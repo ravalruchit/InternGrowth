@@ -39,6 +39,28 @@ class TaskController extends Controller
         
         // Show recommended students if viewing as startup owner
         if (auth()->check() && auth()->user()->isStartup() && $task->startup_profile_id === auth()->user()->startupProfile->id) {
+            $task->load([
+                'applications.student.user',
+                'applications.student.reputationScore',
+                'applications.student.portfolio.items',
+                'applications.student.skillVerifications.skill',
+                'applications.submission'
+            ]);
+            
+            $rankingService = app(\App\Services\CandidateRankingService::class);
+            foreach ($task->applications as $application) {
+                if ($application->student) {
+                    $ranking = $rankingService->calculateMatchScore($application->student, $task);
+                    $application->match_score = $ranking['match_score'];
+                    $application->portfolio_rating_label = $ranking['portfolio_rating_label'];
+                    $application->ranking_details = $ranking;
+                } else {
+                    $application->match_score = 0;
+                    $application->portfolio_rating_label = 'Basic';
+                    $application->ranking_details = [];
+                }
+            }
+            
             $recommendedStudents = $this->matchingService->getRecommendedStudentsForTask($task, 5);
         }
         
