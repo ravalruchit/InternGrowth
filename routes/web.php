@@ -1,0 +1,188 @@
+<?php
+
+use App\Http\Controllers\{
+    ProfileController, StudentController, StartupController, AdminController,
+    TaskController, ApplicationController, SubmissionController,
+    CertificateController, LeaderboardController, RatingController, MessageController,
+    WalletController, AdminWalletController, WalletTopupController, ReportController,
+    NotificationController, StartupReviewController, TalentProfileController
+};
+use App\Http\Controllers\Auth\GoogleAuthController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+// Google OAuth routes
+Route::get('auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
+Route::get('auth/google/role', [GoogleAuthController::class, 'showRoleSelection'])->name('auth.google.role');
+Route::post('auth/google/complete', [GoogleAuthController::class, 'completeRegistration'])->name('auth.google.complete');
+
+Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
+Route::get('/students/{id}/profile', [StudentController::class, 'publicProfile'])->name('students.public-profile');
+Route::get('/startups/{id}/profile', [StartupController::class, 'publicProfile'])->name('startups.public-profile');
+Route::get('/certificates/verify/{certificateNumber}', [CertificateController::class, 'verify'])->name('certificates.verify');
+Route::get('/verify-email/{token}', [StudentController::class, 'verifyEmail'])->name('verify.email');
+
+// Public Talent Profile
+Route::get('/talent/{slug}', [TalentProfileController::class, 'show'])->name('talent.profile');
+
+// Footer Pages
+Route::view('/privacy', 'pages.privacy')->name('privacy');
+Route::view('/terms', 'pages.terms')->name('terms');
+Route::view('/contact', 'pages.contact')->name('contact');
+
+// Report System
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/report/{type?}/{id?}', [ReportController::class, 'show'])->name('report.show');
+    Route::post('/report', [ReportController::class, 'store'])->name('report.store');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        $user = auth()->user();
+        if ($user->isStudent()) return redirect()->route('student.dashboard');
+        if ($user->isStartup()) return redirect()->route('startup.dashboard');
+        if ($user->isAdmin()) return redirect()->route('admin.dashboard');
+    })->name('dashboard');
+
+    // Student Routes
+    Route::middleware('role:student')->prefix('student')->name('student.')->group(function () {
+        Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
+        Route::get('/profile', [StudentController::class, 'profile'])->name('profile');
+        Route::post('/profile', [StudentController::class, 'updateProfile'])->name('profile.update');
+        Route::get('/analytics', [StudentController::class, 'analytics'])->name('analytics');
+        Route::get('/cv/download', [StudentController::class, 'downloadCV'])->name('cv.download');
+        Route::get('/verification', [StudentController::class, 'verification'])->name('verification');
+        Route::post('/verification/send', [StudentController::class, 'sendVerification'])->name('verification.send');
+        Route::get('/verification/code', [StudentController::class, 'showVerificationCode'])->name('verification.code');
+        Route::post('/verification/verify', [StudentController::class, 'verifyCode'])->name('verification.verify');
+        Route::get('/certificates/{id}/download', [CertificateController::class, 'download'])->name('certificates.download');
+        Route::post('/tasks/{taskId}/review', [StartupReviewController::class, 'store'])->name('tasks.review');
+        Route::post('/portfolio/{itemId}/evidence', [TalentProfileController::class, 'updateEvidence'])->name('portfolio.evidence');
+    });
+
+    // Startup Routes
+    Route::middleware('role:startup')->prefix('startup')->name('startup.')->group(function () {
+        Route::get('/dashboard', [StartupController::class, 'dashboard'])->name('dashboard');
+        Route::get('/profile', [StartupController::class, 'profile'])->name('profile');
+        Route::post('/profile', [StartupController::class, 'updateProfile'])->name('profile.update');
+        Route::get('/verification', [StartupController::class, 'verification'])->name('verification');
+        Route::post('/verification', [StartupController::class, 'submitVerification'])->name('verification.submit');
+        Route::post('/clear-verification-alert', [StartupController::class, 'clearVerificationAlert'])->name('clear-verification-alert');
+        Route::post('/applications/{id}/approve', [ApplicationController::class, 'approve'])->name('applications.approve');
+        Route::post('/applications/{id}/reject', [ApplicationController::class, 'reject'])->name('applications.reject');
+        Route::post('/applications/{id}/status', [ApplicationController::class, 'updateStatus'])->name('applications.update-status');
+        Route::get('/submissions/{id}/review', [SubmissionController::class, 'review'])->name('submissions.review');
+        Route::post('/submissions/{id}/accept', [SubmissionController::class, 'accept'])->name('submissions.accept');
+        Route::post('/submissions/{id}/reject', [SubmissionController::class, 'reject'])->name('submissions.reject');
+        Route::post('/submissions/{id}/revision', [SubmissionController::class, 'requestRevision'])->name('submissions.revision');
+        Route::post('/submissions/{id}/rate', [RatingController::class, 'store'])->name('submissions.rate');
+        Route::post('/submissions/{id}/verify-skills', [SubmissionController::class, 'verifySkills'])->name('submissions.verify-skills');
+        Route::get('/candidates', [StartupController::class, 'candidates'])->name('candidates');
+        Route::post('/candidates/{id}/save', [StartupController::class, 'toggleSaveCandidate'])->name('candidates.save');
+    });
+
+    // Admin Routes
+    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+        
+        // Startups Management
+        Route::get('/startups', [AdminController::class, 'startups'])->name('startups');
+        Route::post('/startups/{id}/approve', [AdminController::class, 'approveStartup'])->name('startups.approve');
+        Route::get('/startups/create', [AdminController::class, 'createStartup'])->name('startups.create');
+        Route::post('/startups', [AdminController::class, 'storeStartup'])->name('startups.store');
+        Route::get('/startups/{id}/edit', [AdminController::class, 'editStartup'])->name('startups.edit');
+        Route::put('/startups/{id}', [AdminController::class, 'updateStartup'])->name('startups.update');
+        Route::delete('/startups/{id}', [AdminController::class, 'deleteStartup'])->name('startups.delete');
+        
+        // Students Management
+        Route::get('/students', [AdminController::class, 'students'])->name('students');
+        Route::get('/students/create', [AdminController::class, 'createStudent'])->name('students.create');
+        Route::post('/students', [AdminController::class, 'storeStudent'])->name('students.store');
+        Route::get('/students/{id}/edit', [AdminController::class, 'editStudent'])->name('students.edit');
+        Route::put('/students/{id}', [AdminController::class, 'updateStudent'])->name('students.update');
+        Route::delete('/students/{id}', [AdminController::class, 'deleteStudent'])->name('students.delete');
+        
+        // Tasks & Submissions
+        Route::get('/tasks', [AdminController::class, 'tasks'])->name('tasks');
+        Route::post('/tasks/{id}/moderate', [AdminController::class, 'moderateTask'])->name('tasks.moderate');
+        Route::get('/submissions', [AdminController::class, 'submissions'])->name('submissions');
+        Route::post('/submissions/{id}/certificate', [AdminController::class, 'issueCertificate'])->name('submissions.certificate');
+        
+        // Wallet Management
+        Route::get('/wallets', [AdminWalletController::class, 'manageWallets'])->name('wallets');
+        Route::post('/wallets/add', [AdminWalletController::class, 'addMoney'])->name('wallet.add');
+        Route::post('/wallets/deduct', [AdminWalletController::class, 'deductMoney'])->name('wallet.deduct');
+
+        // Top-up Requests
+        Route::get('/topup', [WalletTopupController::class, 'adminIndex'])->name('topup.index');
+        Route::post('/topup/{id}/approve', [WalletTopupController::class, 'approve'])->name('topup.approve');
+        Route::post('/topup/{id}/reject', [WalletTopupController::class, 'reject'])->name('topup.reject');
+        
+        // Verification Management
+        Route::get('/verifications', [AdminController::class, 'verifications'])->name('verifications');
+        Route::post('/verifications/{id}/approve', [AdminController::class, 'approveVerification'])->name('verifications.approve');
+        Route::post('/verifications/{id}/reject', [AdminController::class, 'rejectVerification'])->name('verifications.reject');
+    });
+
+    // Shared Routes
+    Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
+    Route::get('/tasks/create', [TaskController::class, 'create'])->name('tasks.create')->middleware('role:startup');
+    Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store')->middleware('role:startup');
+    Route::get('/tasks/{id}', [TaskController::class, 'show'])->name('tasks.show');
+    Route::get('/tasks/{id}/edit', [TaskController::class, 'edit'])->name('tasks.edit')->middleware('role:startup');
+    Route::put('/tasks/{id}', [TaskController::class, 'update'])->name('tasks.update')->middleware('role:startup');
+    Route::delete('/tasks/{id}', [TaskController::class, 'destroy'])->name('tasks.destroy')->middleware('role:startup');
+    Route::post('/tasks/{taskId}/apply', [ApplicationController::class, 'store'])->name('applications.store')->middleware('role:student');
+    Route::get('/applications/{applicationId}/submit', [SubmissionController::class, 'create'])->name('submissions.create')->middleware('role:student');
+    Route::post('/applications/{applicationId}/submit', [SubmissionController::class, 'store'])->name('submissions.store')->middleware('role:student');
+    Route::get('/submissions/{id}/revise', [SubmissionController::class, 'revise'])->name('submissions.revise')->middleware('role:student');
+    Route::post('/submissions/{id}/revise', [SubmissionController::class, 'updateRevision'])->name('submissions.update')->middleware('role:student');
+    
+    // Messaging Routes
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::get('/messages/{id}', [MessageController::class, 'show'])->name('messages.show');
+    Route::post('/messages/{id}', [MessageController::class, 'store'])->name('messages.store');
+    Route::get('/messages/start/{studentId}/{startupId}/{taskId?}', [MessageController::class, 'create'])->name('messages.create');
+    
+    // Wallet Routes
+    Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
+    Route::middleware('role:startup')->group(function () {
+        Route::get('/wallet/topup', [WalletTopupController::class, 'create'])->name('wallet.topup');
+        Route::post('/wallet/topup', [WalletTopupController::class, 'store'])->name('wallet.topup.store');
+    });
+
+    // Notification Routes
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/dropdown', [NotificationController::class, 'dropdown'])->name('dropdown');
+        Route::post('/{id}/read', [NotificationController::class, 'markRead'])->name('read');
+        Route::post('/read-all', [NotificationController::class, 'markAllRead'])->name('read-all');
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+        Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
+        Route::delete('/', [NotificationController::class, 'destroyAll'])->name('destroy-all');
+    });
+
+    // Direct Hiring Pipeline Routes
+    Route::post('/startup/offers', [App\Http\Controllers\HiringOfferController::class, 'store'])->name('startup.offers.store')->middleware('role:startup');
+    Route::post('/startup/offers/{id}/withdraw', [App\Http\Controllers\HiringOfferController::class, 'withdraw'])->name('startup.offers.withdraw')->middleware('role:startup');
+    Route::post('/student/offers/{id}/accept', [App\Http\Controllers\HiringOfferController::class, 'accept'])->name('student.offers.accept')->middleware('role:student');
+    Route::post('/student/offers/{id}/reject', [App\Http\Controllers\HiringOfferController::class, 'reject'])->name('student.offers.reject')->middleware('role:student');
+
+    // Interview Routes
+    Route::post('/startup/interviews/schedule/{conversationId}', [App\Http\Controllers\InterviewController::class, 'store'])->name('startup.interviews.store')->middleware('role:startup');
+    Route::post('/student/interviews/{id}/accept', [App\Http\Controllers\InterviewController::class, 'accept'])->name('student.interviews.accept')->middleware('role:student');
+    Route::post('/student/interviews/{id}/reject', [App\Http\Controllers\InterviewController::class, 'reject'])->name('student.interviews.reject')->middleware('role:student');
+    Route::post('/startup/interviews/{id}/cancel', [App\Http\Controllers\InterviewController::class, 'cancel'])->name('startup.interviews.cancel')->middleware('role:startup');
+    Route::post('/startup/interviews/{id}/complete', [App\Http\Controllers\InterviewController::class, 'complete'])->name('startup.interviews.complete')->middleware('role:startup');
+    Route::post('/startup/interviews/{id}/noshow', [App\Http\Controllers\InterviewController::class, 'noShow'])->name('startup.interviews.noshow')->middleware('role:startup');
+});
+
+require __DIR__.'/auth.php';

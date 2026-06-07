@@ -1,0 +1,173 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║              GMAIL SETUP - QUICK GUIDE (5 MINUTES)                   ║
+║                    InternGrowth Email Setup                          ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+📧 GOAL: Send real emails through Gmail (ravalruchit999@gmail.com)
+
+═══════════════════════════════════════════════════════════════════════
+
+STEP 1: ENABLE 2-STEP VERIFICATION
+───────────────────────────────────────────────────────────────────────
+
+1. Open: https://myaccount.google.com/security
+2. Sign in with: ravalruchit999@gmail.com
+3. Find: "2-Step Verification"
+4. Click: "Get Started"
+5. Follow prompts (phone verification)
+6. Complete setup
+
+⏱️ Time: 2-3 minutes
+
+═══════════════════════════════════════════════════════════════════════
+
+STEP 2: CREATE APP PASSWORD
+───────────────────────────────────────────────────────────────────────
+
+1. Open: https://myaccount.google.com/apppasswords
+2. Sign in again if needed
+3. Select app: "Mail"
+4. Select device: "Windows Computer"
+5. Click: "Generate"
+6. COPY the 16-character password (looks like: abcd efgh ijkl mnop)
+7. Remove spaces when copying!
+
+⚠️ IMPORTANT: You can't see this password again! Copy it now!
+
+Your App Password: ________________________________________________
+
+⏱️ Time: 1 minute
+
+═══════════════════════════════════════════════════════════════════════
+
+STEP 3: UPDATE .ENV FILE
+───────────────────────────────────────────────────────────────────────
+
+✅ I've already updated your .env file!
+
+You just need to replace this line:
+MAIL_PASSWORD=your-16-char-app-password-here
+
+With your actual App Password (no spaces):
+MAIL_PASSWORD=abcdefghijklmnop
+
+📝 File location: InternGrowth/.env
+📝 Line to change: MAIL_PASSWORD=your-16-char-app-password-here
+
+⏱️ Time: 30 seconds
+
+═══════════════════════════════════════════════════════════════════════
+
+STEP 4: CLEAR CACHE
+───────────────────────────────────────────────────────────────────────
+
+Open terminal in InternGrowth folder and run:
+
+    php artisan config:clear
+
+⏱️ Time: 10 seconds
+
+═══════════════════════════════════════════════════════════════════════
+
+STEP 5: TEST IT!
+───────────────────────────────────────────────────────────────────────
+
+1. Go to: http://localhost:8000/forgot-password
+2. Enter: ravalruchit999@gmail.com
+3. Click: "Email Password Reset Link"
+4. Check your Gmail inbox!
+5. You should receive the email within 1-2 minutes
+
+⏱️ Time: 1 minute
+
+═══════════════════════════════════════════════════════════════════════
+
+✅ SUCCESS CHECKLIST
+───────────────────────────────────────────────────────────────────────
+
+[ ] 2-Step Verification enabled
+[ ] App Password generated and copied
+[ ] .env file updated with App Password
+[ ] Config cache cleared
+[ ] Test email sent
+[ ] Email received in Gmail
+
+═══════════════════════════════════════════════════════════════════════
+
+🔧 TROUBLESHOOTING
+───────────────────────────────────────────────────────────────────────
+
+❌ "Invalid credentials"
+   → Use App Password, NOT regular Gmail password
+   → Remove all spaces from App Password
+   → Generate new App Password if needed
+
+❌ "Connection refused"
+   → Run: php artisan config:clear
+   → Check .env has: MAIL_HOST=smtp.gmail.com
+
+❌ Email not received
+   → Check spam folder
+   → Wait 1-2 minutes
+   → Check storage/logs/laravel.log for errors
+
+═══════════════════════════════════════════════════════════════════════
+
+📝 CURRENT .ENV SETTINGS
+───────────────────────────────────────────────────────────────────────
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=ravalruchit999@gmail.com
+MAIL_PASSWORD=your-16-char-app-password-here  ← CHANGE THIS!
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="ravalruchit999@gmail.com"
+MAIL_FROM_NAME="InternGrowth"
+
+═══════════════════════════════════════════════════════════════════════
+
+🎯 WHAT TO DO NOW
+───────────────────────────────────────────────────────────────────────
+
+1. Follow Step 1 & 2 above to get your App Password
+2. Open: InternGrowth/.env
+3. Find: MAIL_PASSWORD=your-16-char-app-password-here
+4. Replace with your actual App Password (no spaces!)
+5. Save the file
+6. Run: php artisan config:clear
+7. Test password reset!
+
+═══════════════════════════════════════════════════════════════════════
+
+📚 DETAILED GUIDE
+───────────────────────────────────────────────────────────────────────
+
+For more details, screenshots, and troubleshooting:
+→ See: GMAIL_SETUP_STEPS.md
+
+═══════════════════════════════════════════════════════════════════════
+
+💡 TIPS
+───────────────────────────────────────────────────────────────────────
+
+• App Password is 16 characters (remove spaces!)
+• NOT your regular Gmail password
+• Can be revoked anytime from Google Account
+• Gmail limit: 500 emails/day (plenty for development)
+• Emails will come from: ravalruchit999@gmail.com
+
+═══════════════════════════════════════════════════════════════════════
+
+🎉 DONE!
+───────────────────────────────────────────────────────────────────────
+
+Once set up, InternGrowth will send real emails for:
+✉️ Password resets
+✉️ Email verification
+✉️ Notifications
+✉️ Welcome messages
+
+All through your Gmail account!
+
+═══════════════════════════════════════════════════════════════════════

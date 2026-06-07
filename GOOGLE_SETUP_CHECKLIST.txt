@@ -1,0 +1,157 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                  GOOGLE OAUTH SETUP CHECKLIST                        ║
+║                     InternGrowth Project                             ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+📋 STEP-BY-STEP CHECKLIST
+
+┌─ PART 1: GOOGLE CLOUD CONSOLE ─────────────────────────────────────┐
+│                                                                      │
+│  [ ] 1. Go to: https://console.cloud.google.com/                   │
+│  [ ] 2. Sign in with: ravalruchit999@gmail.com                     │
+│  [ ] 3. Create or select a project                                  │
+│  [ ] 4. Note project name: _______________________________         │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+
+┌─ PART 2: ENABLE APIS ──────────────────────────────────────────────┐
+│                                                                      │
+│  [ ] 1. Go to: APIs & Services > Library                           │
+│  [ ] 2. Search "Google+ API" and click ENABLE                      │
+│  [ ] 3. Search "Google Identity Toolkit API" and click ENABLE      │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+
+┌─ PART 3: OAUTH CONSENT SCREEN ─────────────────────────────────────┐
+│                                                                      │
+│  [ ] 1. Go to: APIs & Services > OAuth consent screen              │
+│  [ ] 2. Select: External                                            │
+│  [ ] 3. App name: InternGrowth                                      │
+│  [ ] 4. User support email: ravalruchit999@gmail.com               │
+│  [ ] 5. Developer email: ravalruchit999@gmail.com                  │
+│  [ ] 6. Click: SAVE AND CONTINUE                                    │
+│  [ ] 7. Skip Scopes (click SAVE AND CONTINUE)                      │
+│  [ ] 8. Add test user: ravalruchit999@gmail.com                    │
+│  [ ] 9. Click: SAVE AND CONTINUE                                    │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+
+┌─ PART 4: CREATE OAUTH CLIENT ──────────────────────────────────────┐
+│                                                                      │
+│  [ ] 1. Go to: APIs & Services > Credentials                       │
+│  [ ] 2. Click: CREATE CREDENTIALS > OAuth client ID                │
+│  [ ] 3. Application type: Web application                           │
+│  [ ] 4. Name: InternGrowth Web Client                              │
+│  [ ] 5. Add Authorized JavaScript origins:                          │
+│         • http://localhost:8000                                     │
+│         • http://127.0.0.1:8000                                     │
+│  [ ] 6. Add Authorized redirect URIs:                               │
+│         • http://localhost:8000/auth/google/callback               │
+│         • http://127.0.0.1:8000/auth/google/callback               │
+│  [ ] 7. Click: CREATE                                               │
+│  [ ] 8. Copy Client ID (save it below)                             │
+│  [ ] 9. Copy Client Secret (save it below)                         │
+│                                                                      │
+│  Client ID: ___________________________________________________     │
+│                                                                      │
+│  Client Secret: _______________________________________________     │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+
+┌─ PART 5: UPDATE LARAVEL .ENV FILE ─────────────────────────────────┐
+│                                                                      │
+│  [ ] 1. Open: InternGrowth/.env                                    │
+│  [ ] 2. Find or add these lines:                                    │
+│                                                                      │
+│         GOOGLE_CLIENT_ID=paste-your-client-id-here                 │
+│         GOOGLE_CLIENT_SECRET=paste-your-client-secret-here         │
+│         GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
+│                                                                      │
+│  [ ] 3. Save the file                                               │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+
+┌─ PART 6: CLEAR LARAVEL CACHE ──────────────────────────────────────┐
+│                                                                      │
+│  [ ] 1. Open terminal in InternGrowth folder                       │
+│  [ ] 2. Run: php artisan config:clear                              │
+│  [ ] 3. Run: php artisan cache:clear                               │
+│  [ ] 4. Run: php artisan route:clear                               │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+
+┌─ PART 7: TEST CONFIGURATION ───────────────────────────────────────┐
+│                                                                      │
+│  [ ] 1. Run: php test-google-config.php                            │
+│  [ ] 2. Should show: ✓ All Google OAuth credentials configured!   │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+
+┌─ PART 8: START SERVER & TEST ──────────────────────────────────────┐
+│                                                                      │
+│  [ ] 1. Run: php artisan serve                                     │
+│  [ ] 2. Open browser: http://localhost:8000/login                  │
+│  [ ] 3. Click: "Continue with Google"                              │
+│  [ ] 4. Should redirect to Google login page                        │
+│  [ ] 5. Sign in with: ravalruchit999@gmail.com                     │
+│  [ ] 6. Select role: Student or Startup                            │
+│  [ ] 7. Should be logged in successfully                            │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                        TROUBLESHOOTING                               ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+❌ Error: "Missing required parameter: client_id"
+   → Check Part 4 & 5 are completed correctly
+   → Run: php artisan config:clear
+   → Verify .env has correct credentials
+
+❌ Error: "Access blocked: Authorization Error"
+   → Add your email as test user (Part 3, step 8)
+
+❌ Error: "Redirect URI mismatch"
+   → Check Part 4, step 6 matches Part 5 exactly
+   → No trailing slashes!
+
+❌ Error: "This app isn't verified"
+   → This is normal for development
+   → Click "Advanced" > "Go to InternGrowth (unsafe)"
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                         QUICK COMMANDS                               ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+Test config:        php test-google-config.php
+Clear cache:        php artisan config:clear
+Start server:       php artisan serve
+View logs:          tail -f storage/logs/laravel.log
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                         HELPFUL LINKS                                ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+Google Cloud Console:    https://console.cloud.google.com/
+Credentials Page:        https://console.cloud.google.com/apis/credentials
+OAuth Consent Screen:    https://console.cloud.google.com/apis/credentials/consent
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                      COMPLETION STATUS                               ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+Date completed: _______________
+Time taken: _______________
+Working: [ ] YES  [ ] NO
+
+Notes:
+_____________________________________________________________________
+_____________________________________________________________________
+_____________________________________________________________________
+
+═══════════════════════════════════════════════════════════════════════
+
+For detailed help, see:
+• GOOGLE_OAUTH_QUICKFIX.md (5-minute guide)
+• GOOGLE_OAUTH_FIX.md (complete guide)
+• GOOGLE_OAUTH_TROUBLESHOOTING.md (problem solving)
