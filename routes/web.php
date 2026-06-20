@@ -23,7 +23,6 @@ Route::post('auth/google/complete', [GoogleAuthController::class, 'completeRegis
 Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
 Route::get('/students/{id}/profile', [StudentController::class, 'publicProfile'])->name('students.public-profile');
 Route::get('/startups/{id}/profile', [StartupController::class, 'publicProfile'])->name('startups.public-profile');
-Route::get('/certificates/verify/{certificateNumber}', [CertificateController::class, 'verify'])->name('certificates.verify');
 Route::get('/verify-email/{token}', [StudentController::class, 'verifyEmail'])->name('verify.email');
 
 // Public Talent Profile
@@ -63,7 +62,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/verification/send', [StudentController::class, 'sendVerification'])->name('verification.send');
         Route::get('/verification/code', [StudentController::class, 'showVerificationCode'])->name('verification.code');
         Route::post('/verification/verify', [StudentController::class, 'verifyCode'])->name('verification.verify');
-        Route::get('/certificates/{id}/download', [CertificateController::class, 'download'])->name('certificates.download');
+        // ── College ID Card AI Verification ──────────────────────────────────
+        Route::get('/verify-id', [StudentController::class, 'showIdVerification'])->name('verify-id');
+        Route::post('/verify-id', [StudentController::class, 'submitIdVerification'])->name('verify-id.submit');
+        Route::get('/verify-id/status', [StudentController::class, 'verificationStatus'])->name('verify-id.status');
+        // ─────────────────────────────────────────────────────────────────────
         Route::post('/tasks/{taskId}/review', [StartupReviewController::class, 'store'])->name('tasks.review');
         Route::post('/portfolio/{itemId}/evidence', [TalentProfileController::class, 'updateEvidence'])->name('portfolio.evidence');
     });
@@ -114,7 +117,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/tasks', [AdminController::class, 'tasks'])->name('tasks');
         Route::post('/tasks/{id}/moderate', [AdminController::class, 'moderateTask'])->name('tasks.moderate');
         Route::get('/submissions', [AdminController::class, 'submissions'])->name('submissions');
-        Route::post('/submissions/{id}/certificate', [AdminController::class, 'issueCertificate'])->name('submissions.certificate');
         
         // Wallet Management
         Route::get('/wallets', [AdminWalletController::class, 'manageWallets'])->name('wallets');
@@ -126,10 +128,20 @@ Route::middleware('auth')->group(function () {
         Route::post('/topup/{id}/approve', [WalletTopupController::class, 'approve'])->name('topup.approve');
         Route::post('/topup/{id}/reject', [WalletTopupController::class, 'reject'])->name('topup.reject');
         
-        // Verification Management
+        // Verification Management (Startups)
         Route::get('/verifications', [AdminController::class, 'verifications'])->name('verifications');
         Route::post('/verifications/{id}/approve', [AdminController::class, 'approveVerification'])->name('verifications.approve');
         Route::post('/verifications/{id}/reject', [AdminController::class, 'rejectVerification'])->name('verifications.reject');
+        Route::post('/verifications/{id}/toggle-suspicious', [AdminController::class, 'toggleSuspiciousFlag'])->name('verifications.toggle-suspicious');
+
+        // Student ID Card AI Review Queue
+        Route::get('/student-id-queue', [AdminController::class, 'studentIdQueue'])->name('student-id-queue');
+        Route::post('/student-id-queue/{id}/approve', [AdminController::class, 'approveStudentId'])->name('student-id-queue.approve');
+        Route::post('/student-id-queue/{id}/reject', [AdminController::class, 'rejectStudentId'])->name('student-id-queue.reject');
+
+        // AI Debug Interface
+        Route::get('/ai-debug', [\App\Http\Controllers\AIDebugController::class, 'index'])->name('ai-debug');
+        Route::post('/ai-debug/test', [\App\Http\Controllers\AIDebugController::class, 'test'])->name('ai-debug.test');
     });
 
     // Shared Routes

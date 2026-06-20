@@ -11,7 +11,8 @@ class Task extends Model
 {
     protected $fillable = [
         'startup_profile_id', 'title', 'description', 'requirements', 'required_skills',
-        'reward_points', 'stipend', 'escrow_amount', 'escrow_locked', 'status', 'is_flagged'
+        'reward_points', 'stipend', 'escrow_amount', 'escrow_locked', 'status', 'is_flagged',
+        'domain', 'role'
     ];
 
     protected $casts = [

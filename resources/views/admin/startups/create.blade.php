@@ -1,94 +1,108 @@
 <x-app-layout>
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Create New Startup</h1>
-            <p class="text-gray-600 mt-2">Add a new startup to the platform</p>
+    <div class="ig-container max-w-4xl py-10">
+        <!-- Header -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-end mb-12 ig-anim-fade-up">
+            <div class="md:col-span-8">
+                <p class="ig-eyebrow mb-3">— Operations / Database</p>
+                <h1 class="ig-display text-5xl md:text-6xl leading-[0.95]">
+                    Create <span class="ig-serif text-[var(--ig-accent)]">Startup.</span><br>
+                    Register new enterprise.
+                </h1>
+            </div>
+            <div class="md:col-span-4 md:text-right">
+                <a href="{{ route('admin.startups') }}" class="ig-btn ig-btn-ghost">
+                    <span>← Cancel</span>
+                </a>
+            </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-lg p-8">
+        <div class="ig-card p-8 bg-white ig-reveal is-in">
             <form action="{{ route('admin.startups.store') }}" method="POST">
                 @csrf
 
                 <div class="space-y-6">
                     <!-- Contact Name -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Contact Name *</label>
+                        <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Contact Name *</label>
                         <input type="text" name="name" value="{{ old('name') }}" 
-                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition" required>
+                               class="ig-input" required placeholder="Full Name">
                         @error('name')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            <p class="text-red-600 text-xs mt-1.5 font-mono">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <!-- Email -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
+                        <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Email *</label>
                         <input type="email" name="email" value="{{ old('email') }}" 
-                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition" required>
+                               class="ig-input" required placeholder="contact@company.com">
                         @error('email')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            <p class="text-red-600 text-xs mt-1.5 font-mono">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <!-- Password -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Password *</label>
-                        <input type="password" name="password" 
-                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition" required>
-                        @error('password')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                        <p class="text-gray-500 text-sm mt-1">Minimum 8 characters</p>
-                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Password -->
+                        <div>
+                            <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Password *</label>
+                            <input type="password" name="password" 
+                                   class="ig-input" required placeholder="••••••••">
+                            @error('password')
+                                <p class="text-red-600 text-xs mt-1.5 font-mono">{{ $message }}</p>
+                            @enderror
+                            <p class="text-[var(--ig-muted)] text-[10px] mt-1.5 font-mono font-semibold">Minimum 8 characters</p>
+                        </div>
 
-                    <!-- Confirm Password -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm Password *</label>
-                        <input type="password" name="password_confirmation" 
-                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition" required>
+                        <!-- Confirm Password -->
+                        <div>
+                            <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Confirm Password *</label>
+                            <input type="password" name="password_confirmation" 
+                                   class="ig-input" required placeholder="••••••••">
+                        </div>
                     </div>
 
                     <!-- Company Name -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Company Name *</label>
+                        <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Company Name *</label>
                         <input type="text" name="company_name" value="{{ old('company_name') }}" 
-                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition" required>
+                               class="ig-input" required placeholder="e.g. Stripe, Inc.">
                         @error('company_name')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            <p class="text-red-600 text-xs mt-1.5 font-mono">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <!-- Description -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                        <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Description</label>
                         <textarea name="description" rows="4" 
-                                  class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition">{{ old('description') }}</textarea>
+                                  class="ig-input" placeholder="Brief elevator pitch or summary of startup activities...">{{ old('description') }}</textarea>
                     </div>
 
                     <!-- Industry -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Industry</label>
+                        <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Industry</label>
                         <input type="text" name="industry" value="{{ old('industry') }}" 
-                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                               class="ig-input"
                                placeholder="e.g., Technology, Healthcare, Finance">
                     </div>
 
                     <!-- Verification Status -->
-                    <div class="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl">
+                    <div class="flex items-center space-x-3 p-4 bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-xl">
                         <input type="checkbox" name="is_verified" id="is_verified" 
                                {{ old('is_verified') ? 'checked' : '' }}
-                               class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                        <label for="is_verified" class="text-sm font-semibold text-gray-700">Verify this startup immediately</label>
+                               class="w-5 h-5 text-[var(--ig-accent)] border-[var(--ig-line-2)] rounded focus:ring-[var(--ig-accent)]">
+                        <label for="is_verified" class="text-sm font-semibold text-[var(--ig-ink)] cursor-pointer select-none">Verify this startup immediately</label>
                     </div>
                 </div>
 
                 <!-- Buttons -->
-                <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
-                    <a href="{{ route('admin.startups') }}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition font-semibold">
-                        Cancel
+                <div class="flex items-center justify-between mt-10 pt-6 border-t border-[var(--ig-line)]">
+                    <a href="{{ route('admin.startups') }}" class="ig-btn ig-btn-ghost">
+                        <span>Cancel</span>
                     </a>
-                    <button type="submit" class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:shadow-lg transition font-semibold">
-                        Create Startup
+                    <button type="submit" class="ig-btn ig-btn-primary">
+                        <span>Create Startup</span>
+                        <span class="arrow">→</span>
                     </button>
                 </div>
             </form>

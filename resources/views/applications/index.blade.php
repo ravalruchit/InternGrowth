@@ -40,7 +40,7 @@
             @foreach($applications as $application)
                 @php
                     $student = $application->student;
-                    $points = $student->wallet?->balance ?? 0;
+                    $iprs = $student->reputationScore?->overall_score ?? 50.00;
                     $reliability = $student->reliability_score ?? 0;
                     $matchScore = $application->match_score ?? 0;
                     $rankingDetails = $application->ranking_details ?? [];
@@ -81,7 +81,7 @@
                                     <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.368 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118L10 15.347l-3.952 2.878c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.064 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.285-3.957z"/>
                                     </svg>
-                                    {{ number_format($points) }} pts
+                                    {{ number_format($iprs, 1) }} IPRS
                                 </span>
                                 <span class="inline-flex items-center gap-1 {{ $reliability >= 0.7 ? 'bg-green-50 text-green-700 border-green-200' : ($reliability >= 0.4 ? 'bg-yellow-50 text-yellow-700 border-yellow-250' : 'bg-gray-50 text-gray-600 border-gray-200') }} text-xs font-bold px-3 py-1 rounded-full border">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -247,17 +247,16 @@
                                     'hired' => 'Hired'
                                 ];
                                 $currentStatus = $application->status;
-                                if ($application->submission && $application->submission->status === 'accepted') {
+                                if ($currentStatus === 'approved' && $application->submission && $application->submission->status === 'accepted') {
                                     $currentStatus = 'task_completed';
+                                }
+                                if ($currentStatus === 'internship_accepted') {
+                                    $currentStatus = 'internship_offered';
                                 }
                                 $stagesKeys = array_keys($stages);
                                 $currentIndex = array_search($currentStatus, $stagesKeys);
                                 if ($currentIndex === false) {
-                                    if (in_array($currentStatus, ['internship_accepted'])) {
-                                        $currentIndex = 5;
-                                    } else {
-                                        $currentIndex = 0;
-                                    }
+                                    $currentIndex = 0;
                                 }
                             @endphp
                             @foreach($stages as $key => $label)
@@ -265,14 +264,23 @@
                                     $keyIndex = array_search($key, $stagesKeys);
                                     $isActive = $key === $currentStatus;
                                     $isPassed = $keyIndex < $currentIndex;
+                                    
+                                    // Determine the status to submit
+                                    $targetStatus = $key;
+                                    if ($key === 'task_completed') {
+                                        $targetStatus = 'approved';
+                                    }
                                 @endphp
                                 <div class="flex items-center flex-1 last:flex-none">
-                                    <div class="flex flex-col items-center">
-                                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold {{ $isActive ? 'bg-indigo-600 text-white' : ($isPassed ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600') }}">
+                                    <button type="button" 
+                                            onclick="submitStatusChange('{{ $application->id }}', '{{ $targetStatus }}')"
+                                            class="flex flex-col items-center focus:outline-none cursor-pointer group"
+                                            title="Move to {{ $label }}">
+                                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 group-hover:scale-110 group-hover:ring-2 group-hover:ring-indigo-450 group-hover:ring-offset-1 {{ $isActive ? 'bg-indigo-600 text-white' : ($isPassed ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600') }}">
                                             @if($isPassed) ✓ @else {{ $keyIndex + 1 }} @endif
                                         </div>
-                                        <span class="text-[10px] font-semibold mt-1 whitespace-nowrap {{ $isActive ? 'text-indigo-650 font-bold' : 'text-gray-550' }}">{{ $label }}</span>
-                                    </div>
+                                        <span class="text-[10px] font-semibold mt-1 whitespace-nowrap transition-colors duration-200 group-hover:text-indigo-650 {{ $isActive ? 'text-indigo-650 font-bold' : 'text-gray-550' }}">{{ $label }}</span>
+                                    </button>
                                     @if(!$loop->last)
                                         <div class="h-0.5 flex-1 mx-2 {{ $keyIndex < $currentIndex ? 'bg-green-500' : 'bg-gray-200' }}"></div>
                                     @endif
@@ -413,7 +421,7 @@
                                         </svg>
                                         <div>
                                             <p class="text-sm font-bold text-green-800 font-poppins">✓ Task Completed Successfully</p>
-                                            <p class="text-xs text-green-700 mt-1">Student has been awarded {{ $task->reward_points }} points.</p>
+                                            <p class="text-xs text-green-700 mt-1">Student's IPRS reputation score has been updated.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -510,6 +518,17 @@
                 } else {
                     arrow.style.transform = 'rotate(180deg)';
                     button.classList.add('bg-indigo-100');
+                }
+            }
+
+            function submitStatusChange(applicationId, newStatus) {
+                const card = document.querySelector(`.application-card[data-id="${applicationId}"]`);
+                if (card) {
+                    const select = card.querySelector('select[name="status"]');
+                    if (select) {
+                        select.value = newStatus;
+                        select.closest('form').submit();
+                    }
                 }
             }
         </script>

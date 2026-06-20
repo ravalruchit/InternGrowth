@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Repositories\StudentRepository;
 use App\Services\MatchingService;
+use App\Services\AIVerificationService;
 use Illuminate\Http\Request;
 use App\Models\Skill;
 
@@ -16,14 +17,25 @@ class StudentController extends Controller
 
     public function dashboard()
     {
-        $profile = auth()->user()->studentProfile->load(['certificates.task', 'skills', 'reputationScore', 'portfolio.items', 'startupReviews']);
+        $profile = auth()->user()->studentProfile->load(['skills', 'reputationScore', 'portfolio.items', 'startupReviews']);
         $hiringOffers = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
             ->where('status', 'pending')
             ->with('startup')
             ->get();
 
+        $completedTasks = \App\Models\Application::where('student_profile_id', $profile->id)
+            ->whereHas('submission', function($q) {
+                $q->where('status', 'accepted');
+            })
+            ->with(['task.startup', 'submission'])
+            ->get();
+
+        $ratings = \App\Models\Rating::where('student_profile_id', $profile->id)
+            ->get()
+            ->keyBy('task_id');
+
         // Compute success metrics
-        $projectsCompleted = $profile->certificates->count();
+        $projectsCompleted = $completedTasks->count();
         $internshipOffersCount = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
             ->where('offer_type', 'internship')
             ->count();
@@ -50,7 +62,9 @@ class StudentController extends Controller
             'internshipOffersCount', 
             'jobOffersCount', 
             'totalEarnings',
-            'reviewedTaskIds'
+            'reviewedTaskIds',
+            'completedTasks',
+            'ratings'
         ));
     }
 
@@ -67,6 +81,8 @@ class StudentController extends Controller
             'name' => 'required|string|max:255',
             'bio' => 'nullable|string',
             'skills' => 'nullable|array',
+            'primary_domain' => 'nullable|string',
+            'preferred_role' => 'nullable|string',
         ]);
 
         // Update user name
@@ -74,7 +90,11 @@ class StudentController extends Controller
 
         // Update profile
         $profile = auth()->user()->studentProfile;
-        $profile->update(['bio' => $validated['bio']]);
+        $profile->update([
+            'bio' => $validated['bio'],
+            'primary_domain' => $validated['primary_domain'] ?? null,
+            'preferred_role' => $validated['preferred_role'] ?? null,
+        ]);
         
         if (isset($validated['skills'])) {
             $profile->skills()->sync($validated['skills']);
@@ -189,7 +209,6 @@ class StudentController extends Controller
     public function analytics()
     {
         $profile = auth()->user()->studentProfile->load([
-            'certificates.task',
             'skills',
             'ratings'
         ]);
@@ -207,12 +226,11 @@ class StudentController extends Controller
         }
 
         // Calculate analytics
-        // Count completed tasks based on certificates (more reliable)
-        $completedTasksCount = $profile->certificates->count();
-        
+        // Count completed tasks based on accepted submissions
         $completedTasks = $applications->filter(function($app) {
             return $app->submission && $app->submission->status === 'accepted';
         });
+        $completedTasksCount = $completedTasks->count();
 
         $pendingTasks = $applications->filter(function($app) {
             return $app->status === 'approved' && (!$app->submission || $app->submission->status !== 'accepted');
@@ -262,6 +280,35 @@ class StudentController extends Controller
         $totalApplications = $applications->where('status', '!=', 'applied')->count();
         $successRate = $totalApplications > 0 ? ($completedTasks->count() / $totalApplications) * 100 : 0;
 
+        // Projects by Domain
+        $projectsByDomain = [];
+        if ($profile->portfolio) {
+            $projectsByDomain = \App\Models\PortfolioItem::where('portfolio_id', $profile->portfolio->id)
+                ->select('domain', \DB::raw('count(*) as count'))
+                ->whereNotNull('domain')
+                ->groupBy('domain')
+                ->pluck('count', 'domain')
+                ->toArray();
+        }
+
+        // Reputation by Domain
+        $domainReputations = $profile->reputationScore?->domain_scores ?? [];
+        foreach (array_keys(\App\Models\StudentProfile::$domains) as $domain) {
+            if (!isset($domainReputations[$domain])) {
+                $domainReputations[$domain] = 50.00;
+            }
+        }
+
+        // Internships by Domain
+        $internshipsByDomain = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
+            ->where('offer_type', 'internship')
+            ->where('status', 'accepted')
+            ->select('domain', \DB::raw('count(*) as count'))
+            ->whereNotNull('domain')
+            ->groupBy('domain')
+            ->pluck('count', 'domain')
+            ->toArray();
+
         $analytics = [
             'completed_tasks' => $completedTasksCount, // Use certificate count instead
             'pending_tasks' => $pendingTasks->count(),
@@ -271,7 +318,10 @@ class StudentController extends Controller
             'skills_stats' => array_slice($skillsStats, 0, 5), // Top 5 skills
             'success_rate' => round($successRate, 1),
             'active_applications' => $applications->whereIn('status', ['applied', 'approved'])->count(),
-            'completed_tasks_list' => $completedTasks->sortByDesc('submission.updated_at')->take(10)
+            'completed_tasks_list' => $completedTasks->sortByDesc('submission.updated_at')->take(10),
+            'projects_by_domain' => $projectsByDomain,
+            'reputation_by_domain' => $domainReputations,
+            'internships_by_domain' => $internshipsByDomain
         ];
 
         return view('student.analytics', compact('profile', 'analytics', 'totalPoints'));
@@ -280,7 +330,6 @@ class StudentController extends Controller
     public function downloadCV()
     {
         $profile = auth()->user()->studentProfile->load([
-            'certificates.task.startup',
             'skills',
             'ratings'
         ]);
@@ -310,4 +359,127 @@ class StudentController extends Controller
 
         return view('student.cv-download', compact('profile', 'completedTasks', 'totalPoints', 'totalStipend'));
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // College ID Card AI Verification
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Show the College ID upload/verification page.
+     */
+    public function showIdVerification()
+    {
+        $profile = auth()->user()->studentProfile;
+
+        // If already verified by any method, redirect to dashboard
+        if ($profile->is_verified) {
+            return redirect()->route('student.dashboard')
+                ->with('success', 'You are already verified! You have full access to all tasks.');
+        }
+
+        return view('student.id-verification', compact('profile'));
+    }
+
+    /**
+     * Handle the College ID card upload and trigger AI verification.
+     */
+    public function submitIdVerification(Request $request)
+    {
+        $currentYear = (int) date('Y');
+        $minAllowedYear = $currentYear - 2;
+
+        $request->validate([
+            'id_card_image'   => 'required|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'graduation_year' => 'required|integer|between:' . ($currentYear - 5) . ',' . ($currentYear + 5),
+        ], [
+            'id_card_image.required' => 'Please upload an image of your college ID card.',
+            'id_card_image.image'    => 'The file must be an image (JPG, PNG, or WebP).',
+            'id_card_image.mimes'    => 'Only JPG, JPEG, PNG, and WebP images are accepted.',
+            'id_card_image.max'      => 'Image size must not exceed 10MB.',
+            'graduation_year.required' => 'Please select your expected or actual graduation year.',
+            'graduation_year.integer'  => 'Graduation year must be a valid number.',
+            'graduation_year.between'  => 'Please select a valid graduation year within the allowed range.',
+        ]);
+
+        // Enforce the 2-year post-graduation limit
+        if ((int) $request->graduation_year < $minAllowedYear) {
+            return back()->withInput()->withErrors([
+                'graduation_year' => "Verification failed: InternGrowth is restricted to current students and recent graduates. You must have graduated in {$minAllowedYear} or later."
+            ]);
+        }
+
+        $profile = auth()->user()->studentProfile;
+
+        // Prevent re-submission if already AI-approved or admin-approved
+        if (in_array($profile->id_card_verification_status, ['ai_approved', 'admin_approved'])) {
+            return redirect()->route('student.dashboard')
+                ->with('success', 'Your college ID is already verified!');
+        }
+
+        // Store the uploaded image
+        $path = $request->file('id_card_image')->store('id-cards', 'public');
+
+        // Mark as processing
+        $profile->update([
+            'graduation_year'             => $request->graduation_year,
+            'id_card_path'                => $path,
+            'id_card_verification_status' => 'processing',
+            'id_card_submitted_at'        => now(),
+            'id_card_ai_result'           => null,
+        ]);
+
+        // Run AI verification (passing the graduation year to cross-reference)
+        $aiService = new AIVerificationService();
+        $result    = $aiService->verifyCollegeId($path, auth()->user()->name, (int) $request->graduation_year);
+
+        // Store the AI result
+        $profile->update(['id_card_ai_result' => $result]);
+
+        // Apply decision based on recommendation
+        switch ($result['recommendation']) {
+            case 'approve':
+                $profile->update([
+                    'id_card_verification_status' => 'ai_approved',
+                    'id_card_verified_at'         => now(),
+                    'is_verified'                 => true,
+                    'verification_method'         => 'college_id_ai',
+                    // Store college name extracted by AI if not already set
+                    'college_name'                => $profile->college_name ?: ($result['college_name'] ?? null),
+                ]);
+                return redirect()->route('student.verify-id')
+                    ->with('ai_approved', true)
+                    ->with('ai_result', $result);
+
+            case 'manual_review':
+                $profile->update([
+                    'id_card_verification_status' => 'manual_review',
+                ]);
+                return redirect()->route('student.verify-id')
+                    ->with('manual_review', true)
+                    ->with('ai_result', $result);
+
+            default: // reject
+                $profile->update([
+                    'id_card_verification_status' => 'ai_rejected',
+                ]);
+                return redirect()->route('student.verify-id')
+                    ->with('ai_rejected', true)
+                    ->with('ai_result', $result);
+        }
+    }
+
+    /**
+     * JSON endpoint to poll verification status.
+     */
+    public function verificationStatus()
+    {
+        $profile = auth()->user()->studentProfile;
+
+        return response()->json([
+            'is_verified'                 => $profile->is_verified,
+            'id_card_verification_status' => $profile->id_card_verification_status,
+            'verification_method'         => $profile->verification_method,
+        ]);
+    }
 }
+

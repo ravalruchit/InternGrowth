@@ -1,135 +1,158 @@
 <x-app-layout>
-    <div class="max-w-4xl mx-auto p-6">
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">Request Wallet Top-up</h1>
-            <a href="{{ route('wallet.index') }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">← Back to Wallet</a>
+    <div class="ig-container max-w-4xl py-12 space-y-8 ig-anim-fade-up">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-[var(--ig-line)] pb-5">
+            <div>
+                <p class="ig-eyebrow mb-2">— Billing & Wallet</p>
+                <h1 class="ig-display text-3xl sm:text-4xl text-[var(--ig-ink)]">
+                    Request Wallet <span class="ig-serif text-[var(--ig-accent)]">Top-up.</span>
+                </h1>
+            </div>
+            <a href="{{ route('wallet.index') }}" class="ig-btn ig-btn-ghost text-xs py-2 px-4">
+                ← Back to Wallet
+            </a>
         </div>
 
+        <!-- Notification Banners -->
         @if(session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                {{ session('success') }}
+            <div class="ig-banner ig-banner-success">
+                <span class="text-lg">✓</span>
+                <div>
+                    <h3 class="font-bold text-[var(--ig-ink)]">Request Submitted</h3>
+                    <p class="text-sm text-[var(--ig-muted)]">{{ session('success') }}</p>
+                </div>
             </div>
         @endif
 
         @if(session('error'))
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                {{ session('error') }}
+            <div class="ig-banner ig-banner-warn">
+                <span class="text-lg">⚠️</span>
+                <div>
+                    <h3 class="font-bold text-[var(--ig-ink)]">Attention Required</h3>
+                    <p class="text-sm text-[var(--ig-muted)]">{{ session('error') }}</p>
+                </div>
             </div>
         @endif
 
         <!-- Current Balance -->
-        <div class="bg-gradient-to-r from-yellow-500 to-orange-600 text-white p-6 rounded-xl shadow mb-6">
-            <p class="text-sm opacity-90">Current Wallet Balance</p>
-            <p class="text-4xl font-bold mt-1">₹{{ number_format($startup->wallet_balance, 2) }}</p>
+        <div class="ig-card-dark p-6 relative overflow-hidden bg-gradient-to-br from-[var(--ig-surface-ink)] to-[#1b2027]">
+            <p class="ig-eyebrow text-[#FAF6EB]/60">Current Wallet Balance</p>
+            <p class="ig-stat-num text-4xl sm:text-5xl text-[var(--ig-lime)] mt-2 font-bold">₹{{ number_format($startup->wallet_balance, 2) }}</p>
         </div>
 
-        <!-- How it works -->
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6">
-            <h2 class="font-semibold text-blue-800 mb-2">How to add money</h2>
-            <ol class="text-sm text-blue-700 space-y-1 list-decimal list-inside">
-                <li>Transfer the amount to our bank account / UPI below.</li>
-                <li>Fill in the form with the amount and your payment reference (UTR/transaction ID).</li>
-                <li>Admin will verify and credit your wallet within 24 hours.</li>
+        <!-- How it works & Payment Details -->
+        <div class="ig-card p-6 bg-[var(--ig-bg-2)] border-[var(--ig-line)]">
+            <h2 class="text-md font-bold text-[var(--ig-ink)] mb-3 flex items-center gap-2">
+                💡 How to add funds
+            </h2>
+            <ol class="text-sm text-[var(--ig-ink-2)] space-y-2 list-decimal list-inside pl-1">
+                <li>Transfer the desired amount to our bank account or UPI listed below.</li>
+                <li>Submit the request form below with the amount and transaction reference (UTR ID).</li>
+                <li>Our operations team will verify the payment and credit your wallet within 24 hours.</li>
             </ol>
-            <div class="mt-4 bg-white rounded-lg p-4 text-sm text-gray-700 border border-blue-100">
-                <p class="font-semibold text-gray-800 mb-1">Payment Details</p>
-                <p><span class="font-medium">Bank:</span> HDFC Bank</p>
-                <p><span class="font-medium">Account Name:</span> InternGrowth Pvt Ltd</p>
-                <p><span class="font-medium">Account No:</span> 1234567890</p>
-                <p><span class="font-medium">IFSC:</span> HDFC0001234</p>
-                <p><span class="font-medium">UPI:</span> interngrowth@hdfcbank</p>
+            
+            <div class="mt-5 bg-white rounded-xl p-5 text-sm text-[var(--ig-ink-2)] border border-[var(--ig-line)] space-y-3">
+                <p class="font-bold text-[var(--ig-ink)] border-b border-[var(--ig-line)] pb-2 uppercase tracking-wider text-xs">Official Payment Details</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+                    <p><span class="text-[var(--ig-muted)]">Bank Name:</span> HDFC Bank</p>
+                    <p><span class="text-[var(--ig-muted)]">Account Name:</span> InternGrowth Pvt Ltd</p>
+                    <p><span class="text-[var(--ig-muted)]">Account No:</span> 1234567890</p>
+                    <p><span class="text-[var(--ig-muted)]">IFSC Code:</span> HDFC0001234</p>
+                    <p class="sm:col-span-2"><span class="text-[var(--ig-muted)]">UPI ID:</span> <span class="text-[var(--ig-accent)] font-semibold select-all">interngrowth@hdfcbank</span></p>
+                </div>
             </div>
         </div>
 
         <!-- Request Form -->
-        <div class="bg-white rounded-xl shadow p-6 mb-8">
-            <h2 class="text-lg font-semibold mb-4">Submit Top-up Request</h2>
-            <form method="POST" action="{{ route('wallet.topup.store') }}">
+        <div class="ig-card p-6 sm:p-8">
+            <h2 class="text-lg font-bold text-[var(--ig-ink)] mb-6">Submit Top-up Request</h2>
+            
+            <form method="POST" action="{{ route('wallet.topup.store') }}" class="space-y-6">
                 @csrf
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Amount (₹) <span class="text-red-500">*</span></label>
+                        <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">Amount (₹) <span class="text-[var(--ig-rose)]">*</span></label>
                         <input type="number" name="amount" min="100" step="1" required
                             value="{{ old('amount') }}"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500"
+                            class="ig-input"
                             placeholder="Minimum ₹100">
-                        @error('amount') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        @error('amount') <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method <span class="text-red-500">*</span></label>
-                        <select name="payment_method" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500">
+                        <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">Payment Method <span class="text-[var(--ig-rose)]">*</span></label>
+                        <select name="payment_method" required class="ig-input">
                             <option value="bank_transfer" {{ old('payment_method') === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer (NEFT/IMPS)</option>
                             <option value="upi" {{ old('payment_method') === 'upi' ? 'selected' : '' }}>UPI</option>
                             <option value="cheque" {{ old('payment_method') === 'cheque' ? 'selected' : '' }}>Cheque</option>
                             <option value="other" {{ old('payment_method') === 'other' ? 'selected' : '' }}>Other</option>
                         </select>
-                        @error('payment_method') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        @error('payment_method') <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p> @enderror
                     </div>
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Reference / UTR</label>
+                <div>
+                    <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">Transaction Reference / UTR</label>
                     <input type="text" name="transaction_reference"
                         value="{{ old('transaction_reference') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500"
+                        class="ig-input"
                         placeholder="e.g. UTR123456789 or UPI transaction ID">
-                    @error('transaction_reference') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    @error('transaction_reference') <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p> @enderror
                 </div>
 
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
-                    <textarea name="notes" rows="2"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500"
-                        placeholder="Any additional info for admin">{{ old('notes') }}</textarea>
-                    @error('notes') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <div>
+                    <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">Additional Notes</label>
+                    <textarea name="notes" rows="3" class="ig-input resize-none"
+                        placeholder="Any additional details to help us verify your transaction...">{{ old('notes') }}</textarea>
+                    @error('notes') <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p> @enderror
                 </div>
 
-                <button type="submit"
-                    class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition">
+                <button type="submit" class="ig-btn ig-btn-primary w-full justify-center">
                     Submit Top-up Request
                 </button>
             </form>
         </div>
 
         <!-- Past Requests -->
-        <div class="bg-white rounded-xl shadow">
-            <div class="p-5 border-b">
-                <h2 class="text-lg font-semibold">My Top-up Requests</h2>
+        <div class="ig-card overflow-hidden">
+            <div class="p-5 border-b border-[var(--ig-line)] bg-[var(--ig-bg-2)]">
+                <h2 class="text-md font-bold text-[var(--ig-ink)]">My Top-up Requests</h2>
             </div>
-            <div class="divide-y">
+            
+            <div class="divide-y divide-[var(--ig-line)]">
                 @forelse($requests as $req)
-                    <div class="p-5 flex items-center justify-between">
+                    <div class="p-5 flex items-center justify-between hover:bg-[var(--ig-bg-2)]/30 transition-colors">
                         <div>
-                            <p class="font-medium text-gray-900">₹{{ number_format($req->amount, 2) }}
-                                <span class="text-sm text-gray-500 font-normal ml-1">via {{ str_replace('_', ' ', $req->payment_method) }}</span>
+                            <p class="font-bold text-[var(--ig-ink)] text-base">₹{{ number_format($req->amount, 2) }}
+                                <span class="text-xs text-[var(--ig-muted)] font-mono font-normal ml-2">via {{ strtoupper(str_replace('_', ' ', $req->payment_method)) }}</span>
                             </p>
                             @if($req->transaction_reference)
-                                <p class="text-xs text-gray-500">Ref: {{ $req->transaction_reference }}</p>
+                                <p class="text-xs text-[var(--ig-muted)] mt-1 font-mono">Ref: {{ $req->transaction_reference }}</p>
                             @endif
-                            <p class="text-xs text-gray-400 mt-1">{{ $req->created_at->format('M d, Y h:i A') }}</p>
+                            <p class="text-[10px] text-[var(--ig-faint)] mt-1">{{ $req->created_at->format('M d, Y h:i A') }}</p>
                             @if($req->admin_notes)
-                                <p class="text-xs text-gray-600 mt-1 italic">Admin: {{ $req->admin_notes }}</p>
+                                <p class="text-xs text-[var(--ig-rose)] mt-1 italic">Admin: {{ $req->admin_notes }}</p>
                             @endif
                         </div>
                         <div>
                             @if($req->status === 'pending')
-                                <span class="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">⏳ Pending</span>
+                                <span class="ig-chip ig-chip-warn">⏳ Pending</span>
                             @elseif($req->status === 'approved')
-                                <span class="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">✓ Approved</span>
+                                <span class="ig-chip ig-chip-success">✓ Approved</span>
                             @else
-                                <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">✗ Rejected</span>
+                                <span class="ig-chip ig-chip-danger">✗ Rejected</span>
                             @endif
                         </div>
                     </div>
                 @empty
-                    <div class="p-6 text-center text-gray-500 text-sm">No top-up requests yet.</div>
+                    <div class="p-8 text-center text-[var(--ig-muted)] text-sm">No top-up requests yet.</div>
                 @endforelse
             </div>
+            
             @if($requests->hasPages())
-                <div class="p-4 border-t">{{ $requests->links() }}</div>
+                <div class="p-4 border-t border-[var(--ig-line)]">{{ $requests->links() }}</div>
             @endif
         </div>
     </div>

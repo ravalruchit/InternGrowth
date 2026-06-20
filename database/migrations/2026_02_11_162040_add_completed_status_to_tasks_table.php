@@ -9,17 +9,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Modify the enum to include 'completed' status
-        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
-            DB::statement("ALTER TABLE tasks MODIFY COLUMN status ENUM('posted', 'closed', 'moderated', 'completed') DEFAULT 'posted'");
-        }
+        Schema::table('tasks', function (Blueprint $table) {
+            $table->string('status', 50)->default('posted')->change();
+        });
     }
 
     public function down(): void
     {
-        // Revert back to original enum values
-        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
-            DB::statement("ALTER TABLE tasks MODIFY COLUMN status ENUM('posted', 'closed', 'moderated') DEFAULT 'posted'");
-        }
+        // Revert status to string (retaining compatibility)
     }
 };

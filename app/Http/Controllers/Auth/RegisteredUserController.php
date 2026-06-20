@@ -34,6 +34,8 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', 'min:3'],
             'role' => ['required', 'in:student,startup'],
+            'primary_domain' => ['required_if:role,student', 'nullable', 'string'],
+            'preferred_role' => ['required_if:role,student', 'nullable', 'string'],
         ]);
 
         $user = User::create([
@@ -51,6 +53,8 @@ class RegisteredUserController extends Controller
                 'bio' => null,
                 'portfolio_links' => [],
                 'reliability_score' => 0,
+                'primary_domain' => $request->primary_domain,
+                'preferred_role' => $request->preferred_role,
             ]);
             \App\Models\PointsWallet::create([
                 'student_profile_id' => $profile->id,

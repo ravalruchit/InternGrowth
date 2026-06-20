@@ -21,7 +21,9 @@ class HiringOffer extends Model
         'status',
         'contract_terms',
         'expires_at',
-        'reserved_fee'
+        'reserved_fee',
+        'domain',
+        'role'
     ];
 
     protected $casts = [

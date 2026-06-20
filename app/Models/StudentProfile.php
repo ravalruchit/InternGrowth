@@ -10,25 +10,76 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class StudentProfile extends Model
 {
+    public static $domains = [
+        'Software Development' => [
+            'Frontend Developer',
+            'Backend Developer',
+            'Full Stack Developer',
+            'Mobile App Developer',
+            'QA Tester',
+        ],
+        'UI/UX Design' => [
+            'UI Designer',
+            'UX Designer',
+            'Graphic Designer',
+            'Product Designer',
+            'Figma Designer',
+        ],
+        'Digital Marketing' => [
+            'SEO Specialist',
+            'Social Media Manager',
+            'Performance Marketer',
+            'Content Marketer',
+            'Email Marketing Executive',
+        ],
+        'Data & AI' => [
+            'Data Analyst',
+            'Data Scientist',
+            'AI Engineer',
+            'Machine Learning Engineer',
+            'Business Intelligence Analyst',
+        ],
+        'Content & Business' => [
+            'Content Writer',
+            'Copywriter',
+            'Business Analyst',
+            'Market Research Analyst',
+            'Operations Associate',
+        ],
+    ];
+
     protected $fillable = [
-        'user_id', 
-        'bio', 
-        'portfolio_links', 
-        'reliability_score', 
+        'user_id',
+        'bio',
+        'portfolio_links',
+        'reliability_score',
         'wallet_balance',
         'college_email',
         'college_name',
         'verification_token',
         'is_verified',
         'email_verified_at',
-        'availability'
+        'availability',
+        'graduation_year',
+        // AI ID Card Verification
+        'id_card_path',
+        'id_card_verification_status',
+        'id_card_ai_result',
+        'id_card_submitted_at',
+        'id_card_verified_at',
+        'verification_method',
+        'primary_domain',
+        'preferred_role',
     ];
 
     protected $casts = [
-        'portfolio_links' => 'array',
-        'wallet_balance' => 'decimal:2',
-        'is_verified' => 'boolean',
-        'email_verified_at' => 'datetime'
+        'portfolio_links'          => 'array',
+        'wallet_balance'           => 'decimal:2',
+        'is_verified'              => 'boolean',
+        'email_verified_at'        => 'datetime',
+        'id_card_ai_result'        => 'array',
+        'id_card_submitted_at'     => 'datetime',
+        'id_card_verified_at'      => 'datetime',
     ];
 
     public function user(): BelongsTo

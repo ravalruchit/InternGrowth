@@ -60,12 +60,13 @@ class NotificationController extends Controller
             ->limit(10)
             ->get()
             ->map(fn($n) => [
-                'id'       => $n->id,
-                'title'    => $n->title,
-                'message'  => $n->message,
-                'type'     => $n->type,
-                'is_read'  => $n->is_read,
-                'time_ago' => $n->created_at->diffForHumans(),
+                'id'          => $n->id,
+                'title'       => $n->title,
+                'message'     => $n->message,
+                'type'        => $n->type,
+                'is_read'     => $n->is_read,
+                'time_ago'    => $n->created_at->diffForHumans(),
+                'target_url'  => $n->target_url,
             ]);
 
         return response()->json(['notifications' => $notifications]);

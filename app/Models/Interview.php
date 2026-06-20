@@ -25,7 +25,9 @@ class Interview extends Model
         'problem_solving_rating',
         'feedback_notes',
         'reminder_24h_sent',
-        'reminder_1h_sent'
+        'reminder_1h_sent',
+        'domain',
+        'role'
     ];
 
     protected $casts = [

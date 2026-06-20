@@ -1,103 +1,72 @@
 <x-app-layout>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Welcome Header -->
-        <div class="mb-8">
-            <h1 class="text-4xl font-bold text-gray-900">Welcome back, {{ auth()->user()->name }}! 👋</h1>
-            <p class="text-gray-600 mt-2">Here's your dashboard overview</p>
+    <div class="ig-container">
+
+        <!-- ─── Header ─── -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-end mb-12 ig-anim-fade-up">
+            <div class="md:col-span-8">
+                <p class="ig-eyebrow mb-3">— Studio · {{ now()->format('l, M d') }}</p>
+                <h1 class="ig-display text-4xl md:text-6xl">
+                    Welcome back, <span class="ig-serif text-[var(--ig-accent)]">{{ Str::words(auth()->user()->name, 1, '') }}.</span>
+                </h1>
+                <p class="text-[var(--ig-ink-2)] mt-3 max-w-xl">Here's your reputation, your work, and what's next on your shipping queue.</p>
+            </div>
+            <div class="md:col-span-4 md:text-right">
+                <a href="{{ route('tasks.index') }}" class="ig-btn ig-btn-primary">
+                    <span>Browse open tasks</span><span class="arrow">→</span>
+                </a>
+            </div>
         </div>
 
-        <!-- Verification Banner -->
+        <!-- ─── Verification banner ─── -->
         @if(!$profile->is_verified)
-            <div class="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400 p-6 rounded-lg shadow">
-                <div class="flex items-start justify-between">
-                    <div class="flex items-start space-x-3">
-                        <svg class="w-6 h-6 text-yellow-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                        </svg>
-                        <div>
-                            <h3 class="text-lg font-semibold text-yellow-900">Limited Access - Verify Your College Email</h3>
-                            <p class="text-yellow-800 mt-1">You can currently see only 5 tasks. Verify your college email to unlock all tasks and opportunities!</p>
-                            <a href="{{ route('student.verification') }}" class="inline-block mt-3 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 font-semibold text-sm">
-                                Verify Now →
-                            </a>
-                        </div>
-                    </div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="text-yellow-600 hover:text-yellow-800">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
+            <div class="ig-banner ig-banner-warn mb-8 ig-anim-fade-up ig-delay-1">
+                <svg class="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="flex-1">
+                    <h3 class="ig-display text-xl mb-1">Verify your college email</h3>
+                    <p class="text-sm text-[var(--ig-ink-2)]">You currently see only 5 tasks. Verify your college email to unlock the full marketplace.</p>
                 </div>
+                <a href="{{ route('student.verification') }}" class="ig-btn ig-btn-primary"><span>Verify now</span><span class="arrow">→</span></a>
             </div>
         @else
-            <div class="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400 p-4 rounded-lg">
-                <div class="flex items-center space-x-3">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                    </svg>
-                    <div>
-                        <p class="text-green-900 font-semibold">✓ Verified Student</p>
-                        <p class="text-green-700 text-sm">{{ $profile->college_name }} • Full access to all tasks</p>
-                    </div>
+            <div class="ig-banner ig-banner-success mb-8 ig-anim-fade-up ig-delay-1">
+                <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <div class="flex-1">
+                    <p class="text-sm font-semibold">Verified student · {{ $profile->college_name }}</p>
+                    <p class="text-[12px] text-[var(--ig-muted)] mt-0.5">Full access · all tasks unlocked</p>
                 </div>
             </div>
         @endif
-        
-        <!-- Pending Hiring Offers -->
+
+        <!-- ─── Pending Offers ─── -->
         @if($hiringOffers && $hiringOffers->count() > 0)
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
-                    <span class="animate-pulse inline-block w-3.5 h-3.5 bg-indigo-600 rounded-full"></span>
-                    <span>Pending Hiring Offers ({{ $hiringOffers->count() }})</span>
-                </h2>
-                <div class="grid grid-cols-1 gap-6">
+            <section class="mb-12 ig-reveal">
+                <div class="ig-section-head">
+                    <div>
+                        <p class="ig-eyebrow mb-2">— You've got mail</p>
+                        <h2 class="ig-display text-3xl">Pending offers <span class="text-[var(--ig-muted)]">· {{ $hiringOffers->count() }}</span></h2>
+                    </div>
+                </div>
+                <div class="space-y-4">
                     @foreach($hiringOffers as $offer)
-                        <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-xl shadow-xl border border-indigo-700 overflow-hidden">
-                            <div class="p-6">
-                                <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
-                                    <div>
-                                        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500 bg-opacity-30 text-indigo-200 uppercase tracking-wider mb-2">
-                                            {{ ucfirst($offer->offer_type) }} Offer
-                                        </span>
-                                        <h3 class="text-2xl font-bold text-white">{{ $offer->title }}</h3>
-                                        <p class="text-indigo-300 text-sm mt-1">from <span class="font-semibold text-white">{{ $offer->startup->company_name }}</span></p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="text-xs text-indigo-300">Compensation</p>
-                                        <p class="text-3xl font-extrabold text-indigo-400">₹{{ number_format($offer->compensation, 2) }}<span class="text-sm font-normal text-indigo-200">/{{ $offer->compensation_period === 'annual' ? 'yr' : 'mo' }}</span></p>
-                                    </div>
+                        <div class="ig-card-dark p-7 relative overflow-hidden">
+                            <div class="absolute -top-16 -right-16 w-48 h-48 rounded-full blur-3xl opacity-30" style="background:var(--ig-accent)"></div>
+                            <div class="relative grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                                <div class="md:col-span-2">
+                                    <span class="ig-chip ig-chip-lime">{{ strtoupper($offer->offer_type) }} OFFER</span>
+                                    <h3 class="ig-display text-3xl text-white mt-3">{{ $offer->title }}</h3>
+                                    <p class="ig-mono text-[12px] mt-1" style="color:#9C9580">from <span class="text-white font-semibold">{{ $offer->startup->company_name }}</span></p>
+                                    <p class="text-sm mt-4 leading-relaxed" style="color:#C9C1AE">{{ Str::limit($offer->description, 180) }}</p>
                                 </div>
-                                
-                                <div class="border-t border-indigo-950 my-4 pt-4">
-                                    <p class="text-indigo-200 text-sm leading-relaxed">{{ $offer->description }}</p>
-                                </div>
-
-                                @if($offer->contract_terms)
-                                    <div class="bg-black bg-opacity-30 rounded-lg p-4 mb-4 text-xs font-mono max-h-32 overflow-y-auto text-indigo-200 border border-indigo-950">
-                                        <p class="font-semibold mb-1 text-white">Contract Terms:</p>
-                                        {{ $offer->contract_terms }}
-                                    </div>
-                                @endif
-
-                                <div class="flex flex-wrap items-center justify-between gap-4 mt-6 text-sm text-indigo-300">
-                                    <div>
-                                        <p><strong>Start Date:</strong> {{ $offer->start_date->format('M d, Y') }}</p>
-                                        @if($offer->end_date)
-                                            <p><strong>End Date:</strong> {{ $offer->end_date->format('M d, Y') }}</p>
-                                        @endif
-                                    </div>
-                                    <div class="flex items-center space-x-3">
-                                        <form method="POST" action="{{ route('student.offers.reject', $offer->id) }}">
-                                            @csrf
-                                            <button type="submit" class="bg-transparent hover:bg-white hover:bg-opacity-5 text-white font-semibold py-2 px-4 border border-white border-opacity-20 rounded-lg transition text-sm">
-                                                Decline
-                                            </button>
+                                <div class="md:text-right">
+                                    <p class="ig-eyebrow mb-1" style="color:#9C9580">Compensation</p>
+                                    <p class="ig-stat-num text-4xl text-[var(--ig-lime)]">₹{{ number_format($offer->compensation, 0) }}</p>
+                                    <p class="ig-mono text-[11px] mt-1" style="color:#9C9580">per {{ $offer->compensation_period === 'annual' ? 'year' : 'month' }}</p>
+                                    <div class="flex md:justify-end gap-2 mt-5">
+                                        <form method="POST" action="{{ route('student.offers.reject', $offer->id) }}">@csrf
+                                            <button class="ig-btn" style="background:transparent;color:#C9C1AE;border:1px solid rgba(255,255,255,.15)">Decline</button>
                                         </form>
-                                        <form method="POST" action="{{ route('student.offers.accept', $offer->id) }}">
-                                            @csrf
-                                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg shadow-md transition text-sm">
-                                                Accept Offer
-                                            </button>
+                                        <form method="POST" action="{{ route('student.offers.accept', $offer->id) }}">@csrf
+                                            <button class="ig-btn ig-btn-lime"><span>Accept</span><span class="arrow">→</span></button>
                                         </form>
                                     </div>
                                 </div>
@@ -105,501 +74,364 @@
                         </div>
                     @endforeach
                 </div>
-            </div>
+            </section>
         @endif
 
-        <!-- Main Dashboard Redesign Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-            <!-- Left Side: Scorecard & Stats -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Premium Motivation Reputation Card -->
-                <x-reputation-card />
+        <!-- ─── Main Grid: IPRS + Ledger ─── -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12">
 
-                <!-- IPRS Scorecard -->
-                <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center justify-between">
-                        <span>Professional Reputation Scorecard (IPRS)</span>
-                        <span class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full font-semibold">IPRS Verified</span>
-                    </h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                        <!-- Left Sub-card: Overall Score -->
-                        <div class="md:col-span-4 bg-gradient-to-br from-indigo-900 to-slate-900 rounded-xl p-5 text-white text-center shadow-md">
-                            <p class="text-indigo-200 text-xs font-semibold uppercase tracking-wider">Reputation Score</p>
-                            <p class="text-5xl font-black mt-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-indigo-200 to-indigo-100">{{ number_format(optional($profile->reputationScore)->overall_score ?? 50.00, 0) }}</p>
-                            <p class="text-indigo-200 text-xs mt-1">out of 100</p>
-                            <div class="mt-4 inline-block bg-white bg-opacity-10 text-white text-xs px-3 py-1 rounded-full">
-                                @if((optional($profile->reputationScore)->overall_score ?? 50.00) >= 90)
-                                    🔥 Elite Category
-                                @elseif((optional($profile->reputationScore)->overall_score ?? 50.00) >= 75)
-                                    ⭐ Professional
+            <!-- IPRS Scorecard -->
+            <div class="lg:col-span-8 ig-card-dark p-8 relative overflow-hidden ig-reveal">
+                <div class="absolute -top-32 -right-32 w-[400px] h-[400px] rounded-full blur-3xl opacity-20" style="background:var(--ig-accent)"></div>
+
+                <div class="relative">
+                    <div class="flex items-start justify-between mb-8">
+                        <div>
+                            <p class="ig-eyebrow" style="color:#9C9580">— IPRS Scorecard</p>
+                            <h2 class="ig-display text-2xl text-white mt-2">Your Professional Reputation</h2>
+                        </div>
+                        <span class="ig-chip ig-chip-lime">VERIFIED</span>
+                    </div>
+
+                    @php $score = optional($profile->reputationScore)->overall_score ?? 50; @endphp
+
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                        <div class="md:col-span-4">
+                            <p class="ig-stat-num text-7xl md:text-8xl text-white" data-counter="{{ (int)$score }}">0</p>
+                            <p class="ig-mono text-[11px] mt-2" style="color:#9C9580">out of 100</p>
+                            <div class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[12px]" style="color:#C9C1AE">
+                                @if($score >= 90)
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[var(--ig-lime)]"></span> Elite category
+                                @elseif($score >= 75)
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[var(--ig-accent)]"></span> Professional
                                 @else
-                                    📈 Emerging Talent
+                                    <span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span> Emerging talent
                                 @endif
                             </div>
                         </div>
-                        
-                        <!-- Right Sub-card: Component Metrics with dot alignment -->
+
                         <div class="md:col-span-8 space-y-3">
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-600 font-medium">Trust Score</span>
-                                <span class="border-b border-dotted border-gray-300 flex-1 mx-2 h-3"></span>
-                                <span class="font-bold text-gray-900">{{ number_format(optional($profile->reputationScore)->trust_score ?? 50.00, 0) }}%</span>
-                            </div>
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-600 font-medium">Task Completion Rate</span>
-                                <span class="border-b border-dotted border-gray-300 flex-1 mx-2 h-3"></span>
-                                <span class="font-bold text-gray-900">{{ number_format(optional($profile->reputationScore)->completion_rate ?? 100.00, 0) }}%</span>
-                            </div>
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-600 font-medium">On-Time Delivery</span>
-                                <span class="border-b border-dotted border-gray-300 flex-1 mx-2 h-3"></span>
-                                <span class="font-bold text-gray-900">{{ number_format(optional($profile->reputationScore)->on_time_rate ?? 100.00, 0) }}%</span>
-                            </div>
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-600 font-medium">Startup Satisfaction</span>
-                                <span class="border-b border-dotted border-gray-300 flex-1 mx-2 h-3"></span>
-                                <span class="font-bold text-gray-900">{{ number_format(optional($profile->reputationScore)->satisfaction_rating ?? 5.00, 1) }}/5</span>
-                            </div>
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-600 font-medium">Communication Rating</span>
-                                <span class="border-b border-dotted border-gray-300 flex-1 mx-2 h-3"></span>
-                                <span class="font-bold text-gray-900">{{ number_format(optional($profile->reputationScore)->communication_rating ?? 4.80, 1) }}/5</span>
-                            </div>
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-600 font-medium">Skill Verification rating</span>
-                                <span class="border-b border-dotted border-gray-300 flex-1 mx-2 h-3"></span>
-                                <span class="font-bold text-gray-900">{{ number_format(optional($profile->reputationScore)->skill_verification_rating ?? 0.00, 0) }}%</span>
-                            </div>
-                            
-                            <!-- Interview Performance Metrics -->
-                            <div class="flex justify-between items-center text-sm border-t border-dashed border-gray-150 pt-2 mt-2">
-                                <span class="text-indigo-600 font-bold uppercase tracking-wide text-xs">Interview Metrics</span>
-                                <span class="border-b border-dashed border-gray-200 flex-1 mx-2 h-3"></span>
-                                <span class="font-extrabold text-indigo-650 text-xs bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded">IPS: {{ number_format(optional($profile->reputationScore)->interview_performance_score ?? 100.00, 0) }}%</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-x-6 gap-y-2 mt-1">
-                                <div class="flex justify-between items-center text-xs">
-                                    <span class="text-gray-500 font-medium">Interviews Attended</span>
-                                    <span class="font-bold text-gray-800">{{ optional($profile->reputationScore)->interviews_attended ?? 0 }}</span>
-                                </div>
-                                <div class="flex justify-between items-center text-xs">
-                                    <span class="text-gray-500 font-medium">Success Rate</span>
-                                    <span class="font-bold text-gray-800">{{ number_format(optional($profile->reputationScore)->interview_success_rate ?? 100.00, 0) }}%</span>
-                                </div>
-                                <div class="flex justify-between items-center text-xs">
-                                    <span class="text-gray-500 font-medium">Strong Outcomes</span>
-                                    <span class="font-bold text-gray-800">{{ optional($profile->reputationScore)->strong_candidate_outcomes ?? 0 }}</span>
-                                </div>
-                                <div class="flex justify-between items-center text-xs">
-                                    <span class="text-gray-500 font-medium">No Shows</span>
-                                    <span class="font-bold text-red-650">{{ optional($profile->reputationScore)->no_shows ?? 0 }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Public Portfolio Link -->
-                @if($profile->portfolio && $profile->portfolio->custom_slug)
-                    <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                        <div>
-                            <h3 class="text-sm font-bold text-indigo-900 flex items-center gap-2">
-                                📂 Your Public Talent Profile
-                            </h3>
-                            <p class="text-xs text-indigo-600 mt-1 font-mono">{{ url('/talent/' . $profile->portfolio->custom_slug) }}</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <a href="{{ route('talent.profile', $profile->portfolio->custom_slug) }}" target="_blank" class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition">
-                                View Portfolio →
-                            </a>
-                            <x-share-profile-button :url="route('talent.profile', $profile->portfolio->custom_slug)" />
-                        </div>
-                    </div>
-                @endif
-
-                <!-- Hiring Success Stats Grid & Wallet -->
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 flex flex-col justify-between">
-                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Projects Completed</span>
-                        <p class="text-3xl font-black text-slate-800 mt-2">{{ $projectsCompleted }}</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 flex flex-col justify-between">
-                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Intern Offers</span>
-                        <p class="text-3xl font-black text-indigo-600 mt-2">{{ $internshipOffersCount }}</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 flex flex-col justify-between">
-                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Job Offers</span>
-                        <p class="text-3xl font-black text-purple-600 mt-2">{{ $jobOffersCount }}</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 flex flex-col justify-between bg-gradient-to-br from-emerald-50 to-white">
-                        <span class="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Total Earnings</span>
-                        <p class="text-2xl font-black text-emerald-600 mt-2">₹{{ number_format($totalEarnings, 0) }}</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-md p-4 text-white flex flex-col justify-between col-span-2 md:col-span-1">
-                        <div>
-                            <span class="text-xs font-semibold text-green-100 uppercase tracking-wider">Wallet Balance</span>
-                            <p class="text-xl font-bold mt-1">₹{{ number_format($profile->wallet_balance, 0) }}</p>
-                        </div>
-                        <a href="{{ route('wallet.index') }}" class="text-[10px] text-white underline mt-2 block">View Transactions</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Side: Experience Ledger -->
-            <div>
-                <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 h-full flex flex-col">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center justify-between">
-                        <span>Experience Ledger</span>
-                        <span class="text-xs text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded">Verified Records</span>
-                    </h2>
-                    
-                    <div class="space-y-4 overflow-y-auto flex-1 max-h-[360px] pr-2">
-                        @if($profile->portfolio && $profile->portfolio->items->count() > 0)
-                            @foreach($profile->portfolio->items as $item)
-                                <div class="relative pl-6 border-l-2 border-indigo-100 hover:border-indigo-500 transition py-1">
-                                    <!-- Timeline Node Circle -->
-                                    <div class="absolute -left-[6px] top-1.5 w-2.5 h-2.5 bg-indigo-500 rounded-full"></div>
-                                    
-                                    <div class="flex justify-between items-start">
-                                        <h4 class="font-bold text-gray-900 text-sm">{{ $item->startup_name }}</h4>
-                                        <span class="text-xs font-medium text-gray-500">{{ $item->created_at->format('M Y') }}</span>
+                            @php $metrics = [
+                                ['Trust score', number_format(optional($profile->reputationScore)->trust_score ?? 50, 0).'%', optional($profile->reputationScore)->trust_score ?? 50],
+                                ['Completion rate', number_format(optional($profile->reputationScore)->completion_rate ?? 100, 0).'%', optional($profile->reputationScore)->completion_rate ?? 100],
+                                ['On-time delivery', number_format(optional($profile->reputationScore)->on_time_rate ?? 100, 0).'%', optional($profile->reputationScore)->on_time_rate ?? 100],
+                                ['Satisfaction', number_format(optional($profile->reputationScore)->satisfaction_rating ?? 5, 1).'/5', (optional($profile->reputationScore)->satisfaction_rating ?? 5) * 20],
+                                ['Communication', number_format(optional($profile->reputationScore)->communication_rating ?? 4.8, 1).'/5', (optional($profile->reputationScore)->communication_rating ?? 4.8) * 20],
+                                ['Skill verification', number_format(optional($profile->reputationScore)->skill_verification_rating ?? 0, 0).'%', optional($profile->reputationScore)->skill_verification_rating ?? 0],
+                            ]; @endphp
+                            @foreach($metrics as $m)
+                                <div>
+                                    <div class="flex items-center justify-between text-[12.5px] mb-1.5">
+                                        <span style="color:#C9C1AE">{{ $m[0] }}</span>
+                                        <span class="text-white font-semibold ig-mono">{{ $m[1] }}</span>
                                     </div>
-                                    <p class="text-xs text-gray-600 mt-0.5">
-                                        <strong>Role:</strong> 
-                                        @if(!empty($item->skills_demonstrated) && is_array($item->skills_demonstrated) && count($item->skills_demonstrated) > 0)
-                                            {{ $item->skills_demonstrated[0] }} Developer
-                                        @else
-                                            PHP Developer
-                                        @endif
-                                    </p>
-                                    <p class="text-xs text-gray-600 mt-0.5"><strong>Project:</strong> {{ $item->project_title }}</p>
-                                    
-                                    <div class="flex items-center justify-between mt-2 text-xs">
-                                        <div class="flex items-center text-yellow-500 font-semibold">
-                                            ⭐ <span class="ml-1 text-gray-700">{{ number_format($item->rating_received, 1) }}/5</span>
-                                        </div>
-                                        @php $badge = $item->badgeLabel(); @endphp
-                                        <span class="text-[10px] font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full flex items-center">
-                                            {{ $badge['emoji'] }} {{ $badge['label'] }}
-                                        </span>
-                                    </div>
-
-                                    <!-- Project Evidence Editing -->
-                                    <div class="mt-3 pt-2 border-t border-gray-100" x-data="{ editing: false }">
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            @if($item->github_url)
-                                                <a href="{{ $item->github_url }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-md hover:bg-slate-200 transition">
-                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-                                                    GitHub
-                                                </a>
-                                            @endif
-                                            @if($item->demo_url)
-                                                <a href="{{ $item->demo_url }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-md hover:bg-slate-200 transition">
-                                                    🌐 Demo
-                                                </a>
-                                            @endif
-                                            <button @click="editing = !editing" class="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md hover:bg-indigo-100 transition cursor-pointer">
-                                                ✏️ {{ ($item->github_url || $item->demo_url) ? 'Edit' : 'Add' }} Links
-                                            </button>
-                                        </div>
-
-                                        <!-- Inline Edit Form -->
-                                        <form x-show="editing" x-transition method="POST" action="{{ route('student.portfolio.evidence', $item->id) }}" class="mt-2 space-y-2">
-                                            @csrf
-                                            <input type="url" name="github_url" value="{{ $item->github_url }}" placeholder="GitHub URL" class="w-full text-xs border border-gray-200 rounded-lg px-3 py-1.5 focus:border-indigo-500 focus:outline-none">
-                                            <input type="url" name="demo_url" value="{{ $item->demo_url }}" placeholder="Live Demo URL" class="w-full text-xs border border-gray-200 rounded-lg px-3 py-1.5 focus:border-indigo-500 focus:outline-none">
-                                            <button type="submit" class="text-xs font-bold bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition">Save</button>
-                                        </form>
+                                    <div class="h-[3px] rounded-full bg-white/10 overflow-hidden">
+                                        <div class="h-full bg-[var(--ig-lime)] rounded-full" style="width:{{ min(100, $m[2]) }}%"></div>
                                     </div>
                                 </div>
                             @endforeach
-                        @else
-                            <div class="text-center py-12 text-gray-500 my-auto">
-                                <svg class="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                                <p class="text-sm">No verified experience records yet.</p>
-                                <p class="text-xs text-gray-400 mt-1">Complete tasks and get rated to build your experience ledger.</p>
-                            </div>
-                        @endif
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- AI Recommended Tasks -->
-        @if($recommendedTasks && $recommendedTasks->count() > 0)
-        <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl shadow-lg p-6 mb-6 border-2 border-purple-200">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-900">🤖 AI Recommended for You</h2>
-                    <p class="text-gray-600 text-sm mt-1">Tasks matched to your skills and experience</p>
-                </div>
-                <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-bold">AI POWERED</span>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                @foreach($recommendedTasks as $task)
-                    <div class="bg-white border-2 border-purple-200 rounded-lg p-4 hover:shadow-xl transition transform hover:scale-105">
-                        <div class="flex items-start justify-between mb-3">
-                            <h3 class="font-semibold text-lg text-gray-900 flex-1">{{ $task->title }}</h3>
-                            <div class="ml-2">
-                                <div class="flex items-center space-x-1">
-                                    <span class="text-2xl font-bold text-purple-600">{{ $task->match_score }}%</span>
-                                </div>
-                                <p class="text-xs text-gray-500 text-right">Match</p>
-                            </div>
-                        </div>
-                        <p class="text-sm text-gray-600 mb-3">{{ Str::limit($task->description, 100) }}</p>
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2">
-                                <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs font-medium">
-                                    {{ $task->reward_points }} pts
-                                </span>
-                                @if($task->match_score >= 80)
-                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-                                        🔥 Perfect Match
-                                    </span>
-                                @elseif($task->match_score >= 60)
-                                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">
-                                        ⭐ Good Match
-                                    </span>
-                                @endif
-                            </div>
-                            <a href="{{ route('tasks.show', $task->id) }}" class="text-purple-600 hover:text-purple-800 font-medium text-sm">
-                                View →
-                            </a>
-                        </div>
+            <!-- Stats column -->
+            <div class="lg:col-span-4 grid grid-cols-2 gap-4">
+                @php
+                    $stats = [
+                        ['Projects', $projectsCompleted, 'ig-card', ''],
+                        ['Intern offers', $internshipOffersCount, 'ig-card', ''],
+                        ['Job offers', $jobOffersCount, 'ig-card', ''],
+                        ['Earnings', '₹'.number_format($totalEarnings, 0), 'ig-card', 'lime-accent'],
+                    ];
+                @endphp
+                @foreach($stats as $s)
+                    <div class="{{ $s[2] }} p-5 ig-reveal {{ $loop->iteration === 4 ? 'col-span-2' : '' }}">
+                        <p class="ig-eyebrow text-[10px]">{{ $s[0] }}</p>
+                        <p class="ig-stat-num text-3xl mt-3">{{ $s[1] }}</p>
                     </div>
                 @endforeach
-            </div>
-            <div class="mt-4 text-center">
-                <a href="{{ route('tasks.index') }}" class="text-purple-600 hover:text-purple-800 font-medium text-sm">
-                    View all tasks →
+                <a href="{{ route('wallet.index') }}" class="col-span-2 ig-card-dark p-5 flex items-center justify-between ig-reveal">
+                    <div>
+                        <p class="ig-eyebrow text-[10px]" style="color:#9C9580">Wallet balance</p>
+                        <p class="ig-stat-num text-3xl text-white mt-2">₹{{ number_format($profile->wallet_balance, 0) }}</p>
+                    </div>
+                    <span class="text-[var(--ig-lime)]">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </span>
                 </a>
             </div>
         </div>
+
+        <!-- ─── Public portfolio link ─── -->
+        @if($profile->portfolio && $profile->portfolio->custom_slug)
+            <div class="ig-card p-6 mb-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ig-reveal">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-[var(--ig-ink)] text-[var(--ig-bg)] flex items-center justify-center">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </div>
+                    <div>
+                        <p class="ig-eyebrow text-[10px]">Your public talent profile</p>
+                        <p class="ig-mono text-sm mt-1">{{ url('/talent/' . $profile->portfolio->custom_slug) }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('talent.profile', $profile->portfolio->custom_slug) }}" target="_blank" class="ig-btn ig-btn-primary"><span>View portfolio</span><span class="arrow">→</span></a>
+                    <x-share-profile-button :url="route('talent.profile', $profile->portfolio->custom_slug)" />
+                </div>
+            </div>
         @endif
 
-        <!-- My Applications -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">My Applications</h2>
-            <div class="space-y-4">
-                @forelse($profile->applications as $application)
-                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <h3 class="font-semibold text-lg text-gray-900">{{ $application->task->title }}</h3>
-                                <p class="text-sm text-gray-600 mt-1">{{ $application->task->startup->company_name }}</p>
-                                <div class="flex items-center space-x-4 mt-3">
-                                    @if($application->submission && $application->submission->status === 'accepted')
-                                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                                            ✓ Completed
-                                        </span>
-                                    @elseif($application->submission && $application->submission->status === 'rejected')
-                                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
-                                            ✗ Rejected
-                                        </span>
-                                    @elseif($application->submission && $application->submission->status === 'revision_requested')
-                                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
-                                            🔄 Revision Requested
-                                        </span>
-                                    @elseif($application->submission && in_array($application->submission->status, ['pending', 'submitted']))
-                                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                                            ⏳ Under Review
-                                        </span>
-                                    @elseif($application->status === 'approved')
-                                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
-                                            Approved - Submit Work
-                                        </span>
-                                    @elseif($application->status === 'rejected')
-                                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
-                                            Application Rejected
-                                        </span>
-                                    @else
-                                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
-                                            Pending Review
-                                        </span>
-                                    @endif
-                                </div>
-                                
-                                @if($application->submission && $application->submission->status === 'revision_requested' && $application->submission->feedback)
-                                    <div class="mt-3 p-3 bg-orange-50 border-l-4 border-orange-400 rounded">
-                                        <p class="text-xs font-semibold text-orange-800 mb-1">Revision Feedback:</p>
-                                        <p class="text-xs text-orange-700">{{ $application->submission->feedback }}</p>
-                                    </div>
-                                @endif
-                                
-                                @if($application->submission && $application->submission->status === 'rejected' && $application->submission->feedback)
-                                    <div class="mt-3 p-3 bg-red-50 border-l-4 border-red-400 rounded">
-                                        <p class="text-xs font-semibold text-red-800 mb-1">Rejection Reason:</p>
-                                        <p class="text-xs text-red-700">{{ $application->submission->feedback }}</p>
-                                    </div>
-                                @endif
-                                
-                                <div class="flex items-center space-x-3 mt-4">
-                                    <a href="{{ route('tasks.show', $application->task_id) }}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
-                                        View Task →
-                                    </a>
-                                    @if($application->submission && $application->submission->status === 'accepted' && !in_array($application->task_id, $reviewedTaskIds))
-                                        <button onclick="openReviewModal({{ $application->task_id }}, '{{ addslashes($application->task->startup->company_name) }}')" class="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-md transition">
-                                            ⭐ Rate Startup
-                                        </button>
-                                    @endif
-                                    @if($application->status === 'approved' && !$application->submission)
-                                        <a href="{{ route('submissions.create', $application->id) }}" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition">
-                                            Submit Work
-                                        </a>
-                                    @endif
-                                    @if($application->submission && $application->submission->status === 'revision_requested')
-                                        <a href="{{ route('submissions.revise', $application->submission->id) }}" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 transition">
-                                            Revise Submission
-                                        </a>
-                                    @endif
+        <!-- ─── Recommended Tasks ─── -->
+        @if($recommendedTasks && $recommendedTasks->count() > 0)
+            <section class="mb-12 ig-reveal">
+                <div class="ig-section-head">
+                    <div>
+                        <p class="ig-eyebrow mb-2">— Matched for you</p>
+                        <h2 class="ig-display text-3xl">Tasks that fit your skills</h2>
+                    </div>
+                    <a href="{{ route('tasks.index') }}" class="hidden md:inline-flex text-sm font-semibold hover:text-[var(--ig-accent)]">View all →</a>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @foreach($recommendedTasks as $task)
+                        <a href="{{ route('tasks.show', $task->id) }}" class="ig-card p-6">
+                            <div class="flex items-start justify-between mb-3">
+                                <h3 class="ig-display text-xl flex-1 leading-tight">{{ $task->title }}</h3>
+                                <div class="text-right ml-3">
+                                    <p class="ig-stat-num text-2xl text-[var(--ig-accent)]">{{ $task->match_score }}%</p>
+                                    <p class="ig-mono text-[10px] text-[var(--ig-muted)]">match</p>
                                 </div>
                             </div>
+                            <p class="text-sm text-[var(--ig-ink-2)] line-clamp-2 mb-4">{{ $task->description }}</p>
+                            <div class="flex items-center justify-between pt-4 border-t border-dashed border-[var(--ig-line)]">
+                                <span class="ig-chip ig-chip-ink">{{ $task->reward_points }} pts</span>
+                                @if($task->match_score >= 80)
+                                    <span class="ig-chip ig-chip-lime">Perfect match</span>
+                                @elseif($task->match_score >= 60)
+                                    <span class="ig-chip">Good match</span>
+                                @endif
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
+        <!-- ─── Applications + Ledger ─── -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12">
+            <!-- Applications -->
+            <section class="lg:col-span-7 ig-card p-8 ig-reveal">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="ig-display text-2xl">My applications</h2>
+                    <a href="{{ route('tasks.index') }}" class="text-sm font-semibold hover:text-[var(--ig-accent)]">Browse tasks →</a>
+                </div>
+                <div class="space-y-4">
+                    @forelse($profile->applications as $application)
+                        <div class="p-5 border border-[var(--ig-line)] rounded-2xl hover:border-[var(--ig-ink)] transition">
+                            <div class="flex items-start justify-between gap-4 mb-3">
+                                <div>
+                                    <h3 class="font-semibold text-[15px]">{{ $application->task->title }}</h3>
+                                    <p class="ig-mono text-[11px] text-[var(--ig-muted)] mt-0.5">{{ $application->task->startup->company_name }}</p>
+                                </div>
+                                @if($application->submission && $application->submission->status === 'accepted')
+                                    <span class="ig-chip ig-chip-success">Completed</span>
+                                @elseif($application->submission && $application->submission->status === 'rejected')
+                                    <span class="ig-chip ig-chip-danger">Rejected</span>
+                                @elseif($application->submission && $application->submission->status === 'revision_requested')
+                                    <span class="ig-chip ig-chip-warn">Revision</span>
+                                @elseif($application->submission && in_array($application->submission->status, ['pending','submitted']))
+                                    <span class="ig-chip">Under review</span>
+                                @elseif($application->status === 'approved')
+                                    <span class="ig-chip ig-chip-accent">Submit work</span>
+                                @elseif($application->status === 'rejected')
+                                    <span class="ig-chip ig-chip-danger">Rejected</span>
+                                @else
+                                    <span class="ig-chip">Pending</span>
+                                @endif
+                            </div>
+
+                            @if($application->submission && $application->submission->feedback && in_array($application->submission->status, ['revision_requested','rejected']))
+                                <p class="text-[12px] text-[var(--ig-muted)] bg-[var(--ig-bg)] rounded-lg p-3 mt-2">{{ $application->submission->feedback }}</p>
+                            @endif
+
+                            <div class="flex items-center gap-3 mt-3">
+                                <a href="{{ route('tasks.show', $application->task_id) }}" class="text-[12px] font-semibold hover:text-[var(--ig-accent)]">View task →</a>
+                                @if($application->status === 'approved' && !$application->submission)
+                                    <a href="{{ route('submissions.create', $application->id) }}" class="ig-btn ig-btn-primary" style="padding:8px 14px;font-size:12px;"><span>Submit work</span></a>
+                                @endif
+                                @if($application->submission && $application->submission->status === 'revision_requested')
+                                    <a href="{{ route('submissions.revise', $application->submission->id) }}" class="ig-btn ig-btn-accent" style="padding:8px 14px;font-size:12px;"><span>Revise</span></a>
+                                @endif
+                                @if($application->submission && $application->submission->status === 'accepted' && !in_array($application->task_id, $reviewedTaskIds))
+                                    <button onclick="openReviewModal({{ $application->task_id }}, '{{ addslashes($application->task->startup->company_name) }}')" class="ig-btn ig-btn-lime" style="padding:8px 14px;font-size:12px;"><span>Rate startup</span></button>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center py-12">
+                            <p class="ig-display text-2xl text-[var(--ig-muted)] mb-1">No applications yet.</p>
+                            <a href="{{ route('tasks.index') }}" class="text-sm font-semibold hover:text-[var(--ig-accent)]">Browse available tasks →</a>
+                        </div>
+                    @endforelse
+                </div>
+            </section>
+
+            <!-- Experience Ledger -->
+            <section class="lg:col-span-5 ig-card p-8 ig-reveal">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="ig-display text-2xl">Experience ledger</h2>
+                    <span class="ig-chip ig-chip-lime">Verified</span>
+                </div>
+                <div class="space-y-5 max-h-[440px] overflow-y-auto pr-1">
+                    @if($profile->portfolio && $profile->portfolio->items->count() > 0)
+                        @foreach($profile->portfolio->items as $item)
+                            <div class="relative pl-5 border-l-2 border-[var(--ig-line)] hover:border-[var(--ig-accent)] transition pb-1">
+                                <div class="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-[var(--ig-ink)]"></div>
+                                <div class="flex items-start justify-between">
+                                    <p class="font-semibold text-sm">{{ $item->startup_name }}</p>
+                                    <span class="ig-mono text-[10px] text-[var(--ig-muted)]">{{ $item->created_at->format('M Y') }}</span>
+                                </div>
+                                <p class="text-[12px] text-[var(--ig-muted)] mt-0.5">{{ $item->project_title }}</p>
+                                <div class="flex items-center gap-3 mt-2">
+                                    <span class="ig-mono text-[11px]">★ {{ number_format($item->rating_received, 1) }}/5</span>
+                                    @php $badge = $item->badgeLabel(); @endphp
+                                    <span class="ig-chip ig-chip-success" style="font-size:10px;padding:2px 8px;">{{ $badge['label'] }}</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center py-10">
+                            <p class="text-sm text-[var(--ig-muted)]">No verified records yet.</p>
+                            <p class="text-[12px] text-[var(--ig-faint)] mt-1">Complete tasks to build your ledger.</p>
+                        </div>
+                    @endif
+                </div>
+            </section>
+        </div>
+
+        <!-- ─── Task Performance & Reputation ─── -->
+        <section class="ig-card p-8 mb-12 ig-reveal">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <p class="ig-eyebrow mb-1.5">— Completed Shipments</p>
+                    <h2 class="ig-display text-2xl">Task Performance & Reputation Impact</h2>
+                </div>
+                <span class="ig-mono text-[11px] text-[var(--ig-muted)]">{{ $completedTasks->count() }} completed</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                @forelse($completedTasks as $app)
+                    @php
+                        $rating = $ratings->get($app->task_id);
+                        $domainScore = optional($profile->reputationScore)->domain_scores[$app->task->domain] ?? 50.00;
+                    @endphp
+                    <div class="p-6 border border-[var(--ig-line)] rounded-3xl flex flex-col justify-between bg-[var(--ig-bg-2)]/30 hover:border-[var(--ig-ink)] transition duration-300 relative overflow-hidden">
+                        <div>
+                            <div class="flex justify-between items-start gap-4 mb-3">
+                                <div>
+                                    <span class="ig-chip ig-chip-lime text-[9px] uppercase tracking-wider mb-2 font-bold">{{ $app->task->domain }}</span>
+                                    <h4 class="font-bold text-base text-[var(--ig-ink)] mt-1.5 leading-snug">{{ $app->task->title }}</h4>
+                                    <p class="ig-mono text-[11px] text-[var(--ig-muted)] mt-0.5">by {{ $app->task->startup->company_name }}</p>
+                                </div>
+                                <span class="ig-mono text-[10px] text-[var(--ig-muted)] whitespace-nowrap">
+                                    {{ $app->submission->updated_at->format('M d, Y') }}
+                                </span>
+                            </div>
+
+                            <!-- Performance Stars and Comments -->
+                            <div class="mt-4 pt-4 border-t border-dashed border-[var(--ig-line)]">
+                                @if($rating)
+                                    <div class="flex items-center gap-1.5 mb-2">
+                                        <div class="flex text-amber-500 text-sm">
+                                            @for($i = 1; $i <= 5; $i++)
+                                                <span>{{ $i <= $rating->rating ? '★' : '☆' }}</span>
+                                            @endfor
+                                        </div>
+                                        <span class="text-xs font-bold text-[var(--ig-ink)] mt-0.5">{{ number_format($rating->rating, 1) }} / 5.0</span>
+                                    </div>
+                                    @if($rating->comment)
+                                        <p class="text-[12.5px] italic text-[var(--ig-ink-2)] bg-white/70 border border-[var(--ig-line-2)] rounded-2xl p-3.5 mt-2.5 leading-relaxed">
+                                            "{{ $rating->comment }}"
+                                        </p>
+                                    @endif
+                                @else
+                                    <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100 text-[11.5px] text-amber-800 font-semibold">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                        Awaiting startup rating & feedback
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Domain Reputation Impact -->
+                        <div class="mt-5 pt-3 border-t border-[var(--ig-line)] flex items-center justify-between text-xs">
+                            <span class="text-[var(--ig-muted)]">Domain reputation contribution:</span>
+                            <span class="font-bold text-[var(--ig-accent)] ig-mono">{{ round($domainScore) }} / 100</span>
                         </div>
                     </div>
                 @empty
-                    <div class="text-center py-12">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        <p class="text-gray-500 mt-2">No applications yet.</p>
-                        <a href="{{ route('tasks.index') }}" class="text-indigo-600 hover:text-indigo-800 font-medium mt-2 inline-block">Browse available tasks →</a>
+                    <div class="md:col-span-2 text-center py-12">
+                        <p class="text-sm text-[var(--ig-muted)]">No completed tasks yet. Ship tasks to establish your reputation.</p>
+                        <a href="{{ route('tasks.index') }}" class="inline-block mt-3 text-xs font-semibold text-[var(--ig-accent)] hover:underline">Browse tasks →</a>
                     </div>
                 @endforelse
             </div>
-        </div>
+        </section>
 
-        <!-- My Certificates -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">My Certificates 🏆</h2>
-            <div class="space-y-4">
-                @forelse($profile->certificates as $certificate)
-                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition bg-gradient-to-r from-indigo-50 to-purple-50">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <h3 class="font-semibold text-lg text-gray-900">{{ $certificate->task->title }}</h3>
-                                <p class="text-sm text-gray-600 mt-1">
-                                    Certificate #{{ $certificate->certificate_number }}
-                                </p>
-                                <p class="text-sm text-gray-500 mt-1">
-                                    Issued: {{ $certificate->issued_at->format('M d, Y') }}
-                                </p>
-                            </div>
-                            <a href="{{ route('student.certificates.download', $certificate->id) }}" 
-                               class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition">
-                                📄 Download
-                            </a>
-                        </div>
-                    </div>
-                @empty
-                    <div class="text-center py-12">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        <p class="text-gray-500 mt-2">No certificates yet.</p>
-                        <p class="text-gray-400 text-sm mt-1">Complete tasks to earn certificates!</p>
-                    </div>
-                @endforelse
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="flex flex-wrap gap-4">
-            <a href="{{ route('tasks.index') }}" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transition">
-                Browse Tasks
-            </a>
-            <a href="{{ route('messages.index') }}" class="bg-white text-gray-700 border border-gray-300 px-6 py-3 rounded-lg font-medium hover:shadow-md transition">
-                Messages
-            </a>
+        <!-- Quick actions -->
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ route('tasks.index') }}" class="ig-btn ig-btn-primary"><span>Browse tasks</span><span class="arrow">→</span></a>
+            <a href="{{ route('messages.index') }}" class="ig-btn ig-btn-ghost"><span>Messages</span></a>
         </div>
     </div>
 
-    <!-- Startup Review Modal -->
-    <div id="review-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-md transition-opacity duration-300">
-        <div class="bg-white/95 backdrop-blur-lg border border-purple-100 rounded-3xl shadow-2xl p-8 max-w-lg w-full mx-4 transform scale-95 transition-transform duration-300 relative">
-            <button onclick="closeReviewModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-650 transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
+    <!-- Review modal (kept functional) -->
+    <div id="review-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl border border-[var(--ig-line)] shadow-2xl p-8 max-w-lg w-full mx-4 relative">
+            <button onclick="closeReviewModal()" class="absolute top-4 right-4 text-[var(--ig-muted)] hover:text-[var(--ig-ink)]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
-            <h3 class="text-2xl font-bold text-gray-900 mb-2 font-poppins">Rate Startup 🌟</h3>
-            <p class="text-sm text-gray-600 mb-6">Review your experience working with <span id="review-startup-name" class="font-bold text-indigo-600"></span>.</p>
-            
-            <form id="review-form" method="POST" action="" class="space-y-4">
+            <p class="ig-eyebrow mb-2">— Rate your experience</p>
+            <h3 class="ig-display text-3xl mb-2">Review the startup</h3>
+            <p class="text-sm text-[var(--ig-muted)] mb-6">Working with <span class="font-semibold text-[var(--ig-ink)]" id="review-startup-name"></span></p>
+
+            <form id="review-form" method="POST" action="" class="space-y-5">
                 @csrf
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Select Rating</label>
-                    <div class="flex items-center space-x-1" id="star-selector">
+                    <label class="block text-sm font-semibold mb-2">Star rating</label>
+                    <div class="flex items-center gap-1" id="star-selector">
                         @for($i = 1; $i <= 5; $i++)
-                            <button type="button" onclick="setStarRating({{ $i }})" class="text-3xl text-gray-300 hover:text-amber-400 transition" id="star-btn-{{ $i }}">
-                                ★
-                            </button>
+                            <button type="button" onclick="setStarRating({{ $i }})" class="text-3xl text-[var(--ig-line-2)] hover:text-[var(--ig-accent)] transition" id="star-btn-{{ $i }}">★</button>
                         @endfor
                     </div>
                     <input type="hidden" name="rating" id="review-rating-val" required value="">
                 </div>
-                
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Review Comment</label>
-                    <textarea name="review" rows="4" required minlength="5" maxlength="1000"
-                              class="w-full px-4 py-3 border border-purple-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm transition"
-                              placeholder="Describe your mentorship experience, payment reliability, communication quality, etc..."></textarea>
+                    <label class="block text-sm font-semibold mb-2">Review</label>
+                    <textarea name="review" rows="4" required minlength="5" maxlength="1000" class="ig-input" placeholder="Mentorship, communication, payment reliability, etc."></textarea>
                 </div>
-                
-                <div class="flex gap-3 pt-2">
-                    <button type="submit" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold px-6 py-3 rounded-xl hover:shadow-lg transition">
-                        Submit Review
-                    </button>
-                    <button type="button" onclick="closeReviewModal()" class="bg-gray-100 text-gray-705 font-bold px-6 py-3 rounded-xl transition">
-                        Cancel
-                    </button>
+                <div class="flex gap-3">
+                    <button type="submit" class="ig-btn ig-btn-primary"><span>Submit review</span><span class="arrow">→</span></button>
+                    <button type="button" onclick="closeReviewModal()" class="ig-btn ig-btn-ghost">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <style>
+        .lime-accent { background: linear-gradient(180deg, #FFFDF7 0%, var(--ig-bg-2) 100%); }
+    </style>
     <script>
-        function openReviewModal(taskId, startupName) {
+        function openReviewModal(taskId, startupName){
             document.getElementById('review-startup-name').textContent = startupName;
             document.getElementById('review-form').action = `/student/tasks/${taskId}/review`;
             document.getElementById('review-rating-val').value = '';
-            
-            // reset stars
-            for (let i = 1; i <= 5; i++) {
-                document.getElementById(`star-btn-${i}`).classList.remove('text-amber-400');
-                document.getElementById(`star-btn-${i}`).classList.add('text-gray-300');
-            }
-            
-            const modal = document.getElementById('review-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-            }, 50);
+            for (let i=1;i<=5;i++){const b=document.getElementById(`star-btn-${i}`);b.classList.remove('text-[var(--ig-accent)]');b.classList.add('text-[var(--ig-line-2)]');}
+            document.getElementById('review-modal').classList.remove('hidden');
         }
-
-        function closeReviewModal() {
-            const modal = document.getElementById('review-modal');
-            modal.classList.add('opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
-
-        function setStarRating(rating) {
-            document.getElementById('review-rating-val').value = rating;
-            for (let i = 1; i <= 5; i++) {
-                const btn = document.getElementById(`star-btn-${i}`);
-                if (i <= rating) {
-                    btn.classList.add('text-amber-400');
-                    btn.classList.remove('text-gray-300');
-                } else {
-                    btn.classList.remove('text-amber-400');
-                    btn.classList.add('text-gray-300');
-                }
-            }
+        function closeReviewModal(){ document.getElementById('review-modal').classList.add('hidden'); }
+        function setStarRating(r){
+            document.getElementById('review-rating-val').value = r;
+            for (let i=1;i<=5;i++){const b=document.getElementById(`star-btn-${i}`);if(i<=r){b.classList.add('text-[var(--ig-accent)]');b.classList.remove('text-[var(--ig-line-2)]');}else{b.classList.remove('text-[var(--ig-accent)]');b.classList.add('text-[var(--ig-line-2)]');}}
         }
     </script>
 </x-app-layout>

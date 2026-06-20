@@ -1,76 +1,83 @@
 <x-app-layout>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 class="text-3xl font-bold mb-6">Wallet Top-up Requests</h1>
+    <div class="ig-container py-10">
+        <!-- Header -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-end mb-12 ig-anim-fade-up">
+            <div class="md:col-span-8">
+                <p class="ig-eyebrow mb-3">— Operations / Financial Ledger</p>
+                <h1 class="ig-display text-5xl md:text-7xl leading-[0.95]">
+                    Top-up <span class="ig-serif text-[var(--ig-accent)]">Requests.</span><br>
+                    Verify bank & UPI deposits.
+                </h1>
+            </div>
+            <div class="md:col-span-4 md:text-right">
+                <a href="{{ route('admin.wallets') }}" class="ig-btn ig-btn-ghost">
+                    <span>← Manage Wallets</span>
+                </a>
+            </div>
+        </div>
 
-        @if(session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                {{ session('success') }}
-            </div>
-        @endif
-        @if(session('error'))
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                {{ session('error') }}
-            </div>
-        @endif
+
 
         <!-- Pending Requests -->
-        <div class="bg-white rounded-lg shadow mb-8">
-            <div class="p-6 border-b flex items-center justify-between">
-                <h2 class="text-xl font-semibold">Pending Requests</h2>
-                <span class="bg-yellow-100 text-yellow-800 text-sm font-medium px-3 py-1 rounded-full">
+        <div class="ig-card p-0 overflow-hidden mb-10 ig-reveal is-in">
+            <div class="p-6 border-b border-[var(--ig-line)] flex items-center justify-between bg-[var(--ig-bg-2)]">
+                <h2 class="ig-display text-xl">Pending Requests</h2>
+                <span class="ig-chip ig-chip-accent">
                     {{ $pending->count() }} pending
                 </span>
             </div>
 
             @if($pending->isEmpty())
-                <div class="p-8 text-center text-gray-500">No pending requests.</div>
+                <div class="p-12 text-center text-[var(--ig-muted)] font-mono text-sm">No pending requests found.</div>
             @else
-                <div class="divide-y">
+                <div class="divide-y divide-[var(--ig-line)]">
                     @foreach($pending as $req)
-                        <div class="p-6">
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <p class="font-semibold text-gray-900 text-lg">{{ $req->startup->company_name }}</p>
-                                    <p class="text-sm text-gray-500">{{ $req->startup->user->email }}</p>
-                                    <div class="mt-2 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                        <div class="p-6 md:p-8 hover:bg-[var(--ig-bg-2)]/30 transition duration-300">
+                            <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                                <div class="space-y-4 flex-1">
+                                    <div>
+                                        <h3 class="ig-display text-2xl font-bold">{{ $req->startup->company_name }}</h3>
+                                        <p class="ig-mono text-xs text-[var(--ig-muted)] mt-1">{{ $req->startup->user->email ?? 'N/A' }}</p>
+                                    </div>
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-[var(--ig-bg-2)]/60 border border-[var(--ig-line)] rounded-2xl">
                                         <div>
-                                            <span class="text-gray-500">Amount:</span>
-                                            <span class="font-bold text-green-600 ml-1">₹{{ number_format($req->amount, 2) }}</span>
+                                            <p class="text-[9px] text-[var(--ig-muted)] font-mono uppercase tracking-wider font-bold">Amount</p>
+                                            <p class="text-emerald-700 font-bold text-base mt-0.5">₹{{ number_format($req->amount, 2) }}</p>
                                         </div>
                                         <div>
-                                            <span class="text-gray-500">Method:</span>
-                                            <span class="ml-1 capitalize">{{ str_replace('_', ' ', $req->payment_method) }}</span>
+                                            <p class="text-[9px] text-[var(--ig-muted)] font-mono uppercase tracking-wider font-bold">Method</p>
+                                            <p class="text-[var(--ig-ink)] font-bold text-sm mt-0.5 capitalize">{{ str_replace('_', ' ', $req->payment_method) }}</p>
                                         </div>
                                         <div>
-                                            <span class="text-gray-500">Ref:</span>
-                                            <span class="ml-1">{{ $req->transaction_reference ?? '—' }}</span>
+                                            <p class="text-[9px] text-[var(--ig-muted)] font-mono uppercase tracking-wider font-bold">Reference</p>
+                                            <p class="text-[var(--ig-ink)] font-mono font-bold text-sm mt-0.5">{{ $req->transaction_reference ?? '—' }}</p>
                                         </div>
                                         <div>
-                                            <span class="text-gray-500">Current Balance:</span>
-                                            <span class="ml-1 font-medium">₹{{ number_format($req->startup->wallet_balance, 2) }}</span>
+                                            <p class="text-[9px] text-[var(--ig-muted)] font-mono uppercase tracking-wider font-bold">Wallet Balance</p>
+                                            <p class="text-[var(--ig-ink)] font-semibold text-sm mt-0.5">₹{{ number_format($req->startup->wallet_balance, 2) }}</p>
                                         </div>
                                     </div>
                                     @if($req->notes)
-                                        <p class="text-sm text-gray-600 mt-2 italic">"{{ $req->notes }}"</p>
+                                        <div class="p-3 bg-white border border-[var(--ig-line-2)] rounded-xl text-xs text-[var(--ig-ink-2)] italic">
+                                            "{{ $req->notes }}"
+                                        </div>
                                     @endif
-                                    <p class="text-xs text-gray-400 mt-2">Requested {{ $req->created_at->diffForHumans() }}</p>
+                                    <p class="text-[10px] text-[var(--ig-muted)] font-semibold font-mono">Requested: {{ $req->created_at->diffForHumans() }}</p>
                                 </div>
-
-                                <div class="flex gap-2 ml-4">
+                                <div class="flex sm:flex-col gap-2.5 flex-shrink-0 justify-end">
                                     <!-- Approve -->
                                     <form method="POST" action="{{ route('admin.topup.approve', $req->id) }}">
                                         @csrf
                                         <input type="hidden" name="admin_notes" value="Payment verified and credited.">
                                         <button type="submit"
                                             onclick="return confirm('Approve ₹{{ number_format($req->amount, 2) }} for {{ $req->startup->company_name }}?')"
-                                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                                            class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition duration-200 shadow-sm border border-emerald-700 w-full justify-center">
                                             ✓ Approve
                                         </button>
                                     </form>
-
                                     <!-- Reject -->
-                                    <button onclick="openRejectModal({{ $req->id }}, '{{ $req->startup->company_name }}')"
-                                        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                                    <button onclick="openRejectModal({{ $req->id }}, '{{ addslashes($req->startup->company_name) }}')"
+                                        class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition duration-200 shadow-sm border border-red-700 w-full justify-center">
                                         ✗ Reject
                                     </button>
                                 </div>
@@ -82,78 +89,84 @@
         </div>
 
         <!-- Reviewed Requests -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b">
-                <h2 class="text-xl font-semibold">Reviewed Requests</h2>
+        <div class="ig-card p-0 overflow-hidden ig-reveal is-in">
+            <div class="p-6 border-b border-[var(--ig-line)] bg-[var(--ig-bg-2)]">
+                <h2 class="ig-display text-xl">Reviewed Requests</h2>
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full divide-y divide-[var(--ig-line)]">
+                    <thead class="bg-[var(--ig-bg-2)]/60">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reviewed</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider font-mono">Company</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider font-mono">Amount</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider font-mono">Method</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider font-mono">Reference</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider font-mono">Status</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider font-mono">Reviewed</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="divide-y divide-[var(--ig-line)] bg-white">
                         @forelse($reviewed as $req)
-                            <tr>
+                            <tr class="hover:bg-[var(--ig-bg-2)]/30 transition-colors duration-150">
                                 <td class="px-6 py-4">
-                                    <p class="font-medium text-gray-900">{{ $req->startup->company_name }}</p>
-                                    <p class="text-xs text-gray-500">{{ $req->startup->user->email }}</p>
+                                    <p class="font-semibold text-[var(--ig-ink)]">{{ $req->startup->company_name }}</p>
+                                    <p class="text-xs text-[var(--ig-muted)] font-mono">{{ $req->startup->user->email ?? 'N/A' }}</p>
                                 </td>
-                                <td class="px-6 py-4 font-bold text-gray-900">₹{{ number_format($req->amount, 2) }}</td>
-                                <td class="px-6 py-4 capitalize text-sm">{{ str_replace('_', ' ', $req->payment_method) }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-600">{{ $req->transaction_reference ?? '—' }}</td>
+                                <td class="px-6 py-4 font-bold text-[var(--ig-ink)]">₹{{ number_format($req->amount, 2) }}</td>
+                                <td class="px-6 py-4 capitalize text-sm text-[var(--ig-ink-2)]">{{ str_replace('_', ' ', $req->payment_method) }}</td>
+                                <td class="px-6 py-4 text-sm text-[var(--ig-muted)] font-mono">{{ $req->transaction_reference ?? '—' }}</td>
                                 <td class="px-6 py-4">
                                     @if($req->status === 'approved')
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">✓ Approved</span>
+                                        <span class="ig-chip ig-chip-success">Approved</span>
                                     @else
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">✗ Rejected</span>
+                                        <span class="ig-chip ig-chip-danger">Rejected</span>
                                     @endif
                                     @if($req->admin_notes)
-                                        <p class="text-xs text-gray-500 mt-1">{{ $req->admin_notes }}</p>
+                                        <p class="text-xs text-[var(--ig-muted)] mt-1 italic">"{{ $req->admin_notes }}"</p>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-500">
+                                <td class="px-6 py-4 text-sm text-[var(--ig-muted)] font-mono">
                                     {{ $req->reviewed_at ? $req->reviewed_at->format('M d, Y') : '—' }}
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-8 text-center text-gray-500">No reviewed requests yet.</td>
+                                <td colspan="6" class="px-6 py-8 text-center text-[var(--ig-muted)] text-sm font-mono">No reviewed requests yet.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
             @if($reviewed->hasPages())
-                <div class="p-4 border-t">{{ $reviewed->links() }}</div>
+                <div class="p-4 border-t border-[var(--ig-line)] bg-[var(--ig-bg-2)]/30">
+                    {{ $reviewed->links() }}
+                </div>
             @endif
         </div>
     </div>
 
     <!-- Reject Modal -->
-    <div id="rejectModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <h3 class="text-lg font-bold mb-4">Reject Top-up Request</h3>
-            <p class="text-sm text-gray-600 mb-4">Rejecting request for: <span id="reject_company" class="font-semibold"></span></p>
+    <div id="rejectModal" class="hidden fixed inset-0 items-center justify-center bg-[var(--ig-surface-ink)]/60 backdrop-blur-md z-50 p-4">
+        <div class="ig-card max-w-md w-full p-8 bg-white relative ig-anim-scale-in">
+            <h3 class="ig-display text-2xl mb-4 text-[var(--ig-ink)] font-bold">Reject Request</h3>
+            <div class="mb-5 p-3.5 bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-xl">
+                <p class="text-[10px] text-[var(--ig-muted)] uppercase tracking-wider font-mono font-bold">Company Profile</p>
+                <p id="reject_company" class="font-semibold text-sm text-[var(--ig-ink)] mt-0.5"></p>
+            </div>
+            
             <form id="rejectForm" method="POST">
                 @csrf
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Reason for rejection <span class="text-red-500">*</span></label>
+                <div class="mb-6">
+                    <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Reason for Rejection *</label>
                     <textarea name="admin_notes" rows="3" required
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500"
-                        placeholder="e.g., Payment not received, invalid reference number..."></textarea>
+                        class="ig-input"
+                        placeholder="e.g., UPI verification failed, duplicate reference..."></textarea>
                 </div>
-                <div class="flex justify-end gap-2">
+                <div class="flex justify-between mt-8 pt-4 border-t border-[var(--ig-line)]">
                     <button type="button" onclick="closeRejectModal()"
-                        class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded-lg text-sm">Cancel</button>
+                        class="ig-btn ig-btn-ghost px-5 py-2">Cancel</button>
                     <button type="submit"
-                        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Reject</button>
+                        class="ig-btn ig-btn-primary px-5 py-2 bg-red-600 hover:bg-red-700 border-red-600">Reject Request</button>
                 </div>
             </form>
         </div>
@@ -164,9 +177,11 @@
             document.getElementById('reject_company').textContent = company;
             document.getElementById('rejectForm').action = '/admin/topup/' + id + '/reject';
             document.getElementById('rejectModal').classList.remove('hidden');
+            document.getElementById('rejectModal').classList.add('flex');
         }
         function closeRejectModal() {
             document.getElementById('rejectModal').classList.add('hidden');
+            document.getElementById('rejectModal').classList.remove('flex');
         }
     </script>
 </x-app-layout>

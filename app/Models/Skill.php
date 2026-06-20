@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Skill extends Model
 {
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'domain'];
 
     public function students(): BelongsToMany
     {

@@ -1,140 +1,192 @@
 <x-app-layout>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <!-- Dashboard Header -->
-        <div class="mb-10 text-center md:text-left flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-                <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 font-poppins">
-                    Startup Verification Queue 📋
+    <div class="ig-container py-10">
+        <!-- Header -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-end mb-12 ig-anim-fade-up">
+            <div class="md:col-span-8">
+                <p class="ig-eyebrow mb-3">— Validation Queue</p>
+                <h1 class="ig-display text-5xl md:text-7xl leading-[0.95]">
+                    Startup <span class="ig-serif text-[var(--ig-accent)]">Verifications.</span><br>
+                    Business credentials review.
                 </h1>
-                <p class="text-gray-600 text-lg mt-1">Review official credentials and approve or reject startup registration requests.</p>
             </div>
-            <div>
-                <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center space-x-2 bg-white/80 hover:bg-white border border-purple-100 text-gray-750 px-5 py-2.5 rounded-xl font-bold shadow-md transition duration-300">
-                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    <span>Back to Dashboard</span>
+            <div class="md:col-span-4 md:text-right">
+                <a href="{{ route('admin.dashboard') }}" class="ig-btn ig-btn-ghost">
+                    <span>← Dashboard</span>
                 </a>
             </div>
         </div>
 
-        @if(session('success'))
-            <div class="mb-8 p-5 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 text-green-800 rounded-xl shadow-lg flex items-center justify-between animate-slide-down">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-green-500 text-white rounded-full p-1.5">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                    </div>
-                    <p class="font-semibold text-base">{{ session('success') }}</p>
-                </div>
-                <button onclick="this.parentElement.remove()" class="text-green-600 hover:text-green-800 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        @endif
 
-        <!-- Grid Layout for Pending and Recent reviews -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Pending Requests Queue (Col span 2) -->
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white/80 backdrop-blur-lg border border-purple-100 rounded-3xl shadow-xl overflow-hidden">
-                    <div class="p-6 border-b border-purple-55 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-gray-900 font-poppins flex items-center space-x-2">
-                            <span>Pending Reviews</span>
-                            <span class="bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">{{ $pendingVerifications->count() }}</span>
+        <!-- Grid Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 ig-reveal">
+            <!-- Pending Reviews Queue (Col span 8) -->
+            <div class="lg:col-span-8 space-y-6">
+                <div class="ig-card p-0 overflow-hidden">
+                    <div class="p-6 border-b border-[var(--ig-line)] flex justify-between items-center bg-[var(--ig-bg-2)]">
+                        <h2 class="ig-display text-xl flex items-center space-x-2">
+                            <span>Pending Reviews Queue</span>
+                            <span class="ml-2 ig-chip ig-chip-accent">{{ $pendingVerifications->count() }}</span>
                         </h2>
                     </div>
 
-                    <div class="divide-y divide-purple-50">
+                    <div class="divide-y divide-[var(--ig-line)]">
                         @forelse($pendingVerifications as $startup)
-                            <div class="p-6 md:p-8 hover:bg-indigo-50/10 transition duration-300">
-                                <!-- Startup Profile Details Header -->
+                            <div class="p-6 md:p-8 hover:bg-[var(--ig-bg-2)]/40 transition duration-300">
+                                <!-- Startup Header -->
                                 <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
                                     <div>
-                                        <h3 class="text-2xl font-bold text-gray-900 font-poppins">{{ $startup->company_name }}</h3>
-                                        <p class="text-gray-500 font-medium text-sm flex items-center mt-1">
-                                            <svg class="w-4 h-4 mr-1 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <h3 class="ig-display text-2xl font-bold">{{ $startup->company_name }}</h3>
+                                        <p class="ig-mono text-xs text-[var(--ig-muted)] mt-1 flex items-center">
+                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                             </svg>
                                             <span>{{ $startup->user->email }}</span>
                                         </p>
                                         @if($startup->verification_submitted_at)
-                                            <p class="text-xs text-gray-400 mt-2 font-semibold">
-                                                Submitted: {{ $startup->verification_submitted_at->format('M d, Y H:i') }}
+                                            <p class="text-[10px] text-[var(--ig-muted)] font-semibold mt-1">
+                                                Submitted: {{ $startup->verification_submitted_at->format('M d, Y @ H:i') }}
                                             </p>
                                         @endif
                                     </div>
                                     <div>
-                                        <span class="inline-flex items-center px-3 py-1 text-xs font-bold rounded-full bg-yellow-150 text-yellow-800 border border-yellow-250 animate-pulse-slow">
-                                            ● Awaiting Verification
-                                        </span>
+                                        @if($startup->is_suspicious)
+                                            <span class="ig-chip ig-chip-accent">🚨 Flagged Suspicious</span>
+                                        @else
+                                            <span class="ig-chip" style="background: rgba(245, 158, 11, 0.1); color: #F59E0B; border-color: rgba(245, 158, 11, 0.2)">● Awaiting Review</span>
+                                        @endif
                                     </div>
                                 </div>
 
-                                <!-- Grid Parameters -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-5 bg-purple-50/30 rounded-2xl border border-purple-100/50">
+                                <!-- AI Insights Card -->
+                                @if($startup->ai_confidence_score !== null || $startup->ai_verification_result)
+                                    @php
+                                        $aiResult = $startup->ai_verification_result ?? [];
+                                        $level = $startup->verification_level ?? 'C';
+                                        $score = $startup->ai_confidence_score ?? 0;
+                                        $fraudScore = $aiResult['fraud_score'] ?? 0;
+                                        $fraudFlags = $aiResult['fraud_flags'] ?? [];
+                                        $reason = $aiResult['reason'] ?? '';
+                                        
+                                        $priorityNum = 5;
+                                        if ($level === 'A') $priorityNum = 1;
+                                        elseif ($level === 'B') $priorityNum = 2;
+                                        elseif ($level === 'C') $priorityNum = 3;
+                                        elseif ($level === 'D') $priorityNum = 4;
+                                        if (in_array('duplicate_company_details', $fraudFlags) || (isset($aiResult['security_flags']) && in_array('duplicate_company_details', $aiResult['security_flags']))) {
+                                            $priorityNum = 4;
+                                        }
+                                        
+                                        $fraudScoreColor = $fraudScore >= 65 ? 'text-red-400' : ($fraudScore >= 25 ? 'text-amber-400' : 'text-[var(--ig-lime)]');
+                                    @endphp
+
+                                    <div class="mb-6 bg-[#0f1217] text-white rounded-2xl p-5 border border-white/10 relative overflow-hidden group">
+                                        <div class="absolute -top-16 -right-16 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all duration-500"></div>
+                                        
+                                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 relative z-10">
+                                            <div>
+                                                <div class="flex flex-wrap gap-2 items-center">
+                                                    <span class="text-[9px] bg-white/10 text-indigo-300 font-extrabold px-2 py-0.5 rounded border border-white/10 uppercase tracking-wider">Priority {{ $priorityNum }}</span>
+                                                    
+                                                    @if($level === 'A')
+                                                        <span class="text-[9px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-500/20">🟢 LEVEL A (Pre-Approved)</span>
+                                                    @elseif($level === 'B')
+                                                        <span class="text-[9px] bg-blue-500/20 text-blue-300 font-bold px-2 py-0.5 rounded border border-blue-500/20">🟡 LEVEL B (High Conf)</span>
+                                                    @elseif($level === 'C')
+                                                        <span class="text-[9px] bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded border border-amber-500/20">🟠 LEVEL C (Med Conf)</span>
+                                                    @else
+                                                        <span class="text-[9px] bg-rose-500/20 text-rose-300 font-bold px-2 py-0.5 rounded border border-rose-500/20">🔴 LEVEL D (Low Match)</span>
+                                                    @endif
+
+                                                    @if(in_array('duplicate_company_details', $fraudFlags) || (isset($aiResult['security_flags']) && in_array('duplicate_company_details', $aiResult['security_flags'])))
+                                                        <span class="text-[9px] bg-red-600 text-white font-extrabold px-2 py-0.5 rounded border border-red-500 animate-pulse">⚠️ DUPLICATE GST/CIN</span>
+                                                    @endif
+                                                </div>
+                                                <p class="text-xs text-slate-300 mt-2 font-mono leading-relaxed">
+                                                    <strong>AI Verdict:</strong> {{ $reason }}
+                                                </p>
+                                            </div>
+
+                                            <div class="flex gap-4 flex-shrink-0 relative z-10 text-center">
+                                                <div>
+                                                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Match Score</span>
+                                                    <span class="text-[var(--ig-lime)] font-bold text-lg">{{ $score }}/100</span>
+                                                </div>
+                                                <div>
+                                                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Fraud Index</span>
+                                                    <span class="font-bold text-lg {{ $fraudScoreColor }}">{{ $fraudScore }}/100</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @if(!empty($fraudFlags))
+                                            <div class="border-t border-white/10 pt-3 flex items-center space-x-2 relative z-10">
+                                                <span class="text-[9px] text-rose-300 font-bold uppercase tracking-wider">Fraud Flags:</span>
+                                                <div class="flex flex-wrap gap-1.5">
+                                                    @foreach($fraudFlags as $flag)
+                                                        <span class="text-[8px] bg-rose-500/20 text-rose-300 border border-rose-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">
+                                                            {{ str_replace('_', ' ', $flag) }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                <!-- Info Parameter Fields -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-5 bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-2xl">
                                     <div>
-                                        <p class="text-xs font-bold text-indigo-500 uppercase tracking-wider">Registration Number</p>
-                                        <p class="text-sm font-bold text-gray-800 mt-1 font-mono">{{ $startup->company_registration_number }}</p>
+                                        <p class="text-[9px] font-bold text-[var(--ig-muted)] uppercase tracking-wider">Registration Number</p>
+                                        <p class="text-sm font-semibold text-[var(--ig-ink)] mt-1 font-mono">{{ $startup->company_registration_number }}</p>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-bold text-indigo-500 uppercase tracking-wider">GSTIN</p>
-                                        <p class="text-sm font-bold text-gray-800 mt-1 font-mono">{{ $startup->gst_number ?? 'Not Provided' }}</p>
+                                        <p class="text-[9px] font-bold text-[var(--ig-muted)] uppercase tracking-wider">GSTIN</p>
+                                        <p class="text-sm font-semibold text-[var(--ig-ink)] mt-1 font-mono">{{ $startup->gst_number ?? 'Not Provided' }}</p>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-bold text-indigo-500 uppercase tracking-wider">Phone Number</p>
-                                        <p class="text-sm font-bold text-gray-850 mt-1">{{ $startup->contact_phone }}</p>
+                                        <p class="text-[9px] font-bold text-[var(--ig-muted)] uppercase tracking-wider">Contact Phone</p>
+                                        <p class="text-sm font-semibold text-[var(--ig-ink)] mt-1">{{ $startup->contact_phone }}</p>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-bold text-indigo-500 uppercase tracking-wider">Website URL</p>
-                                        <p class="text-sm font-bold mt-1">
+                                        <p class="text-[9px] font-bold text-[var(--ig-muted)] uppercase tracking-wider">Website URL</p>
+                                        <p class="text-sm font-semibold mt-1">
                                             @if($startup->website)
-                                                <a href="{{ $startup->website }}" target="_blank" class="text-indigo-650 hover:underline inline-flex items-center space-x-0.5">
+                                                <a href="{{ $startup->website }}" target="_blank" class="text-[var(--ig-accent)] hover:underline inline-flex items-center space-x-0.5">
                                                     <span>{{ $startup->website }}</span>
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                                    </svg>
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                                 </a>
                                             @else
-                                                <span class="text-gray-400 font-normal">Not Provided</span>
+                                                <span class="text-[var(--ig-muted)] font-normal">Not Provided</span>
                                             @endif
                                         </p>
                                     </div>
-                                    <div class="col-span-1 md:col-span-2 border-t border-purple-100/50 pt-3 mt-1">
-                                        <p class="text-xs font-bold text-indigo-500 uppercase tracking-wider">Registered Address</p>
-                                        <p class="text-sm text-gray-800 mt-1 leading-relaxed">{{ $startup->company_address }}</p>
+                                    <div class="col-span-1 md:col-span-2 border-t border-[var(--ig-line)] pt-3 mt-1">
+                                        <p class="text-[9px] font-bold text-[var(--ig-muted)] uppercase tracking-wider">Registered Address</p>
+                                        <p class="text-xs text-[var(--ig-ink-2)] mt-1 leading-relaxed">{{ $startup->company_address }}</p>
                                     </div>
                                 </div>
 
                                 <!-- Documents Section -->
                                 @if($startup->verification_documents && count($startup->verification_documents) > 0)
                                     <div class="mb-6">
-                                        <p class="text-sm font-bold text-gray-800 mb-3">Submitted Evidence Documents:</p>
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            @foreach($startup->verification_documents as $doc)
-                                                <div class="flex items-center justify-between bg-white border border-purple-100 p-4 rounded-xl shadow-sm hover:shadow transition duration-200">
+                                        <p class="text-xs font-bold text-[var(--ig-ink)] mb-3 uppercase tracking-wider">Evidence Files:</p>
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            @foreach($startup->verification_documents as $key => $doc)
+                                                <div class="flex items-center justify-between bg-[var(--ig-bg-2)] border border-[var(--ig-line)] p-4 rounded-xl shadow-sm hover:border-[var(--ig-ink)] transition-colors duration-200">
                                                     <div class="flex items-center space-x-3 min-w-0">
-                                                        <div class="bg-indigo-50 text-indigo-600 p-2.5 rounded-lg">
-                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <div class="bg-[var(--ig-accent-soft)]/20 text-[var(--ig-accent)] p-2.5 rounded-lg flex-shrink-0">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                                             </svg>
                                                         </div>
                                                         <div class="truncate">
-                                                            <p class="text-xs font-bold text-gray-850 truncate" title="{{ $doc['name'] }}">{{ $doc['name'] }}</p>
-                                                            <p class="text-[10px] text-gray-400 font-mono mt-0.5">{{ number_format($doc['size'] / 1024, 1) }} KB</p>
+                                                            <span class="text-[9px] text-[var(--ig-muted)] font-bold uppercase tracking-wider block">{{ $key === 'supporting_document' ? 'DIRECTORS ID PROOF' : str_replace('_', ' ', $key) }}</span>
+                                                            <p class="text-xs font-bold text-[var(--ig-ink)] truncate mt-0.5" title="{{ $doc['name'] }}">{{ $doc['name'] }}</p>
                                                         </div>
                                                     </div>
-                                                    <div class="flex space-x-2 flex-shrink-0">
-                                                        <a href="{{ asset('storage/' . $doc['path']) }}" target="_blank" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-650 px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
-                                                            View
-                                                        </a>
-                                                        <a href="{{ asset('storage/' . $doc['path']) }}" download="{{ $doc['name'] }}" class="bg-gray-150 hover:bg-gray-200 text-gray-700 px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
-                                                            Get
-                                                        </a>
-                                                    </div>
+                                                    <a href="{{ asset('storage/' . $doc['path']) }}" target="_blank" class="bg-[var(--ig-bg)] border border-[var(--ig-line-2)] hover:border-[var(--ig-ink)] text-xs font-bold px-2.5 py-1 rounded transition flex-shrink-0 ml-2">
+                                                        View
+                                                    </a>
                                                 </div>
                                             @endforeach
                                         </div>
@@ -142,30 +194,42 @@
                                 @endif
 
                                 <!-- Decision Controls -->
-                                <div class="flex gap-4">
-                                    <button onclick="toggleDecisionForm('approve', {{ $startup->id }})" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:shadow-md hover:shadow-green-100 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition duration-200">
+                                <div class="flex flex-wrap gap-3 items-center">
+                                    <button onclick="toggleDecisionForm('approve', {{ $startup->id }})" class="ig-btn ig-btn-lime">
                                         ✓ Approve Application
                                     </button>
-                                    <button onclick="toggleDecisionForm('reject', {{ $startup->id }})" class="bg-gradient-to-r from-red-500 to-rose-600 hover:shadow-md hover:shadow-red-100 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition duration-200">
+                                    <button onclick="toggleDecisionForm('reject', {{ $startup->id }})" class="ig-btn ig-btn-ghost text-red-600 border-red-200/50 hover:bg-red-50 hover:border-red-500">
                                         ✗ Reject with Notes
                                     </button>
+
+                                    <!-- Toggle Suspicious Button -->
+                                    <form method="POST" action="{{ route('admin.verifications.toggle-suspicious', $startup->id) }}" class="inline-block">
+                                        @csrf
+                                        @if($startup->is_suspicious)
+                                            <button type="submit" class="ig-btn ig-btn-ghost text-amber-700 border-amber-300 hover:bg-amber-50">
+                                                Clear Flag
+                                            </button>
+                                        @else
+                                            <button type="submit" class="ig-btn ig-btn-ghost text-[var(--ig-muted)] border-[var(--ig-line-2)] hover:text-red-600 hover:border-red-500">
+                                                Flag Suspicious
+                                            </button>
+                                        @endif
+                                    </form>
                                 </div>
 
                                 <!-- Inline Approval Form -->
-                                <div id="approve-panel-{{ $startup->id }}" class="hidden mt-4 p-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-200 animate-slide-down">
+                                <div id="approve-panel-{{ $startup->id }}" class="hidden mt-4 p-5 bg-[var(--ig-lime-soft)]/20 border border-[var(--ig-lime)]/30 rounded-2xl transition duration-300">
                                     <form method="POST" action="{{ route('admin.verifications.approve', $startup->id) }}">
                                         @csrf
-                                        <p class="text-sm font-bold text-green-850 mb-3">
-                                            Confirm Startup Approval:
-                                        </p>
-                                        <p class="text-xs text-green-700 leading-relaxed mb-4">
-                                            This grants verification credentials to <strong>{{ $startup->company_name }}</strong>. They will be immediately unlocked to post internship tasks, search student candidate ledgers, and extend job offers.
+                                        <p class="text-sm font-bold text-green-900 mb-2">Confirm Startup Approval:</p>
+                                        <p class="text-xs text-green-800 leading-relaxed mb-4">
+                                            This grants verification credentials to <strong>{{ $startup->company_name }}</strong>. They will be immediately unlocked to post tasks, view student CVs, and issue offers. Initial Trust Score will start at <strong>50/100</strong>.
                                         </p>
                                         <div class="flex gap-3">
-                                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow transition">
+                                            <button type="submit" class="ig-btn ig-btn-lime">
                                                 Confirm Approval
                                             </button>
-                                            <button type="button" onclick="toggleDecisionForm('approve', {{ $startup->id }}, true)" class="bg-white hover:bg-gray-50 border border-green-200 text-green-800 px-4 py-2 rounded-xl text-xs font-bold transition">
+                                            <button type="button" onclick="toggleDecisionForm('approve', {{ $startup->id }}, true)" class="ig-btn ig-btn-ghost">
                                                 Cancel
                                             </button>
                                         </div>
@@ -173,80 +237,130 @@
                                 </div>
 
                                 <!-- Inline Rejection Form -->
-                                <div id="reject-panel-{{ $startup->id }}" class="hidden mt-4 p-5 bg-gradient-to-r from-red-50 to-rose-50 rounded-2xl border border-red-200 animate-slide-down">
+                                <div id="reject-panel-{{ $startup->id }}" class="hidden mt-4 p-5 bg-[var(--ig-accent-soft)]/20 border border-[var(--ig-accent-soft)] rounded-2xl transition duration-300">
                                     <form method="POST" action="{{ route('admin.verifications.reject', $startup->id) }}">
                                         @csrf
-                                        <label class="block text-sm font-bold text-red-850 mb-2">Rejection Feedback Notes (Required)</label>
-                                        <p class="text-xs text-red-700 mb-3">Provide a detailed explanation. This note will guide the founder on what edits or document qualities are required to resubmit.</p>
+                                        <label class="block text-sm font-bold text-red-900 mb-1">Rejection Feedback Notes (Required)</label>
+                                        <p class="text-xs text-red-800 mb-3">Provide a clear description so the founder knows what files or credentials to fix and re-submit.</p>
                                         
-                                        <textarea name="notes" rows="3" required class="w-full border-red-200 focus:ring-red-500 focus:border-red-500 rounded-xl mb-4 text-sm px-4 py-3 placeholder-red-350" placeholder="e.g. The company registration document uploaded is blurry. Please upload a clear scan."></textarea>
+                                        <textarea name="notes" rows="3" required class="ig-input w-full p-3 mb-4" placeholder="e.g. GSTIN certificate is cropped. Please re-upload full scan."></textarea>
                                         
                                         <div class="flex gap-3">
-                                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow transition">
+                                            <button type="submit" class="ig-btn ig-btn-accent">
                                                 Confirm Rejection
                                             </button>
-                                            <button type="button" onclick="toggleDecisionForm('reject', {{ $startup->id }}, true)" class="bg-white hover:bg-gray-50 border border-red-200 text-red-800 px-4 py-2 rounded-xl text-xs font-bold transition">
+                                            <button type="button" onclick="toggleDecisionForm('reject', {{ $startup->id }}, true)" class="ig-btn ig-btn-ghost">
                                                 Cancel
                                             </button>
                                         </div>
                                     </form>
                                 </div>
+
+                                <!-- Logs History / Audit Trail -->
+                                @if($startup->verificationLogs && $startup->verificationLogs->count() > 0)
+                                    <div class="mt-6 border-t border-[var(--ig-line)] pt-4">
+                                        <button onclick="toggleLogs({{ $startup->id }})" class="text-[var(--ig-accent)] hover:underline font-bold text-xs flex items-center space-x-1 focus:outline-none">
+                                            <svg id="logs-arrow-{{ $startup->id }}" class="w-4 h-4 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                            </svg>
+                                            <span>View Audit Trail / History ({{ $startup->verificationLogs->count() }})</span>
+                                        </button>
+                                        
+                                        <div id="logs-content-{{ $startup->id }}" class="hidden mt-3 space-y-2.5 pl-4 border-l-2 border-[var(--ig-line-2)]">
+                                            @foreach($startup->verificationLogs->sortByDesc('created_at') as $log)
+                                                <div class="text-[11px] bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-xl p-3">
+                                                    <div class="flex items-center justify-between text-[9px] text-[var(--ig-muted)] font-bold mb-1 uppercase tracking-wider">
+                                                        <span>Action: {{ str_replace('_', ' ', $log->action) }}</span>
+                                                        <span>{{ $log->created_at->format('M d, Y H:i') }}</span>
+                                                    </div>
+                                                    <div class="flex items-center justify-between mt-1">
+                                                        <p class="text-[var(--ig-ink-2)]"><span class="font-bold">By:</span> <span class="capitalize text-[var(--ig-accent)] font-semibold">{{ $log->performed_by }}</span></p>
+                                                        <p class="text-[var(--ig-muted)] font-mono text-[9px]"><span class="font-sans font-bold">Status:</span> {{ $log->old_status ?? 'none' }} ➔ {{ $log->new_status }}</p>
+                                                    </div>
+                                                    @if($log->reason)
+                                                        <p class="text-[var(--ig-ink-2)] italic mt-1.5 bg-[var(--ig-bg)] p-2 rounded-lg border border-[var(--ig-line-2)] leading-relaxed">
+                                                            "{{ $log->reason }}"
+                                                        </p>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
                             </div>
                         @empty
                             <div class="p-16 text-center">
-                                <div class="w-16 h-16 bg-purple-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
-                                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-16 h-16 bg-[var(--ig-lime-soft)] rounded-2xl flex items-center justify-center mx-auto mb-4 border border-[var(--ig-lime)]/20">
+                                    <svg class="h-8 w-8 text-[var(--ig-lime-deep)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
                                 </div>
-                                <h3 class="text-lg font-bold text-gray-800 font-poppins">Verification Queue Clear</h3>
-                                <p class="text-gray-500 text-sm mt-1">There are no pending startup verification requests to review at this time.</p>
+                                <h3 class="ig-display text-2xl font-bold">Queue is Clear 🎉</h3>
+                                <p class="text-xs text-[var(--ig-muted)] mt-1">No startups are currently awaiting manual verification.</p>
                             </div>
                         @endforelse
                     </div>
                 </div>
             </div>
 
-            <!-- Recently Reviewed Panel (Col span 1) -->
-            <div class="space-y-6">
-                <div class="bg-white/80 backdrop-blur-lg border border-purple-100 rounded-3xl shadow-xl overflow-hidden">
-                    <div class="p-6 border-b border-purple-55 bg-gradient-to-r from-pink-50/50 to-purple-50/50">
-                        <h2 class="text-lg font-bold text-gray-900 font-poppins flex items-center space-x-2">
-                            <span>Recent Decisions</span>
-                        </h2>
+            <!-- Recently Reviewed Panel (Col span 4) -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="ig-card p-0 overflow-hidden">
+                    <div class="p-6 border-b border-[var(--ig-line)] bg-[var(--ig-bg-2)]">
+                        <h2 class="ig-display text-lg font-bold">Recent Decisions</h2>
                     </div>
 
-                    <div class="divide-y divide-purple-50">
+                    <div class="divide-y divide-[var(--ig-line)]">
                         @forelse($recentlyReviewed as $startup)
-                            <div class="p-5 hover:bg-gray-50/50 transition duration-200">
-                                <div class="flex items-start justify-between mb-2">
-                                    <h4 class="font-bold text-gray-850 text-sm truncate font-poppins" title="{{ $startup->company_name }}">{{ $startup->company_name }}</h4>
+                            <div class="p-5 hover:bg-[var(--ig-bg-2)]/30 transition duration-200">
+                                <div class="flex items-start justify-between gap-2 mb-2">
+                                    <h4 class="font-bold text-[var(--ig-ink)] text-sm truncate" title="{{ $startup->company_name }}">{{ $startup->company_name }}</h4>
                                     
                                     @if($startup->verification_status === 'approved')
-                                        <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full bg-green-100 text-green-800 border border-green-200">
-                                            Approved
-                                        </span>
+                                        <span class="ig-chip ig-chip-lime" style="font-size: 8.5px; padding: 1.5px 6px;">Approved</span>
                                     @else
-                                        <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full bg-red-100 text-red-800 border border-red-200">
-                                            Rejected
-                                        </span>
+                                        <span class="ig-chip ig-chip-accent" style="font-size: 8.5px; padding: 1.5px 6px;">Rejected</span>
                                     @endif
                                 </div>
-                                <p class="text-xs text-gray-500 truncate">{{ $startup->user->email }}</p>
+                                <p class="text-xs text-[var(--ig-muted)] truncate">{{ $startup->user->email }}</p>
                                 
                                 @if($startup->verification_reviewed_at)
-                                    <p class="text-[10px] text-gray-400 mt-2 font-medium">Reviewed: {{ $startup->verification_reviewed_at->format('M d, H:i') }}</p>
+                                    <p class="text-[9px] text-[var(--ig-muted)] mt-2 font-semibold">Reviewed: {{ $startup->verification_reviewed_at->format('M d @ H:i') }}</p>
+                                @endif
+
+                                @if($startup->verification_status === 'approved' && $startup->startup_trust_score !== null)
+                                    <div class="mt-2 bg-[var(--ig-lime-soft)]/20 border border-[var(--ig-lime)]/20 p-2 rounded-xl text-xs flex justify-between items-center">
+                                        <span class="text-[var(--ig-lime-deep)] font-bold">Trust Score:</span>
+                                        <span class="bg-[var(--ig-lime-deep)] text-white font-extrabold px-2 py-0.5 rounded-lg text-[10px]">{{ $startup->startup_trust_score }}</span>
+                                    </div>
                                 @endif
 
                                 @if($startup->verification_notes)
-                                    <div class="mt-3 p-3 bg-red-50/40 rounded-xl border border-red-100">
-                                        <p class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Feedback notes:</p>
-                                        <p class="text-xs text-red-850 mt-1 italic leading-relaxed">"{{ Str::limit($startup->verification_notes, 80) }}"</p>
+                                    <div class="mt-3 p-3 bg-[var(--ig-accent-soft)]/10 rounded-xl border border-[var(--ig-accent-soft)]">
+                                        <p class="text-[9px] font-bold text-[var(--ig-accent)] uppercase tracking-wider">Feedback Notes:</p>
+                                        <p class="text-xs text-[var(--ig-ink-2)] mt-1 italic leading-relaxed">"{{ Str::limit($startup->verification_notes, 80) }}"</p>
                                     </div>
                                 @endif
+
+                                <!-- Suspicious Toggler -->
+                                <div class="mt-3">
+                                    <form method="POST" action="{{ route('admin.verifications.toggle-suspicious', $startup->id) }}" class="block w-full">
+                                        @csrf
+                                        @if($startup->is_suspicious)
+                                            <button type="submit" class="w-full ig-btn ig-btn-ghost justify-center text-center text-amber-700 border-amber-300 hover:bg-amber-50" style="padding: 6px 12px; font-size: 11px;">
+                                                Clear Suspicious
+                                            </button>
+                                        @else
+                                            <button type="submit" class="w-full ig-btn ig-btn-ghost justify-center text-center border-[var(--ig-line-2)] hover:border-red-500 hover:text-red-600" style="padding: 6px 12px; font-size: 11px;">
+                                                Flag Suspicious
+                                            </button>
+                                        @endif
+                                    </form>
+                                </div>
                             </div>
                         @empty
-                            <div class="p-8 text-center text-gray-500 text-sm">
+                            <div class="p-8 text-center text-[var(--ig-muted)] text-sm">
                                 No recently reviewed verifications
                             </div>
                         @endforelse
@@ -256,7 +370,7 @@
         </div>
     </div>
 
-    <!-- Toggle logic for panel triggers -->
+    <!-- Toggle scripts -->
     <script>
         function toggleDecisionForm(action, startupId, forceClose = false) {
             const approvePanel = document.getElementById(`approve-panel-${startupId}`);
@@ -274,6 +388,15 @@
             } else {
                 rejectPanel.classList.toggle('hidden');
                 approvePanel.classList.add('hidden');
+            }
+        }
+
+        function toggleLogs(startupId) {
+            const content = document.getElementById(`logs-content-${startupId}`);
+            const arrow = document.getElementById(`logs-arrow-${startupId}`);
+            if (content) {
+                content.classList.toggle('hidden');
+                arrow.classList.toggle('rotate-180');
             }
         }
     </script>

@@ -1,176 +1,182 @@
 <x-app-layout>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="ig-container">
         <!-- Header -->
-        <div class="mb-8 flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">My Analytics & CV Builder</h1>
-                <p class="text-gray-600 mt-1">Track your progress and build your professional CV</p>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-end mb-12 ig-anim-fade-up">
+            <div class="md:col-span-8">
+                <p class="ig-eyebrow mb-3">— Analytics & Resume Studio</p>
+                <h1 class="ig-display text-5xl md:text-7xl leading-[0.95]">
+                    Performance <span class="ig-serif text-[var(--ig-accent)]">Metrics.</span><br>
+                    Track your growth & print receipts.
+                </h1>
             </div>
-            <a href="{{ route('student.cv.download') }}" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-semibold flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                Download CV
-            </a>
+            <div class="md:col-span-4 md:text-right">
+                <a href="{{ route('student.cv.download') }}" class="ig-btn ig-btn-primary">
+                    <svg class="w-4.5 h-4.5" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Download CV</span>
+                    <span class="arrow">→</span>
+                </a>
+            </div>
         </div>
 
         <!-- Stats Overview -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between mb-2">
-                    <h3 class="text-sm font-medium opacity-90">Tasks Completed</h3>
-                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <p class="text-4xl font-bold">{{ $analytics['completed_tasks'] }}</p>
-                <p class="text-xs mt-2 opacity-75">{{ $analytics['pending_tasks'] }} in progress</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12 ig-anim-fade-up ig-delay-1">
+            <div class="ig-card p-6">
+                <p class="ig-eyebrow mb-1">Tasks Completed</p>
+                <p class="ig-stat-num text-4xl mt-3" data-counter="{{ $analytics['completed_tasks'] }}">0</p>
+                <p class="ig-mono text-[10px] text-[var(--ig-muted)] mt-2">{{ $analytics['pending_tasks'] }} in progress</p>
             </div>
 
-            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between mb-2">
-                    <h3 class="text-sm font-medium opacity-90">Current Points</h3>
-                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <p class="text-4xl font-bold">{{ number_format($profile->wallet->balance ?? 0) }}</p>
-                <p class="text-xs mt-2 opacity-75">{{ number_format($totalPoints) }} earned total</p>
+            <div class="ig-card p-6">
+                <p class="ig-eyebrow mb-1">Current Points</p>
+                <p class="ig-stat-num text-4xl mt-3" data-counter="{{ (int)($profile->wallet->balance ?? 0) }}">0</p>
+                <p class="ig-mono text-[10px] text-[var(--ig-muted)] mt-2">{{ number_format($totalPoints) }} earned total</p>
             </div>
 
-            <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between mb-2">
-                    <h3 class="text-sm font-medium opacity-90">Wallet Balance</h3>
-                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                    </svg>
-                </div>
-                <p class="text-4xl font-bold">₹{{ number_format($profile->wallet_balance, 2) }}</p>
-                <p class="text-xs mt-2 opacity-75">₹{{ number_format($analytics['total_stipend'], 2) }} earned from tasks</p>
+            <div class="ig-card p-6">
+                <p class="ig-eyebrow mb-1">Stipend Earnings</p>
+                <p class="ig-display text-3xl mt-3">₹{{ number_format($profile->wallet_balance, 0) }}</p>
+                <p class="ig-mono text-[10px] text-[var(--ig-muted)] mt-2">₹{{ number_format($analytics['total_stipend'], 0) }} total stipend</p>
             </div>
 
-            <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between mb-2">
-                    <h3 class="text-sm font-medium opacity-90">Avg Rating</h3>
-                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                    </svg>
-                </div>
-                <p class="text-4xl font-bold">{{ number_format($analytics['avg_rating'], 1) }}</p>
-                <p class="text-xs mt-2 opacity-75">Out of 5.0 stars</p>
+            <div class="ig-card p-6">
+                <p class="ig-eyebrow mb-1">Average Rating</p>
+                <p class="ig-display text-4xl mt-3">
+                    {{ number_format($analytics['avg_rating'], 1) }}
+                    <span class="text-xs text-[var(--ig-muted)] font-normal">/ 5.0</span>
+                </p>
+                <p class="ig-mono text-[10px] text-[var(--ig-muted)] mt-2">Based on founder reviews</p>
             </div>
         </div>
 
-        <!-- Charts Row -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <!-- Skills Distribution -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Skills & Expertise</h3>
-                <div class="space-y-4">
-                    @foreach($analytics['skills_stats'] as $skill)
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
+            <!-- Skills & Expertise -->
+            <div class="lg:col-span-6 ig-card p-8 ig-reveal">
+                <h3 class="ig-display text-2xl mb-8 pb-4 border-b border-[var(--ig-line)]">Skills & Expertise</h3>
+                <div class="space-y-5">
+                    @forelse($analytics['skills_stats'] as $skill)
                         <div>
-                            <div class="flex justify-between mb-1">
-                                <span class="text-sm font-medium text-gray-700">{{ $skill['name'] }}</span>
-                                <span class="text-sm text-gray-500">{{ $skill['count'] }} tasks</span>
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="font-semibold text-sm text-[var(--ig-ink)]">{{ $skill['name'] }}</span>
+                                <span class="ig-mono text-xs text-[var(--ig-muted)]">{{ $skill['count'] }} tasks</span>
                             </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-indigo-600 h-2 rounded-full" style="width: {{ $skill['percentage'] }}%"></div>
+                            <div class="w-full bg-[var(--ig-bg-2)] rounded-full h-1.5 overflow-hidden">
+                                <div class="bg-[var(--ig-accent)] h-full rounded-full" style="width: {{ $skill['percentage'] }}%"></div>
                             </div>
                         </div>
-                    @endforeach
+                    @empty
+                        <p class="text-sm text-[var(--ig-muted)]">No skill statistics available yet.</p>
+                    @endforelse
                 </div>
             </div>
 
             <!-- Performance Metrics -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Performance Metrics</h3>
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                        <div>
-                            <p class="text-sm text-gray-600">Success Rate</p>
-                            <p class="text-2xl font-bold text-green-600">{{ $analytics['success_rate'] }}%</p>
-                        </div>
-                        <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                        </svg>
+            <div class="lg:col-span-6 ig-card p-8 ig-reveal" data-reveal-delay="100">
+                <h3 class="ig-display text-2xl mb-8 pb-4 border-b border-[var(--ig-line)]">Efficiency Signals</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="p-5 border border-[var(--ig-line)] rounded-2xl">
+                        <p class="ig-eyebrow mb-1">Success Rate</p>
+                        <p class="ig-stat-num text-3xl mt-2 text-[var(--ig-ink)]">{{ $analytics['success_rate'] }}%</p>
+                        <p class="text-[11px] text-[var(--ig-muted)] mt-2">Completed vs accepted tasks</p>
                     </div>
-                    
-                    <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-                        <div>
-                            <p class="text-sm text-gray-600">Reliability Score</p>
-                            <p class="text-2xl font-bold text-blue-600">{{ number_format($profile->reliability_score * 100, 0) }}%</p>
-                        </div>
-                        <svg class="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
-                        </svg>
+
+                    <div class="p-5 border border-[var(--ig-line)] rounded-2xl">
+                        <p class="ig-eyebrow mb-1">Reliability Score</p>
+                        <p class="ig-stat-num text-3xl mt-2 text-[var(--ig-ink)]">{{ number_format($profile->reliability_score * 100, 0) }}%</p>
+                        <p class="text-[11px] text-[var(--ig-muted)] mt-2">On-time shipping indicator</p>
                     </div>
-                    
-                    <div class="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+
+                    <div class="p-5 border border-[var(--ig-line)] rounded-2xl sm:col-span-2 flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600">Active Applications</p>
-                            <p class="text-2xl font-bold text-purple-600">{{ $analytics['active_applications'] }}</p>
+                            <p class="ig-eyebrow mb-1">Active Applications</p>
+                            <p class="ig-stat-num text-3xl mt-2 text-[var(--ig-ink)]">{{ $analytics['active_applications'] }}</p>
                         </div>
-                        <svg class="w-12 h-12 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                        </svg>
+                        <span class="ig-chip ig-chip-accent">In Review</span>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Domain-Specific Analytics -->
+        <div class="ig-card p-8 mb-12 ig-reveal">
+            <h3 class="ig-display text-2xl mb-8 pb-4 border-b border-[var(--ig-line)]">Domain-Specific Reputation & Projects</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach(\App\Models\StudentProfile::$domains as $domainName => $roles)
+                    @php
+                        $projectsCount = $analytics['projects_by_domain'][$domainName] ?? 0;
+                        $reputationVal = $analytics['reputation_by_domain'][$domainName] ?? 50.00;
+                        $internshipsCount = $analytics['internships_by_domain'][$domainName] ?? 0;
+                        
+                        $emoji = '💻';
+                        if ($domainName == 'UI/UX Design') $emoji = '🎨';
+                        elseif ($domainName == 'Digital Marketing') $emoji = '📈';
+                        elseif ($domainName == 'Data & AI') $emoji = '🤖';
+                        elseif ($domainName == 'Content & Business') $emoji = '💼';
+                    @endphp
+                    <div class="p-5 border border-[var(--ig-line)] rounded-2xl bg-[var(--ig-bg-2)] flex flex-col justify-between space-y-4 animate-fade-in">
+                        <div class="flex items-center">
+                            <span class="text-xl mr-2">{{ $emoji }}</span>
+                            <span class="font-bold text-sm text-[var(--ig-ink)]">{{ $domainName }}</span>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-1 text-xs">
+                                <span class="text-[var(--ig-muted)] font-semibold">IPRS Reputation</span>
+                                <span class="font-bold text-[var(--ig-ink)]">{{ round($reputationVal) }}/100</span>
+                            </div>
+                            <div class="w-full bg-white border border-[var(--ig-line-2)] rounded-full h-2 overflow-hidden">
+                                <div class="bg-[var(--ig-accent)] h-full rounded-full" style="width: {{ min($reputationVal, 100) }}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 pt-3 border-t border-[var(--ig-line-2)] text-xs">
+                            <div>
+                                <span class="block text-[10px] text-[var(--ig-muted)] uppercase tracking-wider font-semibold">Projects</span>
+                                <span class="font-bold text-[var(--ig-ink)] text-sm">{{ $projectsCount }} completed</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] text-[var(--ig-muted)] uppercase tracking-wider font-semibold">Internships</span>
+                                <span class="font-bold text-[var(--ig-ink)] text-sm">{{ $internshipsCount }} accepted</span>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             </div>
         </div>
 
         <!-- Completed Tasks Timeline -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="text-lg font-bold text-gray-900 mb-6">Completed Tasks & Achievements</h3>
-            <div class="space-y-4">
+        <div class="ig-card p-8 mb-12 ig-reveal">
+            <h3 class="ig-display text-2xl mb-8 pb-4 border-b border-[var(--ig-line)]">Work Log & Milestones</h3>
+            <div class="space-y-5">
                 @forelse($analytics['completed_tasks_list'] as $task)
-                    <div class="border-l-4 border-indigo-600 pl-4 py-3 hover:bg-gray-50 transition">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <h4 class="font-semibold text-gray-900">{{ $task->task->title }}</h4>
-                                <p class="text-sm text-gray-600 mt-1">{{ $task->task->startup->company_name }}</p>
-                                <div class="flex items-center gap-4 mt-2">
-                                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">✓ Completed</span>
-                                    <span class="text-xs text-gray-500">{{ $task->submission->updated_at->format('M d, Y') }}</span>
-                                    @if($task->rating)
-                                        <span class="text-xs text-yellow-600">⭐ {{ $task->rating->rating }}/5</span>
-                                    @endif
+                    <div class="p-5 border border-[var(--ig-line)] rounded-2xl hover:border-[var(--ig-ink)] transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <span class="ig-chip ig-chip-success mb-2" style="font-size:10px;padding:2px 8px;">VERIFIED</span>
+                            <h4 class="ig-display text-xl mt-1">{{ $task->task->title }}</h4>
+                            <p class="ig-mono text-[11px] text-[var(--ig-muted)] mt-1">
+                                {{ $task->task->startup->company_name }} · Shipped {{ $task->submission->updated_at->format('M d, Y') }}
+                            </p>
+                            @if($task->rating)
+                                <div class="flex items-center gap-1 text-yellow-500 mt-2 text-sm">
+                                    ★ <span class="text-xs text-[var(--ig-ink-2)] font-semibold">{{ $task->rating->rating }}/5.0</span>
                                 </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-lg font-bold text-indigo-600">{{ $task->task->reward_points }} pts</p>
-                                @if($task->task->stipend)
-                                    <p class="text-sm text-green-600">₹{{ $task->task->stipend }}</p>
-                                @endif
-                            </div>
+                            @endif
+                        </div>
+                        <div class="sm:text-right flex-shrink-0">
+                            <p class="ig-display text-2xl text-[var(--ig-accent)]">{{ $task->task->reward_points }} <span class="text-xs text-[var(--ig-muted)] font-normal">pts</span></p>
+                            @if($task->task->stipend)
+                                <p class="text-xs font-semibold text-[var(--ig-lime-deep)] mt-1">₹{{ number_format($task->task->stipend, 0) }}</p>
+                            @endif
                         </div>
                     </div>
                 @empty
-                    <p class="text-gray-500 text-center py-8">No completed tasks yet. Start applying to tasks!</p>
+                    <div class="py-12 text-center text-[var(--ig-muted)]">
+                        <p class="ig-display text-xl mb-1">No completed tasks in log yet.</p>
+                        <p class="text-xs">Take on and complete marketplace tasks to build your achievements ledger.</p>
+                    </div>
                 @endforelse
             </div>
         </div>
 
-        <!-- Certificates -->
-        @if($profile->certificates->count() > 0)
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-6">My Certificates</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    @foreach($profile->certificates as $certificate)
-                        <div class="border-2 border-indigo-200 rounded-lg p-4 hover:shadow-lg transition">
-                            <div class="flex items-center justify-between mb-3">
-                                <svg class="w-12 h-12 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
-                                </svg>
-                                <span class="text-xs text-gray-500">{{ $certificate->issued_at->format('M Y') }}</span>
-                            </div>
-                            <h4 class="font-semibold text-gray-900 text-sm mb-2">{{ $certificate->task->title }}</h4>
-                            <a href="{{ route('student.certificates.download', $certificate->id) }}" class="text-indigo-600 hover:text-indigo-800 text-xs font-medium">
-                                Download Certificate →
-                            </a>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
+
     </div>
 </x-app-layout>

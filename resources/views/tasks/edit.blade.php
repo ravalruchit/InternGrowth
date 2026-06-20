@@ -1,230 +1,379 @@
 <x-app-layout>
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="bg-gradient-to-br from-white via-indigo-50 to-purple-50 rounded-2xl shadow-2xl p-8 border border-indigo-100">
-            <div class="flex items-center space-x-3 mb-8">
-                <div class="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
+    <div class="ig-container py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start ig-anim-fade-up">
+            <!-- Form Input (Left) -->
+            <div class="lg:col-span-8 space-y-8">
+                <div class="mb-2">
+                    <p class="ig-eyebrow mb-3">— Edit Task</p>
+                    <h1 class="ig-display text-4xl sm:text-5xl text-[var(--ig-ink)]">
+                        Edit <span class="ig-serif text-[var(--ig-accent)]">Task.</span>
+                    </h1>
                 </div>
-                <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">Edit Task</h1>
-            </div>
 
-            @if ($errors->any())
-                <div class="bg-red-50 border-l-4 border-red-500 text-red-800 px-6 py-4 rounded-xl mb-6">
-                    <ul class="list-disc list-inside space-y-1">
-                        @foreach ($errors->all() as $error)
-                            <li class="font-medium">{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+                @if ($errors->any())
+                    <div class="ig-banner ig-banner-warn text-sm">
+                        <div>
+                            <p class="font-bold text-amber-955 mb-1">Please fix the following issues:</p>
+                            <ul class="list-disc list-inside space-y-1 text-amber-900">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                @endif
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Form -->
-                <div class="lg:col-span-2">
+                <div class="ig-card p-6 sm:p-8">
                     <form method="POST" action="{{ route('tasks.update', $task->id) }}" class="space-y-6">
                         @csrf
                         @method('PUT')
 
                         {{-- Title --}}
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Task Title</label>
+                            <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">Task Title</label>
                             <input type="text" name="title" id="f-title" value="{{ old('title', $task->title) }}" required
-                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all bg-white/80"
+                                   class="ig-input"
                                    placeholder="e.g., Build a responsive landing page">
-                            @error('title')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+                            @error('title')<p class="text-[var(--ig-rose)] text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         {{-- Description --}}
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                Description
-                                <span id="desc-chars" class="ml-2 text-xs font-normal text-gray-400">0 characters</span>
+                            <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2 flex justify-between">
+                                <span>Description</span>
+                                <span id="desc-chars" class="ig-mono text-xs font-normal text-[var(--ig-muted)]">0 characters</span>
                             </label>
-                            <textarea name="description" id="f-description" rows="6" required
-                                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all bg-white/80 resize-none"
+                            <textarea name="description" id="f-description" rows="8" required
+                                      class="ig-input resize-none"
                                       placeholder="Describe the task requirements, deliverables, and expectations...">{{ old('description', $task->description) }}</textarea>
-                            <p class="text-xs text-gray-400 mt-1">More detail = more points for the student ✨</p>
-                            @error('description')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+                            <p class="text-xs text-[var(--ig-muted)] mt-1.5">Provide clear deliverables, task requirements, and output formats.</p>
+                            @error('description')<p class="text-[var(--ig-rose)] text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
-                        {{-- Skills --}}
+                        {{-- Hidden selects for form submission compatibility --}}
+                        <select id="domain" name="domain" class="hidden">
+                            <option value="">Select Domain</option>
+                            @foreach(\App\Models\StudentProfile::$domains as $dom => $roles)
+                                <option value="{{ $dom }}" {{ old('domain', $task->domain) == $dom ? 'selected' : '' }}>{{ $dom }}</option>
+                            @endforeach
+                        </select>
+                        <select id="role" name="role" class="hidden" {{ !$task->domain ? 'disabled' : '' }}>
+                            <option value="">Select Role</option>
+                            @if($task->domain && isset(\App\Models\StudentProfile::$domains[$task->domain]))
+                                @foreach(\App\Models\StudentProfile::$domains[$task->domain] as $role)
+                                    <option value="{{ $role }}" {{ old('role', $task->role) == $role ? 'selected' : '' }}>{{ $role }}</option>
+                                @endforeach
+                            @endif
+                        </select>
+
+                        {{-- Domain Selection Cards --}}
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-3">
-                                Required Skills
-                                <span id="skill-count" class="ml-2 text-xs font-normal text-indigo-500">0 selected</span>
-                            </label>
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                @foreach($skills as $skill)
-                                    <label class="skill-label relative flex items-center p-3 bg-white/80 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-indigo-500 hover:shadow-md transition-all group">
-                                        <input type="checkbox" name="skills[]" value="{{ $skill->id }}"
-                                               class="skill-check w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                                               {{ in_array($skill->id, old('skills', $task->skills->pluck('id')->toArray())) ? 'checked' : '' }}>
-                                        <span class="ml-3 text-sm font-medium text-gray-700 group-hover:text-indigo-600 transition-colors">{{ $skill->name }}</span>
-                                    </label>
+                            <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-3">Domain</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="domain-cards-container">
+                                @php
+                                    $domainDetails = [
+                                        'Software Development' => ['icon' => '💻', 'desc' => 'Build web apps, mobile apps, backend systems, and write clean code.'],
+                                        'UI/UX Design' => ['icon' => '🎨', 'desc' => 'Create visual interfaces, wireframes, prototype flows, and design systems.'],
+                                        'Digital Marketing' => ['icon' => '📈', 'desc' => 'Drive traffic, manage ads, optimize search presence, and write copy.'],
+                                        'Data & AI' => ['icon' => '🤖', 'desc' => 'Build AI models, analyze large data sets, and extract key insights.'],
+                                        'Content & Business' => ['icon' => '📋', 'desc' => 'Write engaging content, construct business strategies, and perform market research.']
+                                    ];
+                                @endphp
+                                @foreach($domainDetails as $domName => $info)
+                                    <div data-domain="{{ $domName }}" class="domain-card cursor-pointer p-4 bg-white border-2 border-gray-200 rounded-2xl shadow-sm hover:shadow-xl hover:scale-105 hover:border-indigo-400 active:scale-95 transition-all duration-300 flex flex-col justify-between group">
+                                        <div>
+                                            <div class="text-3xl mb-2 transition-transform duration-300 group-hover:scale-110">{{ $info['icon'] }}</div>
+                                            <h4 class="font-bold text-sm text-[var(--ig-ink)] mb-1">{{ $domName }}</h4>
+                                            <p class="text-[11.5px] text-[var(--ig-muted)] leading-normal">{{ $info['desc'] }}</p>
+                                        </div>
+                                    </div>
                                 @endforeach
                             </div>
-                            @error('skills')<p class="text-red-500 text-sm mt-2">{{ $message }}</p>@enderror
+                            @error('domain')<p class="text-[var(--ig-rose)] text-xs mt-1">{{ $message }}</p>@enderror
+                        </div>
+
+                        {{-- Role Selection Cards --}}
+                        <div id="role-section-wrapper" class="space-y-3" style="display: none;">
+                            <label class="block text-sm font-semibold text-[var(--ig-ink)]">Role</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="role-cards-container">
+                                <!-- Dynamic role cards populated in JS -->
+                            </div>
+                            @error('role')<p class="text-[var(--ig-rose)] text-xs mt-1">{{ $message }}</p>@enderror
+                        </div>
+
+                        {{-- Skills Selection (Modern Chips) --}}
+                        <div>
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                                <label class="block text-sm font-semibold text-[var(--ig-ink)]">Required Skills</label>
+                                <span id="skill-selected-info" class="ig-mono text-xs font-semibold text-[var(--ig-accent)]">0 / 10 Skills Selected</span>
+                            </div>
+                            <input type="text" id="skill-search" placeholder="Search skills..." class="ig-input mb-3 max-w-md" />
+
+                            {{-- Hidden checkbox inputs for standard submission --}}
+                            <div class="hidden">
+                                @foreach($skills as $skill)
+                                    <input type="checkbox" name="skills[]" id="skill-checkbox-{{ $skill->id }}" value="{{ $skill->id }}"
+                                           {{ in_array($skill->id, old('skills', $task->skills->pluck('id')->toArray())) ? 'checked' : '' }}
+                                           class="skill-checkbox-hidden">
+                                @endforeach
+                            </div>
+
+                            {{-- Chips Grid --}}
+                            <div class="flex flex-wrap gap-2" id="skills-chips-container">
+                                @foreach($skills as $skill)
+                                    <div data-skill-id="{{ $skill->id }}" data-domain="{{ $skill->domain }}" data-name="{{ strtolower($skill->name) }}"
+                                         class="skill-chip cursor-pointer px-4 py-2 bg-white border border-[var(--ig-line)] rounded-xl text-xs font-semibold text-[var(--ig-ink-2)] hover:border-indigo-400 hover:scale-105 active:scale-95 transition-all duration-200 select-none flex items-center gap-1.5">
+                                        <span class="status-icon text-indigo-500 font-bold hidden">✓</span>
+                                        <span>{{ $skill->name }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                            @error('skills')<p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p>@enderror
                         </div>
 
                         {{-- Stipend --}}
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">
                                 Stipend (Optional)
-                                <span class="ml-1 text-xs font-normal text-gray-400">— higher stipend = more points</span>
                             </label>
                             <div class="relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">₹</span>
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--ig-muted)] font-semibold">₹</span>
                                 <input type="number" name="stipend" id="f-stipend" value="{{ old('stipend', $task->stipend) }}" step="1" min="0"
-                                       class="w-full pl-8 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all bg-white/80"
+                                       class="ig-input pl-8"
                                        placeholder="0">
                             </div>
-                            @error('stipend')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+                            <p class="text-xs text-[var(--ig-muted)] mt-1.5">Specify stipend amount. Escrow is automatically locked upon submission posting.</p>
+                            @error('stipend')<p class="text-[var(--ig-rose)] text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
-                        <div class="flex gap-4 pt-2">
-                            <button type="submit"
-                                    class="flex-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-semibold hover:shadow-2xl transform hover:scale-105 transition-all">
-                                Update Task
+                        <div class="flex items-center gap-4 pt-4">
+                            <button type="submit" class="ig-btn ig-btn-primary flex-1 justify-center">
+                                <span>Update Task</span><span class="arrow">→</span>
                             </button>
-                            <a href="{{ route('startup.dashboard') }}"
-                               class="px-6 py-4 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-all">
+                            <a href="{{ route('startup.dashboard') }}" class="ig-btn ig-btn-ghost">
                                 Cancel
                             </a>
                         </div>
                     </form>
                 </div>
+            </div>
 
-                <!-- Live Points Card -->
-                <div class="lg:col-span-1">
-                    <div class="sticky top-24">
-                        <div class="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-6 text-white shadow-2xl mb-4 transition-transform duration-200" id="pts-card">
-                            <p class="text-sm font-medium text-indigo-200 mb-1">Auto-calculated Reward</p>
-                            <div class="flex items-end gap-2 mb-4">
-                                <span id="pts-display" class="text-6xl font-black tabular-nums">{{ $task->reward_points }}</span>
-                                <span class="text-xl font-semibold text-indigo-200 mb-2">pts</span>
-                            </div>
-                            <p class="text-xs text-indigo-200">Points recalculate live as you edit.</p>
-                        </div>
-
-                        <div class="bg-white rounded-2xl shadow-lg border border-indigo-100 p-5 space-y-3">
-                            <p class="text-sm font-bold text-gray-700 mb-3">Points Breakdown</p>
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-500 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-400 inline-block"></span> Base</span>
-                                <span class="font-semibold text-gray-800">50 pts</span>
-                            </div>
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-500 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-400 inline-block"></span> Stipend bonus</span>
-                                <span id="b-stipend" class="font-semibold text-green-600">+0 pts</span>
-                            </div>
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-500 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-400 inline-block"></span> Skills bonus</span>
-                                <span id="b-skills" class="font-semibold text-purple-600">+0 pts</span>
-                            </div>
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-500 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-pink-400 inline-block"></span> Description depth</span>
-                                <span id="b-desc" class="font-semibold text-pink-600">+0 pts</span>
-                            </div>
-                            <div class="border-t border-gray-100 pt-3">
-                                <div class="flex justify-between items-center text-sm font-bold">
-                                    <span class="text-gray-700">Total</span>
-                                    <span id="b-total" class="text-indigo-600 text-base">50 pts</span>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <div class="flex justify-between text-xs text-gray-400 mb-1"><span>50</span><span>430</span></div>
-                                <div class="w-full bg-gray-100 rounded-full h-2.5">
-                                    <div id="pts-bar" class="h-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500" style="width:0%"></div>
-                                </div>
-                                <p id="pts-label" class="text-xs text-center text-gray-400 mt-1"></p>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-700 space-y-1">
-                            <p class="font-semibold text-amber-800 mb-1">💡 Tips to maximise points</p>
-                            <p>• Write a detailed description (every 100 chars = +10 pts, max +50)</p>
-                            <p>• Add more required skills (+20 pts each, max +100)</p>
-                            <p>• Offer a stipend (+0.5 pts per ₹1, max +200)</p>
-                        </div>
+            <!-- Guidelines Sidebar (Right) -->
+            <div class="lg:col-span-4 lg:sticky lg:top-24 space-y-4">
+                <!-- Quality Card -->
+                <div class="ig-card-dark p-6 relative overflow-hidden shadow-xl">
+                    <div class="absolute -top-16 -right-16 w-36 h-36 rounded-full blur-2xl opacity-20" style="background:var(--ig-accent)"></div>
+                    <div class="relative">
+                        <p class="ig-eyebrow mb-1" style="color: #9C9580">IPRS Scoring Impact</p>
+                        <h4 class="text-xl font-bold text-white mb-2">Build Ecosystem Trust</h4>
+                        <p class="text-xs" style="color: #C9C1AE; leading-relaxed">Posting detailed, high-quality tasks attracts top students and establishes your startup credibility score.</p>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
 
+                <!-- Guidance Checklist Card -->
+                <div class="ig-card p-5 space-y-3 text-xs leading-relaxed">
+                    <p class="text-sm font-bold text-[var(--ig-ink)] mb-3">Task Guidelines</p>
+                    
+                    <div class="space-y-3 text-[var(--ig-muted)]">
+                        <p><strong>📝 Clear Scope:</strong> Be specific about task expectations, output formats, and timelines to avoid revision loops.</p>
+                        <p><strong>🎯 Skills Profile:</strong> Select matching skills accurately so AI filters candidates with correct backgrounds.</p>
+                        <p><strong>💰 Secure Escrow:</strong> Offering a stipend locks the amount in escrow. Released automatically upon submission approval.</p>
+                    </div>
+                </div>
+
+                <!-- Tips -->
+                <div class="ig-banner ig-banner-warn text-xs space-y-1">
+                    <div>
+                        <p class="font-semibold text-amber-955 mb-1">💡 Pro Tips for Founders</p>
+                        <p class="text-amber-900">• Detail tasks extensively to set clear student expectations.</p>
+                        <p class="text-amber-900">• Select primary programming or design skills required.</p>
+                        <p class="text-amber-900 font-medium">• Verify task submissions within 48h to maintain a high response score.</p>
+                    </div>
+                </div>
+         <!-- JS -->
     <script>
-        function calcPoints(stipend, skillCount, descLen) {
-            const base         = 50;
-            const stipendBonus = Math.min(Math.floor(stipend * 0.5), 200);
-            const skillBonus   = Math.min(skillCount * 20, 100);
-            const descBonus    = Math.min(Math.floor(descLen / 100) * 10, 50);
-            return { base, stipendBonus, skillBonus, descBonus,
-                     total: base + stipendBonus + skillBonus + descBonus };
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const domainSelect = document.getElementById('domain');
+            const roleSelect = document.getElementById('role');
+            const domainCards = document.querySelectorAll('.domain-card');
+            const roleSectionWrapper = document.getElementById('role-section-wrapper');
+            const roleCardsContainer = document.getElementById('role-cards-container');
+            const skillSearch = document.getElementById('skill-search');
+            const skillChips = document.querySelectorAll('.skill-chip');
+            const selectedInfo = document.getElementById('skill-selected-info');
+            const descInput = document.getElementById('f-description');
+            const descChars = document.getElementById('desc-chars');
 
-        let currentPts = {{ $task->reward_points }};
-        function animateTo(target) {
-            const el = document.getElementById('pts-display');
-            const start = currentPts, diff = target - start, steps = 20;
-            let step = 0;
-            const timer = setInterval(() => {
-                step++;
-                el.textContent = Math.round(start + diff * (step / steps));
-                if (step >= steps) { clearInterval(timer); currentPts = target; }
-            }, 16);
-        }
+            const domainsData = @json(\App\Models\StudentProfile::$domains);
+            const oldDomain = "{{ old('domain', $task->domain) }}";
+            const oldRole = "{{ old('role', $task->role) }}";
 
-        const labels = [
-            [50,  100, 'Just getting started…'],
-            [101, 200, 'Looking good! 👍'],
-            [201, 300, 'Great task! Students will love this ⭐'],
-            [301, 400, 'Excellent! High-value task 🔥'],
-            [401, 430, 'Maximum value! Top-tier task 🏆'],
-        ];
-        function getLabel(pts) {
-            for (const [lo, hi, txt] of labels) if (pts >= lo && pts <= hi) return txt;
-            return '';
-        }
-
-        function update() {
-            const stipend    = parseFloat(document.getElementById('f-stipend').value) || 0;
-            const skillCount = document.querySelectorAll('.skill-check:checked').length;
-            const descLen    = document.getElementById('f-description').value.length;
-            const { stipendBonus, skillBonus, descBonus, total } = calcPoints(stipend, skillCount, descLen);
-
-            animateTo(total);
-            document.getElementById('b-stipend').textContent = '+' + stipendBonus + ' pts';
-            document.getElementById('b-skills').textContent  = '+' + skillBonus   + ' pts';
-            document.getElementById('b-desc').textContent    = '+' + descBonus    + ' pts';
-            document.getElementById('b-total').textContent   = total + ' pts';
-
-            const pct = Math.min(((total - 50) / 380) * 100, 100);
-            document.getElementById('pts-bar').style.width = pct + '%';
-            document.getElementById('pts-label').textContent = getLabel(total);
-            document.getElementById('desc-chars').textContent = descLen + ' characters';
-            document.getElementById('skill-count').textContent = skillCount + ' selected';
-
-            const card = document.getElementById('pts-card');
-            card.classList.add('scale-105');
-            setTimeout(() => card.classList.remove('scale-105'), 200);
-        }
-
-        document.getElementById('f-description').addEventListener('input', update);
-        document.getElementById('f-stipend').addEventListener('input', update);
-        document.querySelectorAll('.skill-check').forEach(cb => {
-            cb.addEventListener('change', function() {
-                const label = this.closest('.skill-label');
-                label.classList.toggle('border-indigo-500', this.checked);
-                label.classList.toggle('bg-indigo-50', this.checked);
-                label.classList.toggle('shadow-md', this.checked);
-                update();
-            });
-            if (cb.checked) {
-                cb.closest('.skill-label').classList.add('border-indigo-500', 'bg-indigo-50', 'shadow-md');
+            // Character count description
+            if (descInput && descChars) {
+                descInput.addEventListener('input', function() {
+                    descChars.textContent = this.value.length + ' characters';
+                });
+                descChars.textContent = descInput.value.length + ' characters';
             }
-        });
 
-        update();
+            // Domain Cards Click Listeners
+            domainCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const domainName = this.getAttribute('data-domain');
+                    selectDomain(domainName);
+                });
+            });
+
+            function selectDomain(domainName) {
+                domainSelect.value = domainName;
+                domainSelect.dispatchEvent(new Event('change'));
+
+                // Update Domain cards classes
+                domainCards.forEach(c => {
+                    if (c.getAttribute('data-domain') === domainName) {
+                        c.classList.remove('border-gray-200');
+                        c.classList.add('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.25)]');
+                    } else {
+                        c.classList.remove('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.25)]');
+                        c.classList.add('border-gray-200');
+                    }
+                });
+
+                // Populate and show role cards
+                const roles = domainsData[domainName] || [];
+                if (roles.length > 0) {
+                    roleSelect.disabled = false;
+                    let options = '<option value="">Select Role</option>';
+                    roles.forEach(role => {
+                        options += `<option value="${role}">${role}</option>`;
+                    });
+                    roleSelect.innerHTML = options;
+
+                    // Render cards
+                    roleSectionWrapper.style.display = 'block';
+                    roleCardsContainer.innerHTML = roles.map(role => `
+                        <div data-role="${role}" class="role-card cursor-pointer p-3 bg-white border-2 border-gray-200 rounded-2xl text-center shadow-sm hover:shadow-md hover:scale-105 hover:border-indigo-400 active:scale-95 transition-all duration-300 group">
+                            <p class="font-bold text-xs text-[var(--ig-ink-2)] group-hover:text-[var(--ig-ink)]">${role}</p>
+                        </div>
+                    `).join('');
+
+                    // Add click event listeners to role cards
+                    roleCardsContainer.querySelectorAll('.role-card').forEach(card => {
+                        card.addEventListener('click', function() {
+                            const roleName = this.getAttribute('data-role');
+                            selectRole(roleName);
+                        });
+                    });
+                } else {
+                    roleSelect.disabled = true;
+                    roleSelect.innerHTML = '<option value="">Select Role (Select Domain first)</option>';
+                    roleSectionWrapper.style.display = 'none';
+                    roleCardsContainer.innerHTML = '';
+                }
+
+                // Filter skills to domain, unchecking hidden ones
+                filterAndCleanSkills();
+            }
+
+            function selectRole(roleName) {
+                roleSelect.value = roleName;
+                roleSelect.dispatchEvent(new Event('change'));
+
+                roleCardsContainer.querySelectorAll('.role-card').forEach(c => {
+                    if (c.getAttribute('data-role') === roleName) {
+                        c.classList.remove('border-gray-200');
+                        c.classList.add('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.2)]');
+                    } else {
+                        c.classList.remove('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.2)]');
+                        c.classList.add('border-gray-200');
+                    }
+                });
+            }
+
+            // Sync skills chips with hidden checkboxes
+            skillChips.forEach(chip => {
+                const skillId = chip.getAttribute('data-skill-id');
+                const cb = document.getElementById(`skill-checkbox-${skillId}`);
+                const icon = chip.querySelector('.status-icon');
+
+                // Sync initial state from check state
+                if (cb && cb.checked) {
+                    chip.classList.add('border-indigo-600', 'bg-indigo-50', 'text-indigo-900', 'shadow-[0_2px_8px_rgba(99,102,241,0.15)]');
+                    if (icon) icon.classList.remove('hidden');
+                }
+
+                chip.addEventListener('click', function() {
+                    if (cb.checked) {
+                        cb.checked = false;
+                        cb.dispatchEvent(new Event('change'));
+                        chip.classList.remove('border-indigo-600', 'bg-indigo-50', 'text-indigo-900', 'shadow-[0_2px_8px_rgba(99,102,241,0.15)]');
+                        if (icon) icon.classList.add('hidden');
+                    } else {
+                        const checkedCount = document.querySelectorAll('.skill-checkbox-hidden:checked').length;
+                        if (checkedCount >= 10) {
+                            chip.classList.add('animate-shake');
+                            setTimeout(() => chip.classList.remove('animate-shake'), 400);
+                            return;
+                        }
+                        cb.checked = true;
+                        cb.dispatchEvent(new Event('change'));
+                        chip.classList.add('border-indigo-600', 'bg-indigo-50', 'text-indigo-900', 'shadow-[0_2px_8px_rgba(99,102,241,0.15)]');
+                        if (icon) icon.classList.remove('hidden');
+                    }
+                    updateSelectedSkillsCount();
+                });
+            });
+
+            function updateSelectedSkillsCount() {
+                const checkedCount = document.querySelectorAll('.skill-checkbox-hidden:checked').length;
+                selectedInfo.textContent = `${checkedCount} / 10 Skills Selected`;
+            }
+
+            // Filter chips on search or domain change
+            function filterAndCleanSkills() {
+                const term = skillSearch.value.toLowerCase().trim();
+                const selectedDomain = domainSelect.value;
+
+                skillChips.forEach(chip => {
+                    const skillDomain = chip.getAttribute('data-domain');
+                    const skillId = chip.getAttribute('data-skill-id');
+                    const skillName = chip.getAttribute('data-name');
+                    const cb = document.getElementById(`skill-checkbox-${skillId}`);
+                    const isChecked = cb && cb.checked;
+
+                    if (term) {
+                        // Global search: search all skills across all domains
+                        if (skillName.includes(term)) {
+                            chip.style.display = 'inline-flex';
+                        } else {
+                            chip.style.display = 'none';
+                        }
+                    } else {
+                        // Default view: show only skills of selected domain OR already checked skills
+                        const domainMatches = selectedDomain && skillDomain === selectedDomain;
+                        if (domainMatches || isChecked) {
+                            chip.style.display = 'inline-flex';
+                        } else {
+                            chip.style.display = 'none';
+                        }
+                    }
+                });
+                updateSelectedSkillsCount();
+            }
+
+            if (skillSearch) skillSearch.addEventListener('input', filterAndCleanSkills);
+            domainSelect.addEventListener('change', filterAndCleanSkills);
+
+            // Populate initial state if redirected back with old input
+            if (oldDomain) {
+                selectDomain(oldDomain);
+                if (oldRole) {
+                    setTimeout(() => {
+                        selectRole(oldRole);
+                    }, 50);
+                }
+            }
+            updateSelectedSkillsCount();
+        });
     </script>
 </x-app-layout>

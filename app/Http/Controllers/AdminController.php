@@ -64,21 +64,7 @@ class AdminController extends Controller
         return view('admin.submissions', compact('submissions'));
     }
 
-    public function issueCertificate($submissionId)
-    {
-        $submission = Submission::with('application')->findOrFail($submissionId);
-        
-        $certificateNumber = 'CERT-' . strtoupper(uniqid());
-        
-        Certificate::create([
-            'student_profile_id' => $submission->application->student_profile_id,
-            'task_id' => $submission->application->task_id,
-            'certificate_number' => $certificateNumber,
-            'issued_at' => now()
-        ]);
 
-        return back()->with('success', 'Certificate issued');
-    }
 
     // Students CRUD
     public function students()
@@ -315,13 +301,23 @@ class AdminController extends Controller
     {
         $pendingVerifications = \App\Models\StartupProfile::where('verification_status', 'pending')
             ->whereNotNull('verification_submitted_at')
-            ->with('user')
-            ->orderBy('verification_submitted_at', 'desc')
+            ->with(['user', 'verificationLogs'])
+            ->orderByRaw("
+                CASE 
+                    WHEN verification_level = 'A' THEN 1
+                    WHEN verification_level = 'B' THEN 2
+                    WHEN verification_level = 'C' THEN 3
+                    WHEN verification_level = 'D' THEN 4
+                    ELSE 5
+                END ASC
+            ")
+            ->orderBy('is_suspicious', 'desc')
+            ->orderBy('verification_submitted_at', 'asc')
             ->get();
 
         $recentlyReviewed = \App\Models\StartupProfile::whereIn('verification_status', ['approved', 'rejected'])
             ->whereNotNull('verification_reviewed_at')
-            ->with('user')
+            ->with(['user', 'verificationLogs'])
             ->orderBy('verification_reviewed_at', 'desc')
             ->take(10)
             ->get();
@@ -332,12 +328,30 @@ class AdminController extends Controller
     public function approveVerification($id)
     {
         $startup = \App\Models\StartupProfile::findOrFail($id);
+        $oldStatus = $startup->ai_verification_status;
 
         $startup->update([
             'verification_status' => 'approved',
             'is_verified' => true,
             'verification_reviewed_at' => now(),
             'verification_notes' => null,
+            'verification_expires_at' => now()->addMonths(12),
+            'ai_verification_status' => 'admin_approved',
+            'ai_verified_at' => now(),
+        ]);
+
+        // Recalculate trust score (it will set it to 50 + other platform events)
+        $startup->recalculateTrustScore();
+
+        // Create log entry
+        \App\Models\StartupVerificationLog::create([
+            'startup_profile_id' => $startup->id,
+            'action'             => 'admin_approved',
+            'performed_by'       => 'admin',
+            'old_status'         => $oldStatus,
+            'new_status'         => 'admin_approved',
+            'reason'             => 'Admin manually approved verification.',
+            'created_at'         => now(),
         ]);
 
         // Set session flag for the startup user to show verification alert once
@@ -353,15 +367,127 @@ class AdminController extends Controller
         ]);
 
         $startup = \App\Models\StartupProfile::findOrFail($id);
+        $oldStatus = $startup->ai_verification_status;
 
         $startup->update([
             'verification_status' => 'rejected',
             'is_verified' => false,
             'verification_reviewed_at' => now(),
             'verification_notes' => $request->notes,
+            'ai_verification_status' => 'admin_rejected',
+        ]);
+
+        $startup->recalculateTrustScore();
+
+        // Create log entry
+        \App\Models\StartupVerificationLog::create([
+            'startup_profile_id' => $startup->id,
+            'action'             => 'admin_rejected',
+            'performed_by'       => 'admin',
+            'old_status'         => $oldStatus,
+            'new_status'         => 'admin_rejected',
+            'reason'             => $request->notes,
+            'created_at'         => now(),
         ]);
 
         return back()->with('success', 'Startup verification rejected. They will see your feedback.');
     }
 
+    public function toggleSuspiciousFlag($id)
+    {
+        $startup = \App\Models\StartupProfile::findOrFail($id);
+        $oldSuspicious = $startup->is_suspicious;
+        $newSuspicious = !$oldSuspicious;
+
+        $startup->update([
+            'is_suspicious' => $newSuspicious
+        ]);
+
+        $startup->recalculateTrustScore();
+
+        $action = $newSuspicious ? 'marked_suspicious' : 'cleared_suspicious';
+        $reason = $newSuspicious ? 'Admin marked this startup as suspicious.' : 'Admin cleared suspicious flag for this startup.';
+
+        \App\Models\StartupVerificationLog::create([
+            'startup_profile_id' => $startup->id,
+            'action'             => $action,
+            'performed_by'       => 'admin',
+            'old_status'         => $startup->ai_verification_status,
+            'new_status'         => $startup->ai_verification_status,
+            'reason'             => $reason,
+            'created_at'         => now(),
+        ]);
+
+        $message = $newSuspicious 
+            ? 'Startup has been marked as suspicious and active verification frozen.' 
+            : 'Startup suspicious flag has been cleared.';
+
+        return back()->with('success', $message);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Student ID Card AI Review Queue
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Show all student ID cards pending manual admin review.
+     */
+    public function studentIdQueue()
+    {
+        $pendingQueue = \App\Models\StudentProfile::where('id_card_verification_status', 'manual_review')
+            ->whereNotNull('id_card_path')
+            ->with('user')
+            ->orderBy('id_card_submitted_at', 'asc')
+            ->get();
+
+        $recentlyReviewed = \App\Models\StudentProfile::whereIn('id_card_verification_status', ['admin_approved', 'ai_approved', 'ai_rejected'])
+            ->whereNotNull('id_card_verified_at')
+            ->with('user')
+            ->orderBy('id_card_verified_at', 'desc')
+            ->take(15)
+            ->get();
+
+        return view('admin.student-id-queue', compact('pendingQueue', 'recentlyReviewed'));
+    }
+
+    /**
+     * Admin manually approves a student's college ID card.
+     */
+    public function approveStudentId($id)
+    {
+        $profile = \App\Models\StudentProfile::findOrFail($id);
+
+        $profile->update([
+            'id_card_verification_status' => 'admin_approved',
+            'id_card_verified_at'         => now(),
+            'is_verified'                 => true,
+            'verification_method'         => 'admin_manual',
+        ]);
+
+        return back()->with('success', 'Student ID verified. Student now has full platform access.');
+    }
+
+    /**
+     * Admin rejects a student's college ID card with a reason.
+     */
+    public function rejectStudentId(Request $request, $id)
+    {
+        $request->validate([
+            'notes' => 'required|string|max:500',
+        ]);
+
+        $profile = \App\Models\StudentProfile::findOrFail($id);
+
+        // Store rejection reason inside existing ai_result JSON
+        $aiResult = $profile->id_card_ai_result ?? [];
+        $aiResult['admin_rejection_reason'] = $request->notes;
+
+        $profile->update([
+            'id_card_verification_status' => 'ai_rejected',
+            'id_card_ai_result'           => $aiResult,
+            'is_verified'                 => false,
+        ]);
+
+        return back()->with('success', 'Student ID rejected. They will be asked to re-upload.');
+    }
 }

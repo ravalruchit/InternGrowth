@@ -22,7 +22,9 @@ class PortfolioItem extends Model
         'completed_at',
         'github_url',
         'demo_url',
-        'screenshots'
+        'screenshots',
+        'domain',
+        'role'
     ];
 
     protected $casts = [

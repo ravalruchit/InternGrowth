@@ -69,6 +69,8 @@ class PortfolioAutomationService
                 'verification_badge' => $badge,
                 'completed_at' => now(),
                 'screenshots' => $screenshots,
+                'domain' => $task->domain,
+                'role' => $task->role,
             ]
         );
     }

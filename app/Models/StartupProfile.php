@@ -24,7 +24,18 @@ class StartupProfile extends Model
         'verification_status',
         'verification_notes',
         'verification_submitted_at',
-        'verification_reviewed_at'
+        'verification_reviewed_at',
+        // AI Verification & Trust columns
+        'ai_verification_status',
+        'ai_verification_result',
+        'ai_verified_at',
+        'ai_confidence_score',
+        'verification_documents_hash',
+        'verification_level',
+        'verification_expires_at',
+        'startup_trust_score',
+        'trust_score_breakdown',
+        'is_suspicious'
     ];
 
     protected $casts = [
@@ -34,7 +45,93 @@ class StartupProfile extends Model
         'verification_documents' => 'array',
         'verification_submitted_at' => 'datetime',
         'verification_reviewed_at' => 'datetime',
+        'ai_verification_result' => 'array',
+        'ai_verified_at' => 'datetime',
+        'verification_expires_at' => 'datetime',
+        'trust_score_breakdown' => 'array',
+        'is_suspicious' => 'boolean',
     ];
+
+    /**
+     * Determine if the startup is verified, not suspicious, and verification is active.
+     */
+    public function isVerifiedAndActive(): bool
+    {
+        if (!$this->is_verified || $this->is_suspicious) {
+            return false;
+        }
+
+        if ($this->verification_expires_at && now()->gt($this->verification_expires_at)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Recalculate and cache the startup's trust score and breakdown.
+     */
+    public function recalculateTrustScore(): int
+    {
+        $verificationVal = $this->isVerifiedAndActive() ? 50 : 0;
+
+        // Completed tasks (tasks that have at least one accepted application)
+        $completedTasksCount = $this->tasks()
+            ->whereHas('applications.submission', function($q) {
+                $q->where('status', 'accepted');
+            })->count();
+        $completedTasksVal = $completedTasksCount * 5;
+
+        // Successful internships (accepted HiringOffers with type 'internship')
+        $successfulInternshipsCount = $this->hiringOffers()
+            ->where('offer_type', 'internship')
+            ->where('status', 'accepted')->count();
+        $successfulInternshipsVal = $successfulInternshipsCount * 10;
+
+        // Successful hires (accepted HiringOffers with type 'job')
+        $successfulHiresCount = $this->hiringOffers()
+            ->where('offer_type', 'job')
+            ->where('status', 'accepted')->count();
+        $successfulHiresVal = $successfulHiresCount * 15;
+
+        // Reviews & Payouts (student reviews, payment completions, and complaints)
+        $positiveReviewsCount = $this->reviews()->where('rating', '>=', 4)->count();
+        $negativeReviewsCount = $this->reviews()->where('rating', '<=', 2)->count();
+        
+        // We count 1-star reviews as complaints (-20)
+        $complaintsCount = $this->reviews()->where('rating', 1)->count();
+        
+        // Count verified payment completions: completed tasks that had stipend/escrow payout
+        $verifiedPaymentsCount = $this->tasks()
+            ->where('escrow_locked', false)
+            ->where('escrow_amount', '>', 0)
+            ->whereHas('applications.submission', function($q) {
+                $q->where('status', 'accepted');
+            })->count();
+
+        $studentReviewsVal = ($positiveReviewsCount * 2) 
+            + ($negativeReviewsCount * -5) 
+            + ($complaintsCount * -20) 
+            + ($verifiedPaymentsCount * 3);
+
+        $totalScore = $verificationVal + $completedTasksVal + $successfulInternshipsVal + $successfulHiresVal + $studentReviewsVal;
+        $totalScore = max(0, min(100, $totalScore));
+
+        $breakdown = [
+            'verification'           => $verificationVal,
+            'completed_tasks'        => $completedTasksVal,
+            'successful_internships' => $successfulInternshipsVal,
+            'successful_hires'       => $successfulHiresVal,
+            'student_reviews'        => $studentReviewsVal,
+        ];
+
+        $this->update([
+            'startup_trust_score'   => $totalScore,
+            'trust_score_breakdown' => $breakdown,
+        ]);
+
+        return $totalScore;
+    }
 
     public function user(): BelongsTo
     {
@@ -79,5 +176,10 @@ class StartupProfile extends Model
     public function interviews(): HasMany
     {
         return $this->hasMany(Interview::class, 'startup_profile_id');
+    }
+
+    public function verificationLogs(): HasMany
+    {
+        return $this->hasMany(StartupVerificationLog::class, 'startup_profile_id');
     }
 }

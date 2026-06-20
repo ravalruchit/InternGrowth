@@ -85,6 +85,13 @@ class GoogleAuthController extends Controller
             return back()->with('error', 'Please select a valid role.');
         }
         
+        $primaryDomain = request('primary_domain');
+        $preferredRole = request('preferred_role');
+
+        if ($role === 'student' && (empty($primaryDomain) || empty($preferredRole))) {
+            return back()->with('error', 'Please select your career domain and preferred role.');
+        }
+
         // Create user
         $user = User::create([
             'name' => $googleUser['name'],
@@ -106,6 +113,8 @@ class GoogleAuthController extends Controller
                 'github_url' => '',
                 'linkedin_url' => '',
                 'reliability_score' => 1.0,
+                'primary_domain' => $primaryDomain,
+                'preferred_role' => $preferredRole,
             ]);
             
             // Create points wallet for student

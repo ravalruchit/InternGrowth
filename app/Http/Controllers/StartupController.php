@@ -40,7 +40,67 @@ class StartupController extends Controller
             ->latest()
             ->get();
         
-        return view('startup.dashboard', compact('profile', 'tasks', 'completedTasks', 'totalPointsGiven', 'hiringOffers'));
+        // Calculate domain metrics for analytics
+        $domains = [
+            'Software Development',
+            'UI/UX Design',
+            'Digital Marketing',
+            'Data & AI',
+            'Content & Business'
+        ];
+        $applicationsByDomain = [];
+        $hiringSuccessByDomain = [];
+        
+        foreach ($domains as $d) {
+            $applicationsByDomain[$d] = 0;
+            $hiringSuccessByDomain[$d] = 0;
+        }
+
+        foreach ($tasks as $task) {
+            if ($task->domain && isset($applicationsByDomain[$task->domain])) {
+                $applicationsByDomain[$task->domain] += $task->applications->count();
+            }
+            if ($task->domain && isset($hiringSuccessByDomain[$task->domain])) {
+                $completedCount = $task->applications->filter(function($app) {
+                    return $app->submission && $app->submission->status === 'accepted';
+                })->count();
+                $hiringSuccessByDomain[$task->domain] += $completedCount;
+            }
+        }
+
+        foreach ($hiringOffers as $offer) {
+            if ($offer->status === 'accepted' && $offer->domain && isset($hiringSuccessByDomain[$offer->domain])) {
+                $hiringSuccessByDomain[$offer->domain] += 1;
+            }
+        }
+
+        $domainStats = [];
+        foreach ($domains as $d) {
+            $domainStats[$d] = [
+                'hires' => $hiringSuccessByDomain[$d],
+                'apps' => $applicationsByDomain[$d]
+            ];
+        }
+
+        uasort($domainStats, function($a, $b) {
+            if ($b['hires'] !== $a['hires']) {
+                return $b['hires'] - $a['hires'];
+            }
+            return $b['apps'] - $a['apps'];
+        });
+
+        $topPerformingDomains = array_keys($domainStats);
+
+        return view('startup.dashboard', compact(
+            'profile', 
+            'tasks', 
+            'completedTasks', 
+            'totalPointsGiven', 
+            'hiringOffers',
+            'applicationsByDomain',
+            'hiringSuccessByDomain',
+            'topPerformingDomains'
+        ));
     }
 
     public function profile()
@@ -79,43 +139,211 @@ class StartupController extends Controller
         $profile = auth()->user()->startupProfile;
         $hasExistingDocs = $profile->verification_documents && count($profile->verification_documents) > 0;
 
-        $validated = $request->validate([
-            'company_registration_number' => 'required|string|max:255',
-            'gst_number' => 'nullable|string|max:255',
-            'company_address' => 'required|string',
-            'contact_phone' => 'required|string|max:20',
-            'documents' => ($hasExistingDocs ? 'nullable' : 'required') . '|array',
-            'documents.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120', // 5MB max
-        ]);
+        // Rate Limit Check: Maximum 3 verification attempts per day
+        $recentAttemptsCount = \App\Models\StartupVerificationLog::where('startup_profile_id', $profile->id)
+            ->where('action', 'verification_submitted')
+            ->where('created_at', '>=', now()->subHours(24))
+            ->count();
 
-        // Handle document uploads
-        $uploadedDocs = [];
-        if ($request->hasFile('documents')) {
-            foreach ($request->file('documents') as $file) {
-                if ($file->isValid()) {
-                    $path = $file->store('verification_documents', 'public');
-                    $uploadedDocs[] = [
-                        'name' => $file->getClientOriginalName(),
-                        'path' => $path,
-                        'size' => $file->getSize(),
-                        'type' => $file->getClientMimeType(),
-                        'uploaded_at' => now()->toDateTimeString()
-                    ];
-                }
-            }
+        if ($recentAttemptsCount >= 3) {
+            return back()->withInput()->with('error', 'Rate limit exceeded: You can submit a maximum of 3 verification requests per 24 hours. Please wait before attempting again.');
         }
 
-        $profile->update([
-            'company_registration_number' => $validated['company_registration_number'],
-            'gst_number' => $validated['gst_number'],
-            'company_address' => $validated['company_address'],
-            'contact_phone' => $validated['contact_phone'],
-            'verification_documents' => !empty($uploadedDocs) ? $uploadedDocs : $profile->verification_documents,
-            'verification_status' => 'pending',
-            'verification_submitted_at' => now(),
+        $request->validate([
+            'company_registration_number' => ['required', 'string', 'regex:/^[UL][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/i'],
+            'gst_number'                  => ['required', 'string', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/i'],
+            'company_address'             => 'required|string',
+            'contact_phone'               => 'required|string|max:20',
+            'gst_certificate'             => ($hasExistingDocs ? 'nullable' : 'required') . '|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'registration_document'       => ($hasExistingDocs ? 'nullable' : 'required') . '|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'supporting_document'         => ($hasExistingDocs ? 'nullable' : 'required') . '|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        ], [
+            'company_registration_number.regex' => 'The registration number must be a valid 21-character Corporate Identification Number (CIN) format (e.g. U72900GJ2025PTC123456).',
+            'gst_number.regex'                  => 'The GSTIN must match the official 15-character format (e.g. 24ABCDE1234F1Z5).',
         ]);
 
-        return redirect()->route('startup.dashboard')->with('success', 'Verification request submitted successfully! We will review your documents and notify you.');
+        // AI Protection: Check if any new files are uploaded
+        $filesUploaded = $request->hasFile('gst_certificate') || $request->hasFile('registration_document') || $request->hasFile('supporting_document');
+
+        $textFieldsChanged = $profile->company_name !== $request->company_name ||
+                             $profile->company_registration_number !== $request->company_registration_number ||
+                             $profile->gst_number !== $request->gst_number;
+
+        if (!$filesUploaded && $hasExistingDocs && ($profile->is_verified || !$textFieldsChanged)) {
+            // Text-only update: Save details but do not run AI scan or reset verification status
+            $profile->update([
+                'company_name'                => $request->company_name,
+                'company_registration_number' => $request->company_registration_number,
+                'gst_number'                  => $request->gst_number,
+                'company_address'             => $request->company_address,
+                'contact_phone'               => $request->contact_phone,
+            ]);
+            return redirect()->route('startup.dashboard')->with('success', 'Company details updated successfully (no AI re-scan needed as details were unchanged).');
+        }
+
+        // Duplicate Company Check (GST/CIN)
+        $duplicate = \App\Models\StartupProfile::where('id', '!=', $profile->id)
+            ->where(function($q) use ($request) {
+                $q->where('company_registration_number', $request->company_registration_number)
+                  ->orWhere(function($sub) use ($request) {
+                      if (!empty($request->gst_number)) {
+                          $sub->where('gst_number', $request->gst_number);
+                      } else {
+                          $sub->whereRaw('0 = 1');
+                      }
+                  });
+            })->first();
+
+        if ($duplicate) {
+            $oldStatus = $profile->ai_verification_status;
+            $profile->update([
+                'company_name'                => $request->company_name,
+                'company_registration_number' => $request->company_registration_number,
+                'gst_number'                  => $request->gst_number,
+                'company_address'             => $request->company_address,
+                'contact_phone'               => $request->contact_phone,
+                'ai_verification_status'      => 'ai_flagged',
+                'verification_level'          => 'D',
+                'ai_confidence_score'         => 0,
+                'verification_status'         => 'pending',
+                'verification_submitted_at'   => now(),
+                'ai_verification_result'      => [
+                    'fraud_score' => 100,
+                    'reason' => 'DUPLICATE DETAILS: Another company is already registered with this GSTIN or CIN. Flagged for admin review.',
+                    'security_flags' => ['duplicate_company_details']
+                ]
+            ]);
+
+            \App\Models\StartupVerificationLog::create([
+                'startup_profile_id' => $profile->id,
+                'action'             => 'verification_submitted',
+                'performed_by'       => 'system',
+                'old_status'         => $oldStatus,
+                'new_status'         => 'ai_flagged',
+                'reason'             => 'Duplicate registration credentials flagged during format check.',
+                'created_at'         => now(),
+            ]);
+
+            return redirect()->route('startup.dashboard')->with('error', 'Verification request submitted. A duplicate warning has been flagged for admin review.');
+        }
+
+        // Handle file uploads
+        $uploadedDocs = $profile->verification_documents ?? [];
+
+        if ($request->hasFile('gst_certificate')) {
+            $file = $request->file('gst_certificate');
+            $path = $file->store('verification_documents', 'public');
+            $uploadedDocs['gst_certificate'] = [
+                'name' => $file->getClientOriginalName(),
+                'path' => $path,
+                'size' => $file->getSize(),
+                'type' => $file->getClientMimeType(),
+                'uploaded_at' => now()->toDateTimeString()
+            ];
+        }
+
+        if ($request->hasFile('registration_document')) {
+            $file = $request->file('registration_document');
+            $path = $file->store('verification_documents', 'public');
+            $uploadedDocs['registration_document'] = [
+                'name' => $file->getClientOriginalName(),
+                'path' => $path,
+                'size' => $file->getSize(),
+                'type' => $file->getClientMimeType(),
+                'uploaded_at' => now()->toDateTimeString()
+            ];
+        }
+
+        if ($request->hasFile('supporting_document')) {
+            $file = $request->file('supporting_document');
+            $path = $file->store('verification_documents', 'public');
+            $uploadedDocs['supporting_document'] = [
+                'name' => $file->getClientOriginalName(),
+                'path' => $path,
+                'size' => $file->getSize(),
+                'type' => $file->getClientMimeType(),
+                'uploaded_at' => now()->toDateTimeString()
+            ];
+        }
+
+        // File Hash Cache Check
+        $gstPath = $uploadedDocs['gst_certificate']['path'] ?? null;
+        $regPath = $uploadedDocs['registration_document']['path'] ?? null;
+        $hashString = '';
+        if ($gstPath) $hashString .= hash_file('sha256', storage_path('app/public/' . $gstPath));
+        if ($regPath) $hashString .= hash_file('sha256', storage_path('app/public/' . $regPath));
+        $newHash = hash('sha256', $hashString);
+
+        if ($profile->verification_documents_hash === $newHash && !$textFieldsChanged && $profile->ai_verification_result) {
+            // Reuse previous result
+            $oldStatus = $profile->ai_verification_status;
+            $profile->update([
+                'company_name'                => $request->company_name,
+                'company_registration_number' => $request->company_registration_number,
+                'gst_number'                  => $request->gst_number,
+                'company_address'             => $request->company_address,
+                'contact_phone'               => $request->contact_phone,
+                'verification_status'         => 'pending',
+                'verification_submitted_at'   => now(),
+            ]);
+
+            \App\Models\StartupVerificationLog::create([
+                'startup_profile_id' => $profile->id,
+                'action'             => 'verification_submitted',
+                'performed_by'       => 'system',
+                'old_status'         => $oldStatus,
+                'new_status'         => $profile->ai_verification_status,
+                'reason'             => 'Verification documents unchanged. Reused cached AI results.',
+                'created_at'         => now(),
+            ]);
+
+            return redirect()->route('startup.dashboard')->with('success', 'Verification request submitted. Reused previous AI results as files were unchanged.');
+        }
+
+        // Call Gemini AI
+        $aiService = new \App\Services\AIStartupVerificationService();
+        $result = $aiService->verifyStartup(
+            $gstPath,
+            $regPath,
+            $request->company_name,
+            $request->gst_number,
+            $request->company_registration_number
+        );
+
+        $oldStatus = $profile->ai_verification_status;
+        $newAIStatus = $result['recommendation'] === 'pre_approve' ? 'ai_pre_approved' : ($result['recommendation'] === 'reject' ? 'ai_rejected' : 'ai_flagged');
+
+        $profile->update([
+            'company_name'                => $request->company_name,
+            'company_registration_number' => $request->company_registration_number,
+            'gst_number'                  => $request->gst_number,
+            'company_address'             => $request->company_address,
+            'contact_phone'               => $request->contact_phone,
+            'verification_documents'      => $uploadedDocs,
+            'verification_documents_hash' => $newHash,
+            'ai_verification_status'      => $newAIStatus,
+            'ai_verification_result'      => $result,
+            'ai_confidence_score'         => $result['verification_score'],
+            'verification_level'          => $result['verification_level'],
+            'verification_status'         => $result['recommendation'] === 'reject' ? 'rejected' : 'pending',
+            'verification_submitted_at'   => now(),
+        ]);
+
+        \App\Models\StartupVerificationLog::create([
+            'startup_profile_id' => $profile->id,
+            'action'             => 'verification_submitted',
+            'performed_by'       => 'ai',
+            'old_status'         => $oldStatus,
+            'new_status'         => $newAIStatus,
+            'reason'             => "AI document scan completed. Verification Score: {$result['verification_score']} (Level {$result['verification_level']}). Details: {$result['reason']}",
+            'created_at'         => now(),
+        ]);
+
+        if ($result['recommendation'] === 'reject') {
+            return redirect()->route('startup.verification')->with('error', "Verification failed: {$result['reason']}");
+        }
+
+        return redirect()->route('startup.dashboard')->with('success', 'Verification documents uploaded and scanned successfully. Awaiting admin approval.');
     }
 
     private function transformStudentForDiscovery($student, $targetSkills, $profile)
@@ -193,6 +421,12 @@ class StartupController extends Controller
             return redirect()->route('startup.profile')->with('error', 'Please complete your profile first.');
         }
 
+        // Enforce verification check
+        if (!$profile->isVerifiedAndActive()) {
+            return redirect()->route('startup.verification')
+                ->with('error', 'You must have a verified startup account to access the candidate directory.');
+        }
+
         // Get startup's posted tasks for the AI Match dropdown
         $postedTasks = $profile->tasks()->latest()->get();
 
@@ -258,8 +492,11 @@ class StartupController extends Controller
         $fastestGrowing = collect([]);
         $mostReliable = collect([]);
         $recommended = collect([]);
-        $topPhp = collect([]);
-        $topUi = collect([]);
+        $topSoftware = collect([]);
+        $topDesigners = collect([]);
+        $topMarketers = collect([]);
+        $topDataAi = collect([]);
+        $topBusiness = collect([]);
 
         if ($activeTab === 'discover') {
             $baseDiscoverQuery = \App\Models\StudentProfile::query()
@@ -305,16 +542,52 @@ class StartupController extends Controller
                 $recommended = $topTalent;
             }
 
-            // 5. Top PHP
-            $topPhp = (clone $baseDiscoverQuery)
-                ->whereHas('skills', fn($q) => $q->where('name', 'PHP'))
+            // 5. Top Software Developers
+            $topSoftware = (clone $baseDiscoverQuery)
+                ->where('primary_domain', 'Software Development')
+                ->leftJoin('reputation_scores', 'student_profiles.id', '=', 'reputation_scores.student_profile_id')
+                ->orderByRaw('COALESCE(reputation_scores.overall_score, 50.00) DESC')
+                ->select('student_profiles.*')
                 ->take(4)
                 ->get()
                 ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile));
 
-            // 6. Top UI/UX
-            $topUi = (clone $baseDiscoverQuery)
-                ->whereHas('skills', fn($q) => $q->where('name', 'UI/UX Design'))
+            // 6. Top UI/UX Designers
+            $topDesigners = (clone $baseDiscoverQuery)
+                ->where('primary_domain', 'UI/UX Design')
+                ->leftJoin('reputation_scores', 'student_profiles.id', '=', 'reputation_scores.student_profile_id')
+                ->orderByRaw('COALESCE(reputation_scores.overall_score, 50.00) DESC')
+                ->select('student_profiles.*')
+                ->take(4)
+                ->get()
+                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile));
+
+            // 7. Top Digital Marketers
+            $topMarketers = (clone $baseDiscoverQuery)
+                ->where('primary_domain', 'Digital Marketing')
+                ->leftJoin('reputation_scores', 'student_profiles.id', '=', 'reputation_scores.student_profile_id')
+                ->orderByRaw('COALESCE(reputation_scores.overall_score, 50.00) DESC')
+                ->select('student_profiles.*')
+                ->take(4)
+                ->get()
+                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile));
+
+            // 8. Top Data & AI
+            $topDataAi = (clone $baseDiscoverQuery)
+                ->where('primary_domain', 'Data & AI')
+                ->leftJoin('reputation_scores', 'student_profiles.id', '=', 'reputation_scores.student_profile_id')
+                ->orderByRaw('COALESCE(reputation_scores.overall_score, 50.00) DESC')
+                ->select('student_profiles.*')
+                ->take(4)
+                ->get()
+                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile));
+
+            // 9. Top Content & Business
+            $topBusiness = (clone $baseDiscoverQuery)
+                ->where('primary_domain', 'Content & Business')
+                ->leftJoin('reputation_scores', 'student_profiles.id', '=', 'reputation_scores.student_profile_id')
+                ->orderByRaw('COALESCE(reputation_scores.overall_score, 50.00) DESC')
+                ->select('student_profiles.*')
                 ->take(4)
                 ->get()
                 ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile));
@@ -334,6 +607,16 @@ class StartupController extends Controller
                           $uq->where('name', 'like', $searchTerm);
                       });
                 });
+            }
+
+            // Filter by Domain
+            if ($request->filled('domain')) {
+                $query->where('primary_domain', $request->domain);
+            }
+
+            // Filter by Role
+            if ($request->filled('role')) {
+                $query->where('preferred_role', $request->role);
             }
 
             // Filter by Skill (dropdown)
@@ -407,8 +690,11 @@ class StartupController extends Controller
             'fastestGrowing',
             'mostReliable',
             'recommended',
-            'topPhp',
-            'topUi'
+            'topSoftware',
+            'topDesigners',
+            'topMarketers',
+            'topDataAi',
+            'topBusiness'
         ));
     }
 

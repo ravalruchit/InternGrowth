@@ -1,83 +1,186 @@
 <x-app-layout>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-6">Available Tasks</h1>
+    <div class="ig-container">
+        <!-- Header -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-end mb-12 ig-anim-fade-up">
+            <div class="md:col-span-8">
+                <p class="ig-eyebrow mb-3">— The marketplace</p>
+                <h1 class="ig-display text-5xl md:text-7xl leading-[0.95]">
+                    Real work. <span class="ig-serif text-[var(--ig-accent)]">Real receipts.</span><br>
+                    Pick what you want to ship.
+                </h1>
+            </div>
+            <div class="md:col-span-4 md:text-right">
+                <p class="text-sm text-[var(--ig-muted)] max-w-xs md:ml-auto">
+                    Every task here is posted by a verified startup. Complete one — earn a stipend, and a permanent entry on your IPRS scorecard.
+                </p>
+            </div>
+        </div>
 
+        <!-- Verification banner -->
         @if(isset($isLimited) && $isLimited)
-            <div class="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400 p-6 rounded-lg shadow">
-                <div class="flex items-start space-x-3">
-                    <svg class="w-6 h-6 text-yellow-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                    </svg>
+            <div class="ig-banner ig-banner-warn mb-10 ig-anim-fade-up ig-delay-1">
+                <svg class="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="flex-1">
+                    <h3 class="ig-display text-xl mb-1">Limited access — only 5 tasks visible</h3>
+                    <p class="text-sm text-[var(--ig-ink-2)]">Verify your college email to unlock the full marketplace and the rest of this week's open tasks.</p>
+                </div>
+                <a href="{{ route('student.verification') }}" class="ig-btn ig-btn-primary"><span>Verify email</span><span class="arrow">→</span></a>
+            </div>
+        @endif
+
+        <!-- Filter bar -->
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-10 pb-5 border-b border-[var(--ig-line)] ig-reveal">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="ig-eyebrow mr-2">Filter</span>
+                <button class="ig-chip ig-chip-ink filter-btn" data-filter="all">All</button>
+                <button class="ig-chip filter-btn" data-filter="is-open">Open</button>
+                <button class="ig-chip filter-btn" data-filter="is-progress">In progress</button>
+                <button class="ig-chip filter-btn" data-filter="is-done">Completed</button>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-[var(--ig-muted)]">
+                <span id="tasks-count-display">{{ count($tasks ?? []) }} tasks live</span>
+                <span class="w-2 h-2 rounded-full bg-[var(--ig-lime-deep)] animate-pulse ml-1"></span>
+            </div>
+        </div>
+
+        <!-- Tasks grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            @forelse($tasks as $idx => $task)
+                @php
+                    $approvedApp = $task->applications->where('status', 'approved')->first();
+                    $completedApp = $task->applications->filter(fn($app) => $app->submission && $app->submission->status === 'accepted')->first();
+                    $isCompleted = $task->status === 'completed' || $completedApp;
+                    $isInProgress = !$isCompleted && $approvedApp;
+                    $statusClass = $isCompleted ? 'is-done' : ($isInProgress ? 'is-progress' : 'is-open');
+                @endphp
+
+                <a href="{{ route('tasks.show', $task->id) }}"
+                   class="ig-card ig-task-card {{ $statusClass }} p-6 flex flex-col justify-between ig-reveal"
+                   data-reveal-delay="{{ ($idx % 6) * 60 }}">
+                    <!-- Top -->
                     <div>
-                        <h3 class="text-lg font-semibold text-yellow-900">Limited Access - Only 5 Tasks Shown</h3>
-                        <p class="text-yellow-800 mt-1">Verify your college email to unlock all available tasks and opportunities!</p>
-                        <a href="{{ route('student.verification') }}" class="inline-block mt-3 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 font-semibold text-sm">
-                            Verify College Email →
-                        </a>
+                        <div class="flex items-center justify-between mb-5">
+                            @if($isCompleted)
+                                <span class="ig-chip ig-chip-success">
+                                    <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    Completed
+                                </span>
+                            @elseif($isInProgress)
+                                <span class="ig-chip ig-chip-warn">In progress</span>
+                            @else
+                                <span class="ig-chip ig-chip-accent">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[var(--ig-accent)] animate-pulse"></span>
+                                    Open
+                                </span>
+                            @endif
+
+                            <span class="ig-mono text-[10px] text-[var(--ig-muted)]">#{{ str_pad($task->id, 4, '0', STR_PAD_LEFT) }}</span>
+                        </div>
+
+                        <h3 class="ig-display text-[22px] leading-[1.1] mb-2 text-[var(--ig-ink)] line-clamp-2">
+                            {{ $task->title }}
+                        </h3>
+
+                        <p class="ig-mono text-[11px] text-[var(--ig-muted)] mb-4">
+                            <span class="text-[var(--ig-ink-2)] font-semibold">{{ $task->startup->company_name }}</span>
+                        </p>
+
+                        <p class="text-sm text-[var(--ig-ink-2)] leading-relaxed mb-5 line-clamp-3">
+                            {{ Str::limit($task->description, 130) }}
+                        </p>
+
+                        @if($isCompleted && $completedApp)
+                            <p class="text-[11.5px] text-[var(--ig-muted)] mb-4 ig-mono">→ shipped by {{ $completedApp->student->user->name }}</p>
+                        @elseif($isInProgress && $approvedApp)
+                            <p class="text-[11.5px] text-[var(--ig-muted)] mb-4 ig-mono">→ working: {{ $approvedApp->student->user->name }}</p>
+                        @endif
+
+                        <div class="flex flex-wrap gap-1.5 mb-6">
+                            @foreach($task->skills->take(4) as $skill)
+                                <span class="ig-tag">{{ $skill->name }}</span>
+                            @endforeach
+                            @if($task->skills->count() > 4)
+                                <span class="ig-tag">+{{ $task->skills->count() - 4 }}</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Bottom -->
+                    <div class="flex items-end justify-between pt-5 border-t border-dashed border-[var(--ig-line)]">
+                        <div>
+                            @if($task->stipend)
+                                <p class="ig-eyebrow text-[10px] mb-1">Stipend</p>
+                                <p class="ig-display text-[20px] text-[var(--ig-lime-deep)] font-bold">₹{{ number_format($task->stipend, 0) }}</p>
+                            @else
+                                <p class="ig-eyebrow text-[10px] mb-1">Stipend</p>
+                                <p class="text-xs text-[var(--ig-muted)] font-medium">Experience Task</p>
+                            @endif
+                        </div>
+                        <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ig-ink)] group">
+                            View
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="transition-transform group-hover:translate-x-1"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                        </span>
+                    </div>
+                </a>
+            @empty
+                <div class="col-span-full text-center py-24">
+                    <p class="ig-display text-3xl text-[var(--ig-muted)] mb-2">No open tasks right now.</p>
+                    <p class="text-sm text-[var(--ig-muted)]">Check back soon — startups post new work daily.</p>
+                </div>
+            @endforelse
+        </div>
+
+        <!-- Below grid: helper -->
+        @if(count($tasks) > 0 && auth()->check() && auth()->user()->isStudent())
+            <div class="mt-16 ig-card-dark p-8 md:p-12 relative overflow-hidden ig-reveal">
+                <div class="absolute -top-20 -right-20 w-60 h-60 rounded-full blur-3xl opacity-30" style="background:var(--ig-accent)"></div>
+                <div class="relative grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <p class="ig-eyebrow mb-3" style="color:#9C9580">— Pro tip</p>
+                        <h3 class="ig-display text-3xl text-white">Apply to 3 tasks that match your skills. Founders shortlist within 48h.</h3>
+                    </div>
+                    <div class="md:text-right">
+                        <a href="{{ route('student.profile') }}" class="ig-btn ig-btn-lime"><span>Tune your profile</span><span class="arrow">→</span></a>
                     </div>
                 </div>
             </div>
         @endif
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @forelse($tasks as $task)
-                @php
-                    $approvedApp = $task->applications->where('status', 'approved')->first();
-                    $completedApp = $task->applications->filter(function($app) {
-                        return $app->submission && $app->submission->status === 'accepted';
-                    })->first();
-                    $isCompleted = $task->status === 'completed' || $completedApp;
-                    $isInProgress = !$isCompleted && $approvedApp;
-                @endphp
-                <div class="bg-white rounded-lg shadow-lg hover:shadow-xl transition p-6 {{ $isCompleted ? 'border-l-4 border-green-500' : ($isInProgress ? 'border-l-4 border-yellow-500' : 'border-l-4 border-blue-500') }}">
-                    <div class="flex items-start justify-between mb-3">
-                        <h3 class="text-xl font-semibold text-gray-900 flex-1">{{ $task->title }}</h3>
-                        @if($isCompleted)
-                            <span class="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 ml-2">
-                                ✓ Completed
-                            </span>
-                        @elseif($isInProgress)
-                            <span class="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 ml-2">
-                                ⏳ In Progress
-                            </span>
-                        @else
-                            <span class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 ml-2">
-                                📢 Open
-                            </span>
-                        @endif
-                    </div>
-                    
-                    @if($isCompleted && $completedApp)
-                        <p class="text-sm text-green-700 mb-2">
-                            <strong>Completed by:</strong> {{ $completedApp->student->user->name }}
-                        </p>
-                    @elseif($isInProgress && $approvedApp)
-                        <p class="text-sm text-yellow-700 mb-2">
-                            <strong>Working on it:</strong> {{ $approvedApp->student->user->name }}
-                        </p>
-                    @endif
-                    
-                    <p class="text-sm text-gray-500 mb-2">
-                        <a href="{{ route('startups.public-profile', $task->startup->id) }}" class="font-bold text-indigo-650 hover:text-indigo-855 hover:underline transition">
-                            {{ $task->startup->company_name }}
-                        </a>
-                    </p>
-                    <p class="text-gray-600 mb-4">{{ Str::limit($task->description, 100) }}</p>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        @foreach($task->skills as $skill)
-                            <span class="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded">{{ $skill->name }}</span>
-                        @endforeach
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-lg font-bold text-indigo-600">{{ $task->reward_points }} pts</span>
-                        <a href="{{ route('tasks.show', $task->id) }}" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition font-medium">
-                            View Details
-                        </a>
-                    </div>
-                </div>
-            @empty
-                <p class="text-gray-500">No tasks available at the moment.</p>
-            @endforelse
-        </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const taskCards = document.querySelectorAll('.ig-task-card');
+            const countDisplay = document.getElementById('tasks-count-display');
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove active style class from all buttons
+                    filterBtns.forEach(b => b.classList.remove('ig-chip-ink'));
+                    // Add active style class to clicked button
+                    this.classList.add('ig-chip-ink');
+
+                    const filter = this.getAttribute('data-filter');
+                    let visibleCount = 0;
+
+                    taskCards.forEach(card => {
+                        if (filter === 'all' || card.classList.contains(filter)) {
+                            card.style.display = '';
+                            visibleCount++;
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+
+                    // Update live count display
+                    if (filter === 'all') {
+                        countDisplay.textContent = `${visibleCount} tasks live`;
+                    } else {
+                        const filterName = this.textContent.trim().toLowerCase();
+                        countDisplay.textContent = `${visibleCount} ${filterName} tasks`;
+                    }
+                });
+            });
+        });
+    </script>
 </x-app-layout>

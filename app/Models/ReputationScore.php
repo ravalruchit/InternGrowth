@@ -21,7 +21,8 @@ class ReputationScore extends Model
         'interview_success_rate',
         'strong_candidate_outcomes',
         'no_shows',
-        'total_verified_projects'
+        'total_verified_projects',
+        'domain_scores'
     ];
 
     protected $casts = [
@@ -37,7 +38,8 @@ class ReputationScore extends Model
         'interview_success_rate' => 'decimal:2',
         'strong_candidate_outcomes' => 'integer',
         'no_shows' => 'integer',
-        'total_verified_projects' => 'integer'
+        'total_verified_projects' => 'integer',
+        'domain_scores' => 'array'
     ];
 
     public function studentProfile(): BelongsTo

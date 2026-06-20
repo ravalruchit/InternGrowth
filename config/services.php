@@ -41,4 +41,11 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'gemini' => [
+        'key'                     => env('GEMINI_API_KEY'),
+        'model'                   => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+        'confidence_threshold'    => (int) env('AI_VERIFICATION_CONFIDENCE_THRESHOLD', 90),
+        'manual_review_threshold' => (int) env('AI_MANUAL_REVIEW_THRESHOLD', 70),
+    ],
+
 ];

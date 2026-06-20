@@ -52,7 +52,8 @@
                             default   => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
                         };
                     @endphp
-                    <div class="bg-white rounded-xl shadow-sm border {{ $notification->is_read ? 'border-gray-100 opacity-75' : 'border-indigo-200 ring-1 ring-indigo-100' }} p-4 flex items-start gap-4 transition hover:shadow-md">
+                    <div onclick="window.location='{{ $notification->target_url }}'"
+                         class="cursor-pointer bg-white rounded-xl shadow-sm border {{ $notification->is_read ? 'border-gray-100 opacity-75' : 'border-indigo-200 ring-1 ring-indigo-100' }} p-4 flex items-start gap-4 transition hover:shadow-md hover:border-indigo-400">
                         <!-- Icon -->
                         <div class="flex-shrink-0 w-10 h-10 rounded-full {{ $iconBg }} flex items-center justify-center">
                             <svg class="w-5 h-5 {{ $iconColor }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,7 +78,7 @@
                         </div>
 
                         <!-- Delete -->
-                        <form method="POST" action="{{ route('notifications.destroy', $notification->id) }}" class="flex-shrink-0">
+                        <form method="POST" action="{{ route('notifications.destroy', $notification->id) }}" class="flex-shrink-0" onclick="event.stopPropagation()">
                             @csrf @method('DELETE')
                             <button type="submit" class="text-gray-300 hover:text-red-400 transition" title="Delete">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

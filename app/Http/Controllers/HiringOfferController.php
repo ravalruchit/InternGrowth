@@ -32,9 +32,9 @@ class HiringOfferController extends Controller
             return back()->with('error', 'Only startups can extend hiring offers.');
         }
 
-        // Block if startup is not verified
-        if (!$startup->is_verified) {
-            return back()->with('error', 'Your startup account must be verified by an admin before you can extend hiring offers.');
+        // Block if startup is not verified and active
+        if (!$startup->isVerifiedAndActive()) {
+            return back()->with('error', 'Your startup account must be verified by an admin and active before you can extend hiring offers.');
         }
 
         // Block if startup has outstanding negative balance

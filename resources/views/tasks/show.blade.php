@@ -1,46 +1,44 @@
 <x-app-layout>
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="bg-white rounded-lg shadow p-8">
-            <!-- Startup Info Badge -->
-            <div class="mb-4 flex items-center space-x-3">
-                <div class="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500">Posted by</p>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <a href="{{ route('startups.public-profile', $task->startup->id) }}" class="text-lg font-bold text-indigo-650 hover:text-indigo-855 hover:underline transition">
+    <div class="ig-container">
+        
+        <!-- Header & Startup Card -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end mb-12 ig-anim-fade-up">
+            <div class="lg:col-span-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-[var(--ig-ink)] flex items-center justify-center text-[var(--ig-bg)] ig-display text-lg">
+                        {{ strtoupper(substr($task->startup->company_name, 0, 1)) }}
+                    </div>
+                    <div>
+                        <a href="{{ route('startups.public-profile', $task->startup->id) }}" class="font-semibold hover:text-[var(--ig-accent)] transition">
                             {{ $task->startup->company_name }}
                         </a>
-                        @if($task->startup->is_verified)
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
-                                ✓ Verified
-                            </span>
-                        @endif
-                        @php
-                            $trustScoreVal = $task->startup->trustScore ? $task->startup->trustScore->overall_score : ($task->startup->credibility_score * 100);
-                            if ($trustScoreVal <= 0) $trustScoreVal = 100;
-                        @endphp
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-150">
-                            🛡️ {{ number_format($trustScoreVal, 0) }}/100 Trust Score
-                        </span>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            @if($task->startup->is_verified)
+                                <span class="ig-chip ig-chip-lime" style="font-size: 10px; padding: 2px 8px;">VERIFIED</span>
+                            @endif
+                            @php
+                                $trustScoreVal = $task->startup->trustScore ? $task->startup->trustScore->overall_score : ($task->startup->credibility_score * 100);
+                                if ($trustScoreVal <= 0) $trustScoreVal = 100;
+                            @endphp
+                            <span class="ig-mono text-[10px] text-[var(--ig-muted)]">🛡️ {{ number_format($trustScoreVal, 0) }}/100 Trust</span>
+                        </div>
                     </div>
                 </div>
+                
+                <h1 class="ig-display text-4xl sm:text-5xl md:text-6xl leading-[1.0] text-[var(--ig-ink)]">
+                    {{ $task->title }}
+                </h1>
             </div>
             
-            <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ $task->title }}</h1>
-            
-            @if(auth()->check() && auth()->user()->isStartup() && $task->startup_profile_id === auth()->user()->startupProfile->id)
-                @php
-                    $hasApprovedApp = $task->applications()->where('status', 'approved')->count() > 0;
-                @endphp
-                <div class="mb-4 flex gap-2">
+            <div class="lg:col-span-4 lg:text-right flex flex-wrap gap-2 lg:justify-end">
+                @if(auth()->check() && auth()->user()->isStartup() && $task->startup_profile_id === auth()->user()->startupProfile->id)
+                    @php
+                        $hasApprovedApp = $task->applications()->where('status', 'approved')->count() > 0;
+                    @endphp
                     @if(!$hasApprovedApp)
-                        <a href="{{ route('tasks.edit', $task->id) }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Edit Task</a>
+                        <a href="{{ route('tasks.edit', $task->id) }}" class="ig-btn ig-btn-ghost">Edit Task</a>
                     @else
-                        <button disabled class="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed" title="Cannot edit task after approving an application">
+                        <button disabled class="ig-btn opacity-50 cursor-not-allowed border-dashed border-[var(--ig-line-2)]" title="Cannot edit task after approving an application">
                             Edit Task (Locked)
                         </button>
                     @endif
@@ -48,247 +46,241 @@
                         <form method="POST" action="{{ route('tasks.destroy', $task->id) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this task?');">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">Delete Task</button>
+                            <button type="submit" class="ig-btn" style="background:var(--ig-rose);color:white;">Delete Task</button>
                         </form>
                     @endif
-                </div>
-            @endif
-            
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-700 mb-2">Description</h3>
-                <p class="text-gray-600">{{ $task->description }}</p>
+                @endif
             </div>
+        </div>
 
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-700 mb-2">Required Skills</h3>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($task->skills as $skill)
-                        <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded">{{ $skill->name }}</span>
-                    @endforeach
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
+            <!-- Left Panel: Task Details -->
+            <div class="lg:col-span-8 space-y-8">
+                <!-- Description -->
+                <div class="ig-card p-8 ig-reveal">
+                    <h2 class="ig-eyebrow mb-4">— Task Description</h2>
+                    <div class="text-[var(--ig-ink-2)] text-base leading-relaxed whitespace-pre-line">
+                        {{ $task->description }}
+                    </div>
                 </div>
-            </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-700">Reward Points</h3>
-                    <p class="text-2xl font-bold text-indigo-600">{{ $task->reward_points }}</p>
+                <!-- Skills -->
+                <div class="ig-card p-8 ig-reveal">
+                    <h2 class="ig-eyebrow mb-4">— Required Skills</h2>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($task->skills as $skill)
+                            <span class="ig-tag" style="border-style: solid; border-color: var(--ig-line-2)">{{ $skill->name }}</span>
+                        @endforeach
+                    </div>
                 </div>
-                @if($task->stipend)
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-700">Stipend</h3>
-                        <p class="text-2xl font-bold text-green-600">₹{{ $task->stipend }}</p>
+
+                <!-- Rewards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 ig-reveal">
+                    <div class="ig-card p-6">
+                        <p class="ig-eyebrow mb-2">Reward Points</p>
+                        <p class="ig-display text-4xl text-[var(--ig-accent)]">
+                            {{ $task->reward_points }} <span class="text-sm font-normal text-[var(--ig-muted)]">points</span>
+                        </p>
+                    </div>
+                    @if($task->stipend)
+                        <div class="ig-card p-6">
+                            <p class="ig-eyebrow mb-2">Stipend</p>
+                            <p class="ig-display text-4xl text-[var(--ig-lime-deep)]">
+                                ₹{{ number_format($task->stipend, 0) }}
+                            </p>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Startup Action / Student Application List (Startup Owner Dashboard View) -->
+                @if(auth()->check() && auth()->user()->isStartup() && $task->startup_profile_id === auth()->user()->startupProfile->id)
+                    <div class="mt-8 border-t border-[var(--ig-line)] pt-8 ig-reveal">
+                        @include('applications.index', ['applications' => $task->applications, 'task' => $task])
                     </div>
                 @endif
             </div>
 
-            @auth
-                @if(auth()->user()->isStudent())
-                    @php
-                        $existingApplication = $task->applications->where('student_profile_id', auth()->user()->studentProfile->id)->first();
-                        $hasApprovedApplication = $task->applications->where('status', 'approved')->count() > 0;
-                        $approvedApplication = $task->applications->where('status', 'approved')->first();
-                        $hasAcceptedSubmission = $task->applications->filter(function($app) {
-                            return $app->submission && $app->submission->status === 'accepted';
-                        })->count() > 0;
-                        $acceptedApplication = $task->applications->filter(function($app) {
-                            return $app->submission && $app->submission->status === 'accepted';
-                        })->first();
-                    @endphp
-                    
-                    @if($hasAcceptedSubmission || $task->status === 'completed')
-                        <!-- Task completed -->
-                        <div class="bg-green-50 border-l-4 border-green-500 p-6 rounded-lg">
-                            <div class="flex items-center">
-                                <svg class="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <div>
-                                    <h3 class="text-lg font-semibold text-green-900">This task has been completed</h3>
-                                    <p class="text-green-700 mt-1">
+            <!-- Right Panel: Application Status / AI Recommendation -->
+            <div class="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+                
+                @auth
+                    @if(auth()->user()->isStudent())
+                        @php
+                            $existingApplication = $task->applications->where('student_profile_id', auth()->user()->studentProfile->id)->first();
+                            $hasApprovedApplication = $task->applications->where('status', 'approved')->count() > 0;
+                            $approvedApplication = $task->applications->where('status', 'approved')->first();
+                            $hasAcceptedSubmission = $task->applications->filter(function($app) {
+                                return $app->submission && $app->submission->status === 'accepted';
+                            })->count() > 0;
+                            $acceptedApplication = $task->applications->filter(function($app) {
+                                return $app->submission && $app->submission->status === 'accepted';
+                            })->first();
+                        @endphp
+                        
+                        @if($hasAcceptedSubmission || $task->status === 'completed')
+                            <div class="ig-card-dark p-6 relative overflow-hidden ig-reveal">
+                                <div class="absolute -top-16 -right-16 w-36 h-36 rounded-full blur-2xl opacity-20" style="background:var(--ig-lime)"></div>
+                                <div class="relative">
+                                    <span class="ig-chip ig-chip-success mb-3">COMPLETED</span>
+                                    <h3 class="ig-display text-2xl text-white">Task Completed</h3>
+                                    <p class="text-sm mt-3 leading-relaxed" style="color:#C9C1AE">
                                         This task has been successfully completed by 
                                         <strong>{{ $acceptedApplication ? $acceptedApplication->student->user->name : 'a student' }}</strong>.
                                     </p>
                                 </div>
                             </div>
-                        </div>
-                    @elseif($hasApprovedApplication && !$existingApplication)
-                        <!-- Task already accepted by someone else -->
-                        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-lg">
-                            <div class="flex items-center">
-                                <svg class="w-6 h-6 text-yellow-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                </svg>
-                                <div>
-                                    <h3 class="text-lg font-semibold text-yellow-900">This task has been accepted</h3>
-                                    <p class="text-yellow-700 mt-1">
-                                        <strong>{{ $approvedApplication ? $approvedApplication->student->user->name : 'A student' }}</strong> has already been approved for this task. Applications are no longer being accepted.
+                        @elseif($hasApprovedApplication && !$existingApplication)
+                            <div class="ig-card p-6 ig-reveal">
+                                <span class="ig-chip ig-chip-warn mb-3">IN PROGRESS</span>
+                                <h3 class="ig-display text-2xl">Task Taken</h3>
+                                <p class="text-sm mt-3 text-[var(--ig-ink-2)] leading-relaxed">
+                                    <strong>{{ $approvedApplication ? $approvedApplication->student->user->name : 'A student' }}</strong> has already been approved for this task. Applications are closed.
+                                </p>
+                            </div>
+                        @elseif($existingApplication)
+                            <div class="ig-card p-6 ig-reveal">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="ig-display text-2xl">Your Application</h3>
+                                    <a href="{{ route('messages.create', [auth()->user()->studentProfile->id, $task->startup_profile_id, $task->id]) }}" class="w-8 h-8 rounded-full border border-[var(--ig-line)] hover:border-[var(--ig-ink)] flex items-center justify-center transition" title="Message startup">
+                                        💬
+                                    </a>
+                                </div>
+
+                                <div class="mb-5">
+                                    @if($existingApplication->status === 'approved')
+                                        <span class="ig-chip ig-chip-success">Approved</span>
+                                        <p class="text-xs text-green-700 font-semibold mt-2">✓ You've been accepted for this task!</p>
+                                    @elseif($existingApplication->status === 'rejected')
+                                        <span class="ig-chip ig-chip-danger">Rejected</span>
+                                        <p class="text-xs text-[var(--ig-rose)] font-semibold mt-2">✗ Your application was not accepted</p>
+                                    @else
+                                        <span class="ig-chip ig-chip-warn">Pending</span>
+                                        <p class="text-xs text-amber-700 font-semibold mt-2">⏳ Waiting for startup review</p>
+                                    @endif
+                                </div>
+
+                                @if($existingApplication->cover_letter)
+                                    <p class="text-xs text-[var(--ig-muted)] bg-[var(--ig-bg)] rounded-xl p-3 mb-5 leading-relaxed">
+                                        <strong>Your message:</strong> {{ Str::limit($existingApplication->cover_letter, 120) }}
+                                    </p>
+                                @endif
+
+                                @if($existingApplication->status === 'approved')
+                                    @php
+                                        $submission = $existingApplication->submission;
+                                    @endphp
+                                    
+                                    <div class="border-t border-dashed border-[var(--ig-line)] pt-5">
+                                        @if(!$submission)
+                                            <div class="bg-[var(--ig-accent-soft)] rounded-xl p-4 border border-[var(--ig-accent)]/20">
+                                                <h4 class="font-bold text-[var(--ig-ink)] text-sm mb-1">📝 Ready to submit?</h4>
+                                                <p class="text-xs text-[var(--ig-ink-2)] mb-3">Submit your completed work for review.</p>
+                                                <a href="{{ route('submissions.create', $existingApplication->id) }}" class="ig-btn ig-btn-accent w-full justify-center" style="padding: 10px; font-size: 13px;">
+                                                    <span>Submit work</span><span class="arrow">→</span>
+                                                </a>
+                                            </div>
+                                        @elseif($submission->status === 'pending')
+                                            <div class="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                                                <h4 class="font-bold text-amber-900 text-sm mb-1">⏳ Under Review</h4>
+                                                <p class="text-xs text-amber-800">Your submission is waiting for startup review.</p>
+                                            </div>
+                                        @elseif($submission->status === 'revision_requested')
+                                            <div class="bg-orange-50 rounded-xl p-4 border border-orange-200">
+                                                <h4 class="font-bold text-orange-900 text-sm mb-1">🔄 Revision Requested</h4>
+                                                <p class="text-xs text-orange-800 mb-2">Changes are needed for your submission.</p>
+                                                @if($submission->feedback)
+                                                    <p class="text-xs text-orange-950 bg-white p-2 rounded-lg border border-orange-100 mb-3 leading-relaxed">{{ $submission->feedback }}</p>
+                                                @endif
+                                                <a href="{{ route('submissions.revise', $submission->id) }}" class="ig-btn ig-btn-accent w-full justify-center animate-pulse" style="padding: 10px; font-size: 13px;">
+                                                    <span>Revise work</span><span class="arrow">→</span>
+                                                </a>
+                                            </div>
+                                        @elseif($submission->status === 'accepted')
+                                            <div class="bg-green-50 rounded-xl p-4 border border-green-200">
+                                                <h4 class="font-bold text-green-900 text-sm mb-1">✅ Work Accepted!</h4>
+                                                <p class="text-xs text-green-800">Your submission has been accepted.</p>
+                                            </div>
+                                        @elseif($submission->status === 'rejected')
+                                            <div class="bg-red-50 rounded-xl p-4 border border-red-200">
+                                                <h4 class="font-bold text-red-900 text-sm mb-1">❌ Submission Rejected</h4>
+                                                @if($submission->feedback)
+                                                    <p class="text-xs text-red-950 bg-white p-2 rounded-lg border border-red-100 mb-2">{{ $submission->feedback }}</p>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        @else
+                            <!-- Apply Form -->
+                            <div class="ig-card p-6 ig-reveal">
+                                <h3 class="ig-display text-2xl mb-4">Apply for Task</h3>
+                                <form method="POST" action="{{ route('applications.store', $task->id) }}" class="space-y-4">
+                                    @csrf
+                                    <div>
+                                        <label class="block text-xs font-semibold mb-2 uppercase tracking-wider text-[var(--ig-muted)]">Cover Message (Optional)</label>
+                                        <textarea name="cover_letter" rows="4" class="ig-input" placeholder="Explain why you are the best fit for this task..."></textarea>
+                                    </div>
+                                    <button type="submit" class="ig-btn ig-btn-primary w-full justify-center">
+                                        <span>Apply now</span><span class="arrow">→</span>
+                                    </button>
+                                    <a href="{{ route('messages.create', [auth()->user()->studentProfile->id, $task->startup_profile_id, $task->id]) }}" class="ig-btn ig-btn-ghost w-full justify-center">
+                                        💬 Message startup
+                                    </a>
+                                </form>
+                            </div>
+                        @endif
+                    @endif
+
+                    @if(auth()->user()->isStartup() && $task->startup_profile_id === auth()->user()->startupProfile->id)
+                        <!-- AI Recommended Students -->
+                        @if($recommendedStudents && $recommendedStudents->count() > 0)
+                            <div class="ig-card-dark p-6 relative overflow-hidden border border-blue-500/20 shadow-xl ig-reveal">
+                                <div class="absolute -top-20 -right-20 w-44 h-44 rounded-full blur-3xl opacity-20" style="background:var(--ig-lime)"></div>
+                                <div class="relative">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div>
+                                            <p class="ig-eyebrow" style="color: #9C9580">— AI Matchmaker</p>
+                                            <h3 class="ig-display text-xl text-white mt-1">Recommended Students</h3>
+                                        </div>
+                                        <span class="ig-chip ig-chip-lime" style="font-size:9.5px;padding:2px 8px;">AI POWERED</span>
+                                    </div>
+
+                                    <div class="space-y-4 mt-6">
+                                        @foreach($recommendedStudents as $student)
+                                            <div class="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition">
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <div>
+                                                        <h4 class="font-semibold text-white text-[15px]">{{ $student->user->name }}</h4>
+                                                        <p class="text-xs mt-1" style="color:#C9C1AE">{{ Str::limit($student->bio ?? 'No bio available', 60) }}</p>
+                                                        <div class="flex items-center gap-3 mt-3">
+                                                            <span class="ig-mono text-[10px]" style="color:#9C9580">Reliability: {{ number_format($student->reliability_score * 100, 0) }}%</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-right flex-shrink-0">
+                                                        <span class="ig-stat-num text-lg text-[var(--ig-lime)]">{{ $student->match_score }}%</span>
+                                                        <p class="ig-mono text-[9px]" style="color:#9C9580">match</p>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-3 pt-3 border-t border-white/5 text-right">
+                                                    <a href="{{ route('students.public-profile', $student->id) }}" class="inline-flex items-center gap-1 text-[11.5px] font-semibold text-[var(--ig-lime)] hover:underline">
+                                                        View profile
+                                                        <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <p class="text-[10px] text-center mt-4" style="color:#9C9580">
+                                        💡 Pro-tip: Invite these students to apply directly.
                                     </p>
                                 </div>
                             </div>
-                        </div>
-                    @elseif($existingApplication)
-                        <!-- Show application status -->
-                        <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border-l-4 border-indigo-500 p-6 rounded-lg">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Your Application Status</h3>
-                                    <div class="flex items-center space-x-3">
-                                        <span class="px-4 py-2 text-sm font-medium rounded-full {{ $existingApplication->status === 'approved' ? 'bg-green-100 text-green-800' : ($existingApplication->status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
-                                            {{ ucfirst($existingApplication->status) }}
-                                        </span>
-                                        @if($existingApplication->status === 'approved')
-                                            <span class="text-green-600 font-medium">✓ You've been accepted for this task!</span>
-                                        @elseif($existingApplication->status === 'rejected')
-                                            <span class="text-red-600 font-medium">✗ Your application was not accepted</span>
-                                        @else
-                                            <span class="text-yellow-600 font-medium">⏳ Waiting for startup review</span>
-                                        @endif
-                                    </div>
-                                    @if($existingApplication->cover_letter)
-                                        <p class="text-sm text-gray-600 mt-3">
-                                            <strong>Your cover letter:</strong> {{ Str::limit($existingApplication->cover_letter, 100) }}
-                                        </p>
-                                    @endif
-                                </div>
-                                <a href="{{ route('messages.create', [auth()->user()->studentProfile->id, $task->startup_profile_id, $task->id]) }}" class="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:shadow-md transition font-medium">
-                                    💬 Message
-                                </a>
-                            </div>
-                            
-                            @if($existingApplication->status === 'approved')
-                                @php
-                                    $submission = $existingApplication->submission;
-                                @endphp
-                                
-                                <!-- Submit Work / Revision Section -->
-                                <div class="mt-6 pt-6 border-t border-indigo-200">
-                                    @if(!$submission)
-                                        <!-- No submission yet - show submit button -->
-                                        <div class="bg-white rounded-lg p-4 border-2 border-green-400">
-                                            <h4 class="font-semibold text-gray-900 mb-2">📝 Ready to Submit Your Work?</h4>
-                                            <p class="text-sm text-gray-600 mb-4">You've been approved! Now submit your completed work for review.</p>
-                                            <a href="{{ route('submissions.create', $existingApplication->id) }}" class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-semibold">
-                                                Submit Work →
-                                            </a>
-                                        </div>
-                                    @elseif($submission->status === 'pending')
-                                        <!-- Submission pending review -->
-                                        <div class="bg-yellow-50 rounded-lg p-4 border-2 border-yellow-400">
-                                            <h4 class="font-semibold text-gray-900 mb-2">⏳ Submission Under Review</h4>
-                                            <p class="text-sm text-gray-600">Your work has been submitted and is waiting for startup review.</p>
-                                            <p class="text-xs text-gray-500 mt-2">Submitted: {{ $submission->created_at->format('M d, Y H:i') }}</p>
-                                        </div>
-                                    @elseif($submission->status === 'revision_requested')
-                                        <!-- Revision requested - show revise button -->
-                                        <div class="bg-orange-50 rounded-lg p-4 border-2 border-orange-400">
-                                            <h4 class="font-semibold text-gray-900 mb-2">🔄 Revision Requested</h4>
-                                            <p class="text-sm text-gray-600 mb-2">The startup has requested changes to your submission.</p>
-                                            @if($submission->feedback)
-                                                <div class="bg-white p-3 rounded border border-orange-200 mb-3">
-                                                    <p class="text-xs font-medium text-gray-500 mb-1">Feedback:</p>
-                                                    <p class="text-sm text-gray-800">{{ $submission->feedback }}</p>
-                                                </div>
-                                            @endif
-                                            <a href="{{ route('submissions.revise', $submission->id) }}" class="inline-block bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 font-semibold">
-                                                Revise Submission →
-                                            </a>
-                                        </div>
-                                    @elseif($submission->status === 'accepted')
-                                        <!-- Work accepted -->
-                                        <div class="bg-green-50 rounded-lg p-4 border-2 border-green-400">
-                                            <h4 class="font-semibold text-green-900 mb-2">✅ Work Accepted!</h4>
-                                            <p class="text-sm text-green-700">Congratulations! Your submission has been accepted.</p>
-                                        </div>
-                                    @elseif($submission->status === 'rejected')
-                                        <!-- Work rejected -->
-                                        <div class="bg-red-50 rounded-lg p-4 border-2 border-red-400">
-                                            <h4 class="font-semibold text-red-900 mb-2">❌ Submission Rejected</h4>
-                                            @if($submission->feedback)
-                                                <div class="bg-white p-3 rounded border border-red-200 mb-2">
-                                                    <p class="text-xs font-medium text-gray-500 mb-1">Feedback:</p>
-                                                    <p class="text-sm text-gray-800">{{ $submission->feedback }}</p>
-                                                </div>
-                                            @endif
-                                            <p class="text-sm text-red-700">Unfortunately, your submission was not accepted.</p>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
-                        </div>
-                    @else
-                        <!-- Show application form -->
-                        <form method="POST" action="{{ route('applications.store', $task->id) }}">
-                            @csrf
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Cover Letter (Optional)</label>
-                                <textarea name="cover_letter" rows="4" class="w-full border-gray-300 rounded-lg" placeholder="Tell the startup why you're a great fit for this task..."></textarea>
-                            </div>
-                            <div class="flex gap-3">
-                                <button type="submit" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition font-medium">Apply Now</button>
-                                <a href="{{ route('messages.create', [auth()->user()->studentProfile->id, $task->startup_profile_id, $task->id]) }}" class="bg-white text-gray-700 border border-gray-300 px-6 py-3 rounded-lg hover:shadow-md transition font-medium">
-                                    💬 Message Startup
-                                </a>
-                            </div>
-                        </form>
+                        @endif
                     @endif
-                @endif
+                @endauth
 
-                @if(auth()->user()->isStartup() && $task->startup_profile_id === auth()->user()->startupProfile->id)
-                    <!-- AI Recommended Students -->
-                    @if($recommendedStudents && $recommendedStudents->count() > 0)
-                    <div class="mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6 border-2 border-blue-200">
-                        <div class="flex items-center justify-between mb-6">
-                            <div>
-                                <h2 class="text-2xl font-bold text-gray-900">🤖 AI Recommended Students</h2>
-                                <p class="text-gray-600 text-sm mt-1">Top students matched to this task's requirements</p>
-                            </div>
-                            <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">AI POWERED</span>
-                        </div>
-                        <div class="space-y-3">
-                            @foreach($recommendedStudents as $student)
-                                <div class="bg-white border-2 border-blue-200 rounded-lg p-4 hover:shadow-xl transition">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex-1">
-                                            <div class="flex items-center space-x-3">
-                                                <h3 class="font-semibold text-lg text-gray-900">{{ $student->user->name }}</h3>
-                                                <span class="text-2xl font-bold text-blue-600">{{ $student->match_score }}%</span>
-                                                @if($student->match_score >= 80)
-                                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-                                                        🔥 Perfect Match
-                                                    </span>
-                                                @elseif($student->match_score >= 60)
-                                                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">
-                                                        ⭐ Good Match
-                                                    </span>
-                                                @endif
-                                            </div>
-                                            <p class="text-sm text-gray-600 mt-1">{{ Str::limit($student->bio ?? 'No bio available', 100) }}</p>
-                                            <div class="flex items-center space-x-2 mt-2">
-                                                <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs font-medium">
-                                                    Reliability: {{ number_format($student->reliability_score * 100, 0) }}%
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="flex gap-2">
-                                            <a href="{{ route('students.public-profile', $student->id) }}" class="text-blue-600 hover:text-blue-800 font-medium text-sm">
-                                                View Profile →
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                        <p class="text-xs text-gray-500 mt-4 text-center">
-                            💡 Tip: Reach out to these students directly to invite them to apply!
-                        </p>
-                    </div>
-                    @endif
-                
-                    <div class="mt-8 border-t pt-8">
-                        @include('applications.index', ['applications' => $task->applications, 'task' => $task])
-                    </div>
-                @endif
-            @endauth
+            </div>
         </div>
     </div>
 </x-app-layout>

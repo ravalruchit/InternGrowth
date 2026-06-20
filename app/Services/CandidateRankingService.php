@@ -22,10 +22,23 @@ class CandidateRankingService
         // 1. Load relationships if not already loaded (optimized to avoid query duplication)
         $student->loadMissing(['skills', 'reputationScore', 'portfolio.items', 'skillVerifications.skill']);
 
-        // 2. Compute Verified Skills Match (30%)
+        // 2. Compute Verified Skills Match (25%)
         $verifiedSkillsMatch = $this->calculateVerifiedSkillsMatch($student, $task, $taskSkills);
 
-        // 3. Compute IPRS Score (20%)
+        // 2.5 Compute Domain Alignment Score (15%)
+        $domainAlignmentScore = 0.00;
+        if (!empty($task->domain) && !empty($student->primary_domain)) {
+            if ($task->domain === $student->primary_domain) {
+                $domainAlignmentScore += 60.00;
+            }
+        }
+        if (!empty($task->role) && !empty($student->preferred_role)) {
+            if ($task->role === $student->preferred_role) {
+                $domainAlignmentScore += 40.00;
+            }
+        }
+
+        // 3. Compute IPRS Score (15%)
         $iprsScore = floatval($student->reputationScore?->overall_score ?? 50.00);
 
         // 4. Compute Task Completion (15%)
@@ -34,7 +47,7 @@ class CandidateRankingService
         // 5. Compute Portfolio Strength (15%)
         $portfolioStrength = $this->calculatePortfolioStrength($student);
 
-        // 6. Compute Interview Performance (10%)
+        // 6. Compute Interview Performance (5%)
         $interviewPerformance = floatval($student->reputationScore?->interview_performance_score ?? 100.00);
 
         // 7. Compute Communication (5%)
@@ -47,12 +60,13 @@ class CandidateRankingService
         // 8. Compute Potential Score (5%)
         $potentialScore = $this->calculatePotentialScore($student);
 
-        // 9. Calculate Overall Match Score
-        $overallScore = ($verifiedSkillsMatch * 0.30) +
-                        ($iprsScore * 0.20) +
+        // 9. Calculate Overall Match Score (Total 100%)
+        $overallScore = ($verifiedSkillsMatch * 0.25) +
+                        ($domainAlignmentScore * 0.15) +
+                        ($iprsScore * 0.15) +
                         ($taskCompletion * 0.15) +
                         ($portfolioStrength * 0.15) +
-                        ($interviewPerformance * 0.10) +
+                        ($interviewPerformance * 0.05) +
                         ($communicationScore * 0.05) +
                         ($potentialScore * 0.05);
 
@@ -60,6 +74,15 @@ class CandidateRankingService
 
         // 10. Generate "Why Recommended" Explanations
         $explanations = $this->generateWhyRecommended($student, $task, $taskSkills, $verifiedSkillsMatch, $taskCompletion, $portfolioStrength, $interviewPerformance);
+        
+        // Add domain explanation if it aligns
+        if ($domainAlignmentScore > 0) {
+            if ($domainAlignmentScore === 100) {
+                array_unshift($explanations, "Perfect fit: Both Domain and Role align with this candidate's career track");
+            } elseif ($domainAlignmentScore === 60) {
+                array_unshift($explanations, "Domain Match: Aligns with candidate's primary career domain");
+            }
+        }
 
         // 11. Generate Candidate Insights (Strengths, Potential Risks, Suggested Interview Questions)
         $insights = $this->generateInsights($student, $taskSkills, $verifiedSkillsMatch, $iprsScore, $taskCompletion, $portfolioStrength, $interviewPerformance, $communicationScore);
@@ -72,6 +95,7 @@ class CandidateRankingService
             'portfolio_rating_label' => $this->getPortfolioLabel($portfolioStrength),
             'breakdown' => [
                 'skills_match' => round($verifiedSkillsMatch),
+                'domain_alignment' => round($domainAlignmentScore),
                 'iprs' => round($iprsScore),
                 'reliability' => round($taskCompletion),
                 'portfolio' => round($portfolioStrength),

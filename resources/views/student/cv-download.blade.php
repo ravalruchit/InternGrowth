@@ -168,11 +168,6 @@
             color: #4b5563;
         }
         
-        .detail-badge.points {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        
         .detail-badge.stipend {
             background: #d1fae5;
             color: #065f46;
@@ -303,8 +298,8 @@
                         <div class="stat-label">Tasks Completed</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">{{ number_format($totalPoints) }}</div>
-                        <div class="stat-label">Reward Points</div>
+                        <div class="stat-value">{{ number_format(optional($profile->reputationScore)->overall_score ?? 50, 0) }}</div>
+                        <div class="stat-label">IPRS Score</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value">₹{{ number_format($totalStipend, 0) }}</div>
@@ -345,7 +340,6 @@
                                 </div>
                             </div>
                             <div class="experience-details">
-                                <span class="detail-badge points">{{ $task->task->reward_points }} Points</span>
                                 @if($task->task->stipend)
                                     <span class="detail-badge stipend">₹{{ $task->task->stipend }} Stipend</span>
                                 @endif
@@ -358,24 +352,7 @@
                 </div>
             @endif
             
-            <!-- Certificates -->
-            @if($profile->certificates->count() > 0)
-                <div class="section">
-                    <h2 class="section-title">Certificates & Achievements</h2>
-                    <div class="certificates-grid">
-                        @foreach($profile->certificates as $certificate)
-                            <div class="certificate-card">
-                                <div class="certificate-title">{{ $certificate->task->title }}</div>
-                                <div class="certificate-meta">
-                                    Issued by {{ $certificate->task->startup->company_name }}<br>
-                                    {{ $certificate->issued_at->format('F d, Y') }}<br>
-                                    Certificate #{{ $certificate->certificate_number }}
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
+
             
             <!-- Footer -->
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 12px;">

@@ -10,10 +10,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create Skills
-        $skills = ['PHP', 'Laravel', 'JavaScript', 'React', 'Python', 'UI/UX Design', 'Content Writing', 'Digital Marketing'];
-        foreach ($skills as $skill) {
-            Skill::create(['name' => $skill]);
-        }
+        $this->call(MultiDomainCareerSeeder::class);
 
         // Create Admin
         User::create([

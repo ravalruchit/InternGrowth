@@ -48,15 +48,16 @@ class Portfolio extends Model
         // Offers received
         $offersCount = HiringOffer::where('student_profile_id', $studentProfileId)->count();
 
-        // Certificates earned
-        $certificatesCount = $items->whereNotNull('certificate_number')->count();
+        // IPRS reputation score
+        $score = $this->studentProfile->reputationScore;
+        $iprsScore = $score ? round($score->overall_score) : 50;
 
         return [
             'total_projects' => $totalProjects,
             'avg_startup_rating' => $avgStartupRating,
             'verified_skills' => $verifiedSkillsCount,
             'offers_received' => $offersCount,
-            'certificates' => $certificatesCount,
+            'iprs_score' => $iprsScore,
         ];
     }
 }

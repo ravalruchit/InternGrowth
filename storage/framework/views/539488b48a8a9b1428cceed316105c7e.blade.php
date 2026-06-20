@@ -1,1 +1,0 @@
-<x-reputation-card compact="true" />

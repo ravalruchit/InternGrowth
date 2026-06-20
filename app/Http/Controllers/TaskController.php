@@ -69,10 +69,10 @@ class TaskController extends Controller
 
     public function create()
     {
-        // Check if startup is verified
-        if (!auth()->user()->startupProfile->is_verified) {
+        // Check if startup is verified and active
+        if (!auth()->user()->startupProfile->isVerifiedAndActive()) {
             return redirect()->route('startup.dashboard')
-                ->with('error', 'Your startup account must be verified by an admin before you can create tasks.');
+                ->with('error', 'Your startup account must be verified by an admin and active before you can create tasks.');
         }
 
         // Block if outstanding dues exist (negative wallet balance)
@@ -87,10 +87,10 @@ class TaskController extends Controller
 
     public function store(Request $request)
     {
-        // Check if startup is verified
-        if (!auth()->user()->startupProfile->is_verified) {
+        // Check if startup is verified and active
+        if (!auth()->user()->startupProfile->isVerifiedAndActive()) {
             return redirect()->route('startup.dashboard')
-                ->with('error', 'Your startup account must be verified by an admin before you can create tasks.');
+                ->with('error', 'Your startup account must be verified by an admin and active before you can create tasks.');
         }
 
         // Block if outstanding dues exist (negative wallet balance)

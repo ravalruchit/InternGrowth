@@ -165,15 +165,6 @@ class SubmissionController extends Controller
             $moneyMessage = " and ₹{$studentAmount}";
         }
 
-        // Issue Certificate Automatically
-        $certificateNumber = 'CERT-' . strtoupper(uniqid());
-        \App\Models\Certificate::create([
-            'student_profile_id' => $submission->application->student_profile_id,
-            'task_id' => $submission->application->task_id,
-            'certificate_number' => $certificateNumber,
-            'issued_at' => now()
-        ]);
-
         // Auto-generate verified portfolio item
         $portfolioService = new \App\Services\PortfolioAutomationService();
         $portfolioService->addVerifiedTaskToPortfolio($submission->id);
@@ -189,7 +180,7 @@ class SubmissionController extends Controller
         Notification::create([
             'user_id' => $submission->application->student->user_id,
             'title' => 'Submission Accepted',
-            'message' => "Your submission was accepted. You earned {$points} points{$moneyMessage} and received a certificate!",
+            'message' => "Your submission was accepted. Your IPRS reputation score has been updated{$moneyMessage}!",
             'type' => 'success'
         ]);
 
@@ -197,7 +188,7 @@ class SubmissionController extends Controller
         $reputationService = new \App\Services\ReputationEngineService();
         $reputationService->updateReputation($submission->application->student_profile_id);
 
-        return back()->with('success', 'Submission accepted, points awarded' . $moneyMessage . ', and certificate issued!');
+        return back()->with('success', 'Submission accepted and IPRS score updated' . $moneyMessage . '!');
     }
 
     public function reject(Request $request, $id)
