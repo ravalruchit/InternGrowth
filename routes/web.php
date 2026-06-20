@@ -27,10 +27,10 @@ Route::get('/', function () {
     // ── Real startup company names for marquee ──
     $startupNames = \App\Models\StartupProfile::whereNotNull('company_name')
         ->where('company_name', '!=', '')
-        ->where('company_name', 'not like', '%test%')
-        ->where('company_name', 'not like', '%demo%')
-        ->where('company_name', 'not like', '%dummy%')
-        ->where('company_name', 'not like', '%example%')
+        ->whereRaw('LOWER(company_name) NOT LIKE ?', ['%test%'])
+        ->whereRaw('LOWER(company_name) NOT LIKE ?', ['%demo%'])
+        ->whereRaw('LOWER(company_name) NOT LIKE ?', ['%dummy%'])
+        ->whereRaw('LOWER(company_name) NOT LIKE ?', ['%example%'])
         ->pluck('company_name')
         ->toArray();
 

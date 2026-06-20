@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>InternGrowth — Verified Work for Students</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/design-system.css') }}?v=1.2">
 </head>
 <body class="ig-body antialiased min-h-screen">
 
