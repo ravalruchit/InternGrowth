@@ -39,8 +39,6 @@ class MigrateSQLiteToMySQL extends Command
             $skillTask = DB::table('skill_task')->get();
             $applications = DB::table('applications')->get();
             $submissions = DB::table('submissions')->get();
-            $pointsWallets = DB::table('points_wallets')->get();
-            $pointsTransactions = DB::table('points_transactions')->get();
             $certificates = DB::table('certificates')->get();
             $ratings = DB::table('ratings')->get();
             $notifications = DB::table('notifications')->get();
@@ -69,8 +67,6 @@ class MigrateSQLiteToMySQL extends Command
             DB::table('notifications')->truncate();
             DB::table('ratings')->truncate();
             DB::table('certificates')->truncate();
-            DB::table('points_transactions')->truncate();
-            DB::table('points_wallets')->truncate();
             DB::table('submissions')->truncate();
             DB::table('applications')->truncate();
             DB::table('skill_task')->truncate();
@@ -112,7 +108,9 @@ class MigrateSQLiteToMySQL extends Command
             
             $this->info('Inserting tasks...');
             foreach ($tasks as $task) {
-                DB::table('tasks')->insert((array) $task);
+                $taskArray = (array) $task;
+                unset($taskArray['reward_points']);
+                DB::table('tasks')->insert($taskArray);
             }
             
             $this->info('Inserting skill-task relationships...');
@@ -128,16 +126,6 @@ class MigrateSQLiteToMySQL extends Command
             $this->info('Inserting submissions...');
             foreach ($submissions as $submission) {
                 DB::table('submissions')->insert((array) $submission);
-            }
-            
-            $this->info('Inserting points wallets...');
-            foreach ($pointsWallets as $wallet) {
-                DB::table('points_wallets')->insert((array) $wallet);
-            }
-            
-            $this->info('Inserting points transactions...');
-            foreach ($pointsTransactions as $transaction) {
-                DB::table('points_transactions')->insert((array) $transaction);
             }
             
             $this->info('Inserting certificates...');
@@ -180,8 +168,6 @@ class MigrateSQLiteToMySQL extends Command
             $this->info("- Tasks: " . count($tasks));
             $this->info("- Applications: " . count($applications));
             $this->info("- Submissions: " . count($submissions));
-            $this->info("- Points Wallets: " . count($pointsWallets));
-            $this->info("- Points Transactions: " . count($pointsTransactions));
             $this->info("- Certificates: " . count($certificates));
             $this->info("- Ratings: " . count($ratings));
             $this->info("- Notifications: " . count($notifications));

@@ -121,6 +121,13 @@
                                         This task has been successfully completed by 
                                         <strong>{{ $acceptedApplication ? $acceptedApplication->student->user->name : 'a student' }}</strong>.
                                     </p>
+                                    @if($existingApplication && in_array($existingApplication->status, ['hired', 'internship_accepted']))
+                                        <div class="mt-4">
+                                            <a href="{{ route('messages.create', [$existingApplication->student_profile_id, $task->startup_profile_id, $task->id]) }}" class="ig-btn ig-btn-lime w-full justify-center" style="padding: 10px; font-size: 13px;">
+                                                <span>💬 Message Startup</span>
+                                            </a>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @elseif($hasApprovedApplication && !$existingApplication)

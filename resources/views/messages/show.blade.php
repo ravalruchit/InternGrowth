@@ -26,12 +26,39 @@
                     </div>
                     
                     @if(auth()->user()->isStartup())
-                        <button onclick="openScheduleModal()" class="bg-white/20 hover:bg-white/30 text-white font-extrabold py-2.5 px-4 rounded-xl text-xs tracking-wide transition flex items-center space-x-1 border border-white/10 shadow-sm">
-                            <span>📅 Schedule Interview</span>
-                        </button>
+                        @php
+                            $isHired = false;
+                            if ($conversation->task_id) {
+                                $appForChat = \App\Models\Application::where('task_id', $conversation->task_id)
+                                    ->where('student_profile_id', $conversation->student_profile_id)
+                                    ->first();
+                                if ($appForChat && in_array($appForChat->status, ['hired', 'internship_accepted'])) {
+                                    $isHired = true;
+                                }
+                            }
+                        @endphp
+                        @if(!$isHired)
+                            <button onclick="openScheduleModal()" class="bg-white/20 hover:bg-white/30 text-white font-extrabold py-2.5 px-4 rounded-xl text-xs tracking-wide transition flex items-center space-x-1 border border-white/10 shadow-sm">
+                                <span>📅 Schedule Interview</span>
+                            </button>
+                        @endif
                     @endif
                 </div>
             </div>
+
+            @php
+                $isContactUnlocked = $conversation->student->contactDetailsUnlockedFor(auth()->user());
+            @endphp
+            @if($isContactUnlocked)
+                <div class="bg-emerald-50 border-b border-emerald-200 px-6 py-3 flex-shrink-0 flex items-center justify-between">
+                    <div class="flex items-center space-x-2 text-emerald-800 text-xs font-bold">
+                        <span>🎉 Direct Contact Details Unlocked!</span>
+                    </div>
+                    <button onclick="openContactModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-1.5 px-3 rounded-lg text-xs transition">
+                        🔓 View Contact Information
+                    </button>
+                </div>
+            @endif
 
             <!-- Messages Area -->
             <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
@@ -207,8 +234,16 @@
                                                     </div>
                                                 </div>
                                             @else
-                                                <div class="text-xs text-green-700 font-bold flex items-center space-x-1">
-                                                    <span>✓ Invitation accepted. Ready for interview.</span>
+                                                <div class="space-y-2">
+                                                    <div class="text-xs text-green-700 font-bold flex items-center space-x-1">
+                                                        <span>✓ Invitation accepted. Ready for interview.</span>
+                                                    </div>
+                                                    <form method="POST" action="{{ route('student.interviews.noshow', $interview->id) }}">
+                                                        @csrf
+                                                        <button type="submit" class="w-full bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold py-1.5 rounded-lg transition border border-amber-250 text-xs">
+                                                            Startup No Show ⚠️
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             @endif
                                         @elseif($interview->status === 'no_show')
@@ -433,5 +468,83 @@
                 modal.classList.add('hidden');
             }
         }
+        function openContactModal() {
+            const modal = document.getElementById('contact-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        }
+        function closeContactModal() {
+            const modal = document.getElementById('contact-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
     </script>
+
+    @if(isset($isContactUnlocked) && $isContactUnlocked)
+        <!-- Contact Information Modal -->
+        <div id="contact-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-md transition-opacity duration-300">
+            <div class="bg-white/95 backdrop-blur-lg border border-emerald-100 rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300 relative text-gray-900">
+                <button onclick="closeContactModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-650 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                <h3 class="text-2xl font-black text-gray-900 mb-4 font-poppins flex items-center space-x-2">
+                    <span>🔓 Direct Contact Details</span>
+                </h3>
+                
+                <div class="space-y-4 text-sm">
+                    @if(auth()->user()->isStudent())
+                        <div>
+                            <p class="text-xs uppercase font-bold text-gray-400">Startup / Company Name</p>
+                            <p class="font-semibold text-gray-800 mt-0.5">{{ $conversation->startup->company_name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase font-bold text-gray-400">Founder Email</p>
+                            <p class="font-semibold text-gray-800 mt-0.5">{{ $conversation->startup->user->email }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase font-bold text-gray-400">Contact Phone</p>
+                            <p class="font-semibold text-gray-800 mt-0.5">{{ $conversation->startup->contact_phone ?? 'N/A' }}</p>
+                        </div>
+                    @else
+                        <div>
+                            <p class="text-xs uppercase font-bold text-gray-400">Candidate Name</p>
+                            <p class="font-semibold text-gray-800 mt-0.5">{{ $conversation->student->user->name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase font-bold text-gray-400">Primary Email</p>
+                            <p class="font-semibold text-gray-800 mt-0.5">{{ $conversation->student->user->email }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase font-bold text-gray-400">College Email</p>
+                            <p class="font-semibold text-gray-800 mt-0.5">{{ $conversation->student->college_email ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase font-bold text-gray-400">Contact Phone</p>
+                            <p class="font-semibold text-gray-800 mt-0.5">+91 98765 43210</p>
+                        </div>
+                        @if($conversation->student->portfolio_links && count($conversation->student->portfolio_links) > 0)
+                            <div>
+                                <p class="text-xs uppercase font-bold text-gray-400 mb-1">Portfolio & Social Links</p>
+                                <div class="space-y-1">
+                                    @foreach($conversation->student->portfolio_links as $link)
+                                        @if($link)
+                                            <a href="{{ $link }}" target="_blank" class="text-indigo-650 hover:underline block truncate">{{ $link }}</a>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    @endif
+                </div>
+                
+                <div class="mt-6 pt-4 border-t border-gray-100 text-center">
+                    <p class="text-[10px] text-gray-500 italic">Please use these details to coordinate communication professionally.</p>
+                </div>
+            </div>
+        </div>
+    @endif
 </x-app-layout>

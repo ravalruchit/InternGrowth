@@ -54,6 +54,13 @@ class StudentController extends Controller
         $reviewedTaskIds = $profile->startupReviews->pluck('task_id')->toArray();
 
         $recommendedTasks = $this->matchingService->getRecommendedTasksForStudent($profile, 6, $profile->id);
+
+        $interviews = \App\Models\Interview::where('student_profile_id', $profile->id)
+            ->whereIn('status', ['pending', 'accepted'])
+            ->with(['startup', 'task'])
+            ->orderBy('scheduled_at', 'asc')
+            ->get();
+
         return view('student.dashboard', compact(
             'profile', 
             'recommendedTasks', 
@@ -64,7 +71,8 @@ class StudentController extends Controller
             'totalEarnings',
             'reviewedTaskIds',
             'completedTasks',
-            'ratings'
+            'ratings',
+            'interviews'
         ));
     }
 

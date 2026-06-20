@@ -23,8 +23,17 @@ class HiringOfferController extends Controller
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'nullable|date|after:start_date',
             'contract_terms' => 'nullable|string',
-            'source_task_id' => 'nullable|exists:tasks,id'
+            'source_task_id' => 'nullable|exists:tasks,id',
+            'agreement' => 'required|accepted',
+        ], [
+            'agreement.accepted' => 'You must confirm that this hiring process will be completed through InternGrowth.'
         ]);
+
+        // Validate contact leaks
+        \App\Helpers\ContactDetector::validate($validated['description'], 'description');
+        if (!empty($validated['contract_terms'])) {
+            \App\Helpers\ContactDetector::validate($validated['contract_terms'], 'contract_terms');
+        }
 
         $startup = auth()->user()->startupProfile;
 
@@ -95,6 +104,20 @@ class HiringOfferController extends Controller
             return $offer;
         });
 
+        // Log the agreement details on the application if it exists
+        if ($offer->source_task_id) {
+            $application = \App\Models\Application::where('task_id', $offer->source_task_id)
+                ->where('student_profile_id', $offer->student_profile_id)
+                ->first();
+            if ($application) {
+                $application->update([
+                    'agreement_accepted' => true,
+                    'agreement_accepted_at' => now(),
+                    'agreement_ip' => $request->ip()
+                ]);
+            }
+        }
+
         // Notify student
         Notification::create([
             'user_id' => $offer->student->user_id,
@@ -123,6 +146,27 @@ class HiringOfferController extends Controller
 
         \Illuminate\Support\Facades\DB::transaction(function() use ($offer, $startup) {
             $offer->update(['status' => 'accepted']);
+
+            // Sync with application status and outcomes
+            if ($offer->source_task_id) {
+                $application = \App\Models\Application::where('task_id', $offer->source_task_id)
+                    ->where('student_profile_id', $offer->student_profile_id)
+                    ->first();
+                if ($application) {
+                    $hasInterview = \App\Models\Interview::where('task_id', $offer->source_task_id)
+                        ->where('student_profile_id', $offer->student_profile_id)
+                        ->exists();
+                    $hiredVia = $hasInterview ? 'interview' : 'task';
+                    $targetStatus = $offer->offer_type === 'internship' ? 'internship_accepted' : 'hired';
+                    $targetOutcome = $offer->offer_type === 'internship' ? 'hired_intern' : 'hired_job';
+                    
+                    $application->update([
+                        'status' => $targetStatus,
+                        'startup_hiring_outcome' => $targetOutcome,
+                        'hired_via' => $hiredVia
+                    ]);
+                }
+            }
 
             // Record credit transaction for platform if a fee was reserved
             if ($offer->reserved_fee > 0) {
@@ -233,5 +277,63 @@ class HiringOfferController extends Controller
         ]);
 
         return back()->with('success', 'Offer withdrawn successfully.');
+    }
+
+    public function counterOffer(Request $request, $id)
+    {
+        $offer = HiringOffer::with(['student.user', 'startup'])->findOrFail($id);
+
+        if (!auth()->user()->studentProfile || $offer->student_profile_id !== auth()->user()->studentProfile->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($offer->status !== 'pending') {
+            return back()->with('error', 'This offer is no longer pending.');
+        }
+
+        $validated = $request->validate([
+            'counter_compensation' => 'required|numeric|min:0',
+            'counter_note' => 'required|string|max:1000'
+        ]);
+
+        \App\Helpers\ContactDetector::validate($validated['counter_note'], 'counter_note');
+
+        $startup = $offer->startup;
+
+        \Illuminate\Support\Facades\DB::transaction(function() use ($offer, $validated, $startup) {
+            $offer->update([
+                'status' => 'countered',
+                'counter_compensation' => $validated['counter_compensation'],
+                'counter_note' => $validated['counter_note']
+            ]);
+
+            // Refund reserved fee to startup wallet
+            if ($offer->reserved_fee > 0) {
+                $startup->increment('wallet_balance', $offer->reserved_fee);
+
+                Transaction::create([
+                    'user_type' => 'startup',
+                    'user_id' => $startup->id,
+                    'type' => 'credit',
+                    'amount' => $offer->reserved_fee,
+                    'description' => "Refunded success fee reservation for countered offer ID: {$offer->id}",
+                    'reference_id' => "offer_{$offer->id}"
+                ]);
+            }
+        });
+
+        // Notify startup
+        Notification::create([
+            'user_id' => $offer->startup->user_id,
+            'title' => 'Offer Countered by Student',
+            'message' => "{$offer->student->user->name} has countered your {$offer->offer_type} offer for '{$offer->title}' with ₹" . number_format($validated['counter_compensation']),
+            'type' => 'warning'
+        ]);
+
+        // Recalculate student IPRS
+        $reputationService = new \App\Services\ReputationEngineService();
+        $reputationService->updateReputation($offer->student_profile_id);
+
+        return back()->with('success', 'Counter-offer sent successfully.');
     }
 }

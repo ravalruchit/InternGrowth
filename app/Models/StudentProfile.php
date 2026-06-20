@@ -142,4 +142,53 @@ class StudentProfile extends Model
     {
         return $this->hasMany(Interview::class, 'student_profile_id');
     }
+
+    /**
+     * Check if contact details are unlocked for a specific user.
+     */
+    public function contactDetailsUnlockedFor($user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        // Student can see their own info
+        if ($user->studentProfile && $user->studentProfile->id === $this->id) {
+            return true;
+        }
+
+        // Admin can see it
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        // Startup can see it if they have an accepted offer or application
+        if ($user->startupProfile) {
+            $startupId = $user->startupProfile->id;
+
+            // Check if there is an accepted hiring offer
+            $hasAcceptedOffer = \App\Models\HiringOffer::where('student_profile_id', $this->id)
+                ->where('startup_profile_id', $startupId)
+                ->where('status', 'accepted')
+                ->exists();
+
+            if ($hasAcceptedOffer) {
+                return true;
+            }
+
+            // Check if there is an accepted/hired application
+            $hasAcceptedApp = \App\Models\Application::where('student_profile_id', $this->id)
+                ->whereHas('task', function($q) use ($startupId) {
+                    $q->where('startup_profile_id', $startupId);
+                })
+                ->whereIn('status', ['internship_accepted', 'hired'])
+                ->exists();
+
+            if ($hasAcceptedApp) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

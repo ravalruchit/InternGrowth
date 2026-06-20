@@ -63,6 +63,8 @@ class CandidatesTestSeeder extends Seeder
             'is_verified' => true,
             'availability' => 'looking_for_internship',
             'reliability_score' => 0.92,
+            'primary_domain' => 'Software Development',
+            'preferred_role' => 'Backend Developer',
         ]);
 
         $p1->skills()->sync([$php->id, $laravel->id, $js->id]);
@@ -93,7 +95,9 @@ class CandidatesTestSeeder extends Seeder
             'title' => 'Laravel Optimized Setup',
             'description' => 'Development verification task',
             'required_skills' => ['PHP', 'Laravel'],
-            'status' => 'completed'
+            'status' => 'completed',
+            'domain' => 'Software Development',
+            'role' => 'Backend Developer'
         ]);
         $a1 = Application::create(['task_id' => $t1->id, 'student_profile_id' => $p1->id, 'status' => 'approved']);
         $s1 = Submission::create(['application_id' => $a1->id, 'content' => 'https://github.com/ruchit/test', 'status' => 'accepted']);
@@ -125,7 +129,9 @@ class CandidatesTestSeeder extends Seeder
                 'compensation_period' => 'monthly',
                 'start_date' => now()->subMonths(6),
                 'end_date' => now()->subMonths(3),
-                'status' => 'accepted'
+                'status' => 'accepted',
+                'domain' => 'Software Development',
+                'role' => 'Backend Developer'
             ]);
         }
 
@@ -140,7 +146,9 @@ class CandidatesTestSeeder extends Seeder
                 'compensation' => 700000.00,
                 'compensation_period' => 'annual',
                 'start_date' => now()->addMonth(),
-                'status' => 'pending'
+                'status' => 'pending',
+                'domain' => 'Software Development',
+                'role' => 'Full Stack Developer'
             ]);
         }
 
@@ -161,6 +169,8 @@ class CandidatesTestSeeder extends Seeder
             'is_verified' => true,
             'availability' => 'open_to_work',
             'reliability_score' => 0.88,
+            'primary_domain' => 'Data & AI',
+            'preferred_role' => 'Data Analyst',
         ]);
 
         $p2->skills()->sync([$python->id, $js->id]);
@@ -186,7 +196,9 @@ class CandidatesTestSeeder extends Seeder
             'title' => 'Python Data Cleaning',
             'description' => 'Development verification task',
             'required_skills' => ['Python'],
-            'status' => 'completed'
+            'status' => 'completed',
+            'domain' => 'Data & AI',
+            'role' => 'Data Analyst'
         ]);
         $a2 = Application::create(['task_id' => $t2->id, 'student_profile_id' => $p2->id, 'status' => 'approved']);
         $s2 = Submission::create(['application_id' => $a2->id, 'content' => 'https://github.com/alice/test', 'status' => 'accepted']);
@@ -215,7 +227,9 @@ class CandidatesTestSeeder extends Seeder
             'compensation_period' => 'monthly',
             'start_date' => now()->subMonths(4),
             'end_date' => now()->subMonths(1),
-            'status' => 'accepted'
+            'status' => 'accepted',
+            'domain' => 'Data & AI',
+            'role' => 'Data Scientist'
         ]);
 
         // 2 job offers received
@@ -229,7 +243,9 @@ class CandidatesTestSeeder extends Seeder
                 'compensation' => 850000.00,
                 'compensation_period' => 'annual',
                 'start_date' => now()->addMonth(),
-                'status' => 'pending'
+                'status' => 'pending',
+                'domain' => 'Data & AI',
+                'role' => 'Data Scientist'
             ]);
         }
 
@@ -250,6 +266,8 @@ class CandidatesTestSeeder extends Seeder
             'is_verified' => false,
             'availability' => 'looking_for_job',
             'reliability_score' => 0.81,
+            'primary_domain' => 'Software Development',
+            'preferred_role' => 'Frontend Developer',
         ]);
 
         $p3->skills()->sync([$js->id, $react->id, $uiux->id]);
@@ -273,7 +291,9 @@ class CandidatesTestSeeder extends Seeder
             'title' => 'React Component Development',
             'description' => 'Development verification task',
             'required_skills' => ['React', 'JavaScript'],
-            'status' => 'completed'
+            'status' => 'completed',
+            'domain' => 'Software Development',
+            'role' => 'Frontend Developer'
         ]);
         $a3 = Application::create(['task_id' => $t3->id, 'student_profile_id' => $p3->id, 'status' => 'approved']);
         $s3 = Submission::create(['application_id' => $a3->id, 'content' => 'https://github.com/bob/test', 'status' => 'accepted']);
@@ -302,7 +322,9 @@ class CandidatesTestSeeder extends Seeder
                 'compensation' => 550000.00,
                 'compensation_period' => 'annual',
                 'start_date' => now()->addMonth(),
-                'status' => 'pending'
+                'status' => 'pending',
+                'domain' => 'Software Development',
+                'role' => 'Frontend Developer'
             ]);
         }
 
@@ -323,6 +345,8 @@ class CandidatesTestSeeder extends Seeder
             'is_verified' => true,
             'availability' => 'freelance_available',
             'reliability_score' => 0.95,
+            'primary_domain' => 'Content & Business',
+            'preferred_role' => 'Content Writer',
         ]);
 
         $p4->skills()->sync([$writing->id]);
@@ -348,7 +372,9 @@ class CandidatesTestSeeder extends Seeder
             'title' => 'Blog Content Creation',
             'description' => 'Development verification task',
             'required_skills' => ['Content Writing'],
-            'status' => 'completed'
+            'status' => 'completed',
+            'domain' => 'Content & Business',
+            'role' => 'Content Writer'
         ]);
         $a4 = Application::create(['task_id' => $t4->id, 'student_profile_id' => $p4->id, 'status' => 'approved']);
         $s4 = Submission::create(['application_id' => $a4->id, 'content' => 'https://github.com/carol/test', 'status' => 'accepted']);
@@ -376,7 +402,9 @@ class CandidatesTestSeeder extends Seeder
             'compensation' => 450000.00,
             'compensation_period' => 'annual',
             'start_date' => now()->addMonth(),
-            'status' => 'pending'
+            'status' => 'pending',
+            'domain' => 'Content & Business',
+            'role' => 'Copywriter'
         ]);
     }
 }

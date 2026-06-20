@@ -35,6 +35,8 @@ class DatabaseSeeder extends Seeder
             'bio' => 'Passionate developer looking for opportunities',
             'portfolio_links' => ['https://github.com/johndoe'],
             'reliability_score' => 0.85,
+            'primary_domain' => 'Software Development',
+            'preferred_role' => 'Full Stack Developer',
         ]);
 
         // Create Startup

@@ -230,79 +230,116 @@
                         </div>
                     @endif
 
-                    <!-- Talent Pipeline Status Actions (Standard Section) -->
-                    <div class="bg-slate-50 border border-gray-200 rounded-xl p-4 mt-4 shadow-sm">
-                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 font-poppins">Hiring Funnel Stage</h4>
+                    <!-- ATS Funnel Timeline & Action Center -->
+                    <div class="bg-slate-50 border border-gray-200 rounded-xl p-5 mt-4 shadow-sm space-y-4">
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider font-poppins">ATS Funnel Pipeline</h4>
                         
                         <!-- Visual Stepper -->
-                        <div class="flex items-center justify-between mb-4 overflow-x-auto py-2">
+                        <div class="flex items-center justify-between overflow-x-auto py-2">
                             @php
-                                $stages = [
-                                    'applied' => 'Applied',
-                                    'shortlisted' => 'Shortlisted',
-                                    'approved' => 'Task Started',
-                                    'task_completed' => 'Task Done',
-                                    'interview' => 'Interview',
-                                    'internship_offered' => 'Offered',
-                                    'hired' => 'Hired'
-                                ];
                                 $currentStatus = $application->status;
-                                if ($currentStatus === 'approved' && $application->submission && $application->submission->status === 'accepted') {
-                                    $currentStatus = 'task_completed';
-                                }
-                                if ($currentStatus === 'internship_accepted') {
-                                    $currentStatus = 'internship_offered';
-                                }
-                                $stagesKeys = array_keys($stages);
-                                $currentIndex = array_search($currentStatus, $stagesKeys);
-                                if ($currentIndex === false) {
-                                    $currentIndex = 0;
+                                $outcome = $application->startup_hiring_outcome;
+                                
+                                $stepActive = 1;
+                                if ($currentStatus === 'applied') {
+                                    $stepActive = 1;
+                                } elseif ($currentStatus === 'approved' && (!$application->submission || $application->submission->status !== 'accepted')) {
+                                    $stepActive = 2;
+                                } elseif ($application->submission && $application->submission->status === 'accepted' && !$outcome) {
+                                    $stepActive = 3;
+                                } elseif (in_array($outcome, ['interview_scheduled', 'interview_passed', 'interview_failed'])) {
+                                    $stepActive = 4;
+                                } elseif (in_array($outcome, ['hired_intern', 'hired_job']) || in_array($currentStatus, ['internship_offered', 'internship_accepted', 'hired'])) {
+                                    $stepActive = 5;
                                 }
                             @endphp
-                            @foreach($stages as $key => $label)
-                                @php
-                                    $keyIndex = array_search($key, $stagesKeys);
-                                    $isActive = $key === $currentStatus;
-                                    $isPassed = $keyIndex < $currentIndex;
-                                    
-                                    // Determine the status to submit
-                                    $targetStatus = $key;
-                                    if ($key === 'task_completed') {
-                                        $targetStatus = 'approved';
-                                    }
-                                @endphp
-                                <div class="flex items-center flex-1 last:flex-none">
-                                    <button type="button" 
-                                            onclick="submitStatusChange('{{ $application->id }}', '{{ $targetStatus }}')"
-                                            class="flex flex-col items-center focus:outline-none cursor-pointer group"
-                                            title="Move to {{ $label }}">
-                                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 group-hover:scale-110 group-hover:ring-2 group-hover:ring-indigo-450 group-hover:ring-offset-1 {{ $isActive ? 'bg-indigo-600 text-white' : ($isPassed ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600') }}">
-                                            @if($isPassed) ✓ @else {{ $keyIndex + 1 }} @endif
-                                        </div>
-                                        <span class="text-[10px] font-semibold mt-1 whitespace-nowrap transition-colors duration-200 group-hover:text-indigo-650 {{ $isActive ? 'text-indigo-650 font-bold' : 'text-gray-550' }}">{{ $label }}</span>
-                                    </button>
-                                    @if(!$loop->last)
-                                        <div class="h-0.5 flex-1 mx-2 {{ $keyIndex < $currentIndex ? 'bg-green-500' : 'bg-gray-200' }}"></div>
-                                    @endif
+                            
+                            <!-- Step 1: Applied -->
+                            <div class="flex items-center flex-1 last:flex-none">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 1 ? 'bg-indigo-600 text-white' : 'bg-gray-205 text-gray-500' }}">
+                                        @if($stepActive > 1) ✓ @else 1 @endif
+                                    </div>
+                                    <span class="text-[9px] font-bold mt-1 text-gray-600">Applied</span>
                                 </div>
-                            @endforeach
+                                <div class="h-0.5 flex-1 mx-2 {{ $stepActive > 1 ? 'bg-indigo-600' : 'bg-gray-200' }}"></div>
+                            </div>
+
+                            <!-- Step 2: Task Assigned -->
+                            <div class="flex items-center flex-1 last:flex-none">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 2 ? 'bg-indigo-600 text-white' : 'bg-gray-205 text-gray-500' }}">
+                                        @if($stepActive > 2) ✓ @else 2 @endif
+                                    </div>
+                                    <span class="text-[9px] font-bold mt-1 text-gray-600">Task Started</span>
+                                </div>
+                                <div class="h-0.5 flex-1 mx-2 {{ $stepActive > 2 ? 'bg-indigo-600' : 'bg-gray-200' }}"></div>
+                            </div>
+
+                            <!-- Step 3: Task Completed -->
+                            <div class="flex items-center flex-1 last:flex-none">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 3 ? 'bg-indigo-600 text-white' : 'bg-gray-205 text-gray-500' }}">
+                                        @if($stepActive > 3) ✓ @else 3 @endif
+                                    </div>
+                                    <span class="text-[9px] font-bold mt-1 text-gray-600">Task Completed</span>
+                                </div>
+                                <div class="h-0.5 flex-1 mx-2 {{ $stepActive > 3 ? 'bg-indigo-600' : 'bg-gray-200' }}"></div>
+                            </div>
+
+                            <!-- Step 4: Interview -->
+                            <div class="flex items-center flex-1 last:flex-none">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 4 ? 'bg-indigo-600 text-white' : 'bg-gray-205 text-gray-500' }}">
+                                        @if($stepActive > 4) ✓ @else 4 @endif
+                                    </div>
+                                    <span class="text-[9px] font-bold mt-1 text-gray-600">Interview</span>
+                                </div>
+                                <div class="h-0.5 flex-1 mx-2 {{ $stepActive > 4 ? 'bg-indigo-600' : 'bg-gray-200' }}"></div>
+                            </div>
+
+                            <!-- Step 5: Hired -->
+                            <div class="flex items-center last:flex-none">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 5 ? 'bg-emerald-600 text-white' : 'bg-gray-205 text-gray-500' }}">
+                                        🎉
+                                    </div>
+                                    <span class="text-[9px] font-bold mt-1 text-gray-600">Hired</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Actions Dropdown -->
-                        <form method="POST" action="{{ route('startup.applications.update-status', $application->id) }}" class="flex items-center space-x-3">
-                            @csrf
-                            <label class="text-xs font-bold text-gray-700 font-poppins">Move Candidate To:</label>
-                            <select name="status" onchange="this.form.submit()" class="bg-white border border-gray-300 rounded-lg text-xs py-1.5 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium">
-                                <option value="applied" {{ $application->status === 'applied' ? 'selected' : '' }}>1. Task Applicant (Applied)</option>
-                                <option value="shortlisted" {{ $application->status === 'shortlisted' ? 'selected' : '' }}>2. Shortlisted</option>
-                                <option value="approved" {{ $application->status === 'approved' ? 'selected' : '' }}>3. Task Approved (Assign Task)</option>
-                                <option value="interview" {{ $application->status === 'interview' ? 'selected' : '' }}>4. Interviewing</option>
-                                <option value="internship_offered" {{ $application->status === 'internship_offered' ? 'selected' : '' }}>5. Internship Offered</option>
-                                <option value="internship_accepted" {{ $application->status === 'internship_accepted' ? 'selected' : '' }}>6. Internship Accepted</option>
-                                <option value="hired" {{ $application->status === 'hired' ? 'selected' : '' }}>7. Employee Hired</option>
-                                <option value="rejected" {{ $application->status === 'rejected' ? 'selected' : '' }}>Rejected</option>
-                            </select>
-                        </form>
+                        <!-- Action Buttons based on status -->
+                        <div class="pt-2 border-t border-gray-200">
+                            @if($currentStatus === 'applied')
+                                <div class="flex gap-2">
+                                    <form method="POST" action="{{ route('startup.applications.approve', $application->id) }}" class="flex-1">
+                                        @csrf
+                                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-755 text-white font-extrabold py-2 rounded-xl text-xs transition shadow-sm">
+                                            ✓ Approve Candidate to Start Task
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ route('startup.applications.reject', $application->id) }}">
+                                        @csrf
+                                        <button type="submit" class="bg-white hover:bg-gray-50 text-gray-700 font-bold py-2 px-4 rounded-xl text-xs transition border border-gray-250">
+                                            Reject Candidate
+                                        </button>
+                                    </form>
+                                </div>
+                            @elseif($currentStatus === 'rejected')
+                                <div class="text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3 font-semibold">
+                                    ✗ Application Rejected.
+                                </div>
+                            @elseif($currentStatus === 'approved' && (!$application->submission || $application->submission->status !== 'accepted'))
+                                <div class="text-xs text-amber-800 bg-amber-50 border border-amber-250 rounded-xl p-3 font-semibold flex items-center gap-2">
+                                    <span class="flex h-2 w-2 relative">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-600"></span>
+                                    </span>
+                                    <span>Task Assigned. Candidate is currently working on the assignment.</span>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                     
                     <!-- Submission Section (Standard Section) -->
@@ -414,15 +451,146 @@
                                     </form>
                                 </div>
                             @elseif($application->submission->status === 'accepted')
-                                <div class="p-4 bg-green-50 border-l-4 border-green-400 rounded-xl shadow-sm">
+                                <div class="p-4 bg-green-50 border-l-4 border-green-400 rounded-xl shadow-sm space-y-4">
                                     <div class="flex items-center">
-                                        <svg class="w-6 h-6 text-green-600 mr-3 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                                         <div>
                                             <p class="text-sm font-bold text-green-800 font-poppins">✓ Task Completed Successfully</p>
                                             <p class="text-xs text-green-700 mt-1">Student's IPRS reputation score has been updated.</p>
                                         </div>
+                                    </div>
+
+                                    <!-- Decision Card -->
+                                    <div class="border-t border-green-200 pt-4 space-y-4">
+                                        @if(!$application->startup_hiring_outcome)
+                                            <h4 class="text-xs font-bold text-indigo-900 uppercase tracking-wider font-poppins">Choose Next Action</h4>
+                                            
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <!-- Option 1: Close Task -->
+                                                <div class="bg-white border border-gray-250 p-4 rounded-xl flex flex-col justify-between space-y-3 shadow-sm">
+                                                    <div>
+                                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Option 1</span>
+                                                        <h5 class="font-extrabold text-xs text-gray-900">Close Task</h5>
+                                                        <p class="text-[11px] text-gray-500 leading-normal mt-1">For startups that only wanted project work. Marks candidate relationship as completed.</p>
+                                                    </div>
+                                                    <form method="POST" action="{{ route('startup.applications.close-task', $application->id) }}">
+                                                        @csrf
+                                                        <button type="submit" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-extrabold py-2 px-3 rounded-lg text-[11px] transition shadow-sm">
+                                                            Approve Work & Close Task
+                                                        </button>
+                                                    </form>
+                                                </div>
+
+                                                <!-- Option 2: Explore Hiring -->
+                                                <div class="bg-white border border-indigo-200 p-4 rounded-xl flex flex-col justify-between space-y-3 shadow-sm">
+                                                    <div>
+                                                        <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-wider block mb-1 font-poppins">Option 2</span>
+                                                        <h5 class="font-extrabold text-xs text-indigo-950">Explore Hiring</h5>
+                                                        <p class="text-[11px] text-gray-500 leading-normal mt-1">For startups that liked the student and want to recruit them.</p>
+                                                        <div class="space-y-1.5 mt-3">
+                                                            <div class="flex gap-1.5">
+                                                                @php
+                                                                    $conversation = \App\Models\Conversation::where('student_profile_id', $application->student_profile_id)
+                                                                        ->where('startup_profile_id', auth()->user()->startupProfile->id)
+                                                                        ->where('task_id', $application->task_id)
+                                                                        ->first();
+                                                                @endphp
+                                                                <button type="button" onclick="openOfferModalFromIndex('{{ $application->student->id }}', '{{ $application->id }}', 'internship', '{{ $application->task_id }}')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-2.5 rounded-lg text-[11px] text-center transition">
+                                                                    💼 Intern Offer
+                                                                </button>
+                                                                <button type="button" onclick="openJobPathModal('{{ addslashes($application->student->user->name) }}', '{{ $conversation ? $conversation->id : '' }}', '{{ $application->student->id }}', '{{ $application->id }}', '{{ $application->task_id }}', '{{ $application->student_profile_id }}', '{{ auth()->user()->startupProfile->id }}')" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-1.5 px-2.5 rounded-lg text-[11px] text-center transition">
+                                                                    🚀 Job Offer
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @elseif($application->startup_hiring_outcome === 'task_only')
+                                            <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-xs text-gray-700 font-semibold flex items-center gap-1.5 shadow-sm">
+                                                <span>🤝</span>
+                                                <span>Relationship Resolved. Task completed & closed (No placement).</span>
+                                            </div>
+                                        @elseif($application->startup_hiring_outcome === 'task_completed_rejected')
+                                            <div class="bg-white border border-red-200 rounded-xl p-3.5 text-xs text-red-850 font-semibold flex items-center gap-1.5 shadow-sm">
+                                                <span>❌</span>
+                                                <span>Task Completed. Candidate not selected for placement hiring.</span>
+                                            </div>
+                                        @elseif(in_array($application->startup_hiring_outcome, ['hired_intern', 'hired_job']))
+                                            <div class="bg-white border border-emerald-250 rounded-xl p-4 space-y-3.5 shadow-sm">
+                                                <div class="flex items-center justify-between flex-wrap gap-2">
+                                                    <div class="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+                                                        <span>🎉</span>
+                                                        <span>Candidate hired as {{ $application->startup_hiring_outcome === 'hired_intern' ? 'Intern' : 'Full-time Employee' }}!</span>
+                                                    </div>
+                                                    <a href="{{ route('messages.create', [$application->student_profile_id, auth()->user()->startupProfile->id, $application->task_id]) }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg text-[10px] text-center transition flex items-center gap-1 shadow-sm">
+                                                        💬 Message Candidate
+                                                    </a>
+                                                </div>
+                                                
+                                                @if(!$application->hiring_success_rating)
+                                                    <div class="bg-slate-50 border border-emerald-100 rounded-lg p-3 space-y-2">
+                                                        <h5 class="text-xs font-bold text-gray-800 font-poppins">Rate Placement Performance (30 Days)</h5>
+                                                        <p class="text-[10px] text-gray-500 leading-normal">Submit a placement rating to adjust their reliability rating.</p>
+                                                        
+                                                        <form method="POST" action="{{ route('startup.applications.rate-hiring-success', $application->id) }}" class="flex items-center gap-2 pt-1">
+                                                            @csrf
+                                                            <select name="rating" required class="bg-white border border-gray-300 rounded-lg text-xs py-1 px-2.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium">
+                                                                <option value="excellent">⭐⭐⭐⭐⭐ Excellent</option>
+                                                                <option value="good" selected>⭐⭐⭐⭐ Good</option>
+                                                                <option value="average">⭐⭐⭐ Average</option>
+                                                                <option value="poor">⭐⭐ Poor</option>
+                                                                <option value="terminated">❌ Terminated</option>
+                                                            </select>
+                                                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-1 px-3 rounded-lg text-[10px] transition shadow-sm">
+                                                                Submit
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                @else
+                                                    <div class="text-[10px] text-emerald-700 italic font-semibold">
+                                                        Performance rating: <strong>{{ ucfirst($application->hiring_success_rating) }}</strong>. Score updated.
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @elseif($application->startup_hiring_outcome === 'interview_scheduled')
+                                            <div class="bg-white border border-blue-200 rounded-xl p-3.5 text-xs text-blue-800 font-semibold flex items-center justify-between shadow-sm">
+                                                <span class="flex items-center gap-1.5">
+                                                    <span>📅</span>
+                                                    <span>Interview scheduled in pipeline.</span>
+                                                </span>
+                                                <div class="flex gap-1.5">
+                                                    <button type="button" onclick="openOfferModalFromIndex('{{ $application->student->id }}', '{{ $application->id }}', 'internship', '{{ $application->task_id }}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-2.5 rounded-lg text-[10px] transition shadow-sm">
+                                                        💼 Offer Intern
+                                                    </button>
+                                                    <button type="button" onclick="openOfferModalFromIndex('{{ $application->student->id }}', '{{ $application->id }}', 'job', '{{ $application->task_id }}')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2.5 rounded-lg text-[10px] transition shadow-sm">
+                                                        🚀 Offer Job
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @elseif($application->startup_hiring_outcome === 'interview_passed')
+                                            <div class="bg-white border border-green-200 rounded-xl p-3.5 text-xs text-green-800 font-semibold flex items-center justify-between shadow-sm">
+                                                <span class="flex items-center gap-1.5">
+                                                    <span>🏆</span>
+                                                    <span>Interview Passed! Extended placement offers:</span>
+                                                </span>
+                                                <div class="flex gap-1.5">
+                                                    <button type="button" onclick="openOfferModalFromIndex('{{ $application->student->id }}', '{{ $application->id }}', 'internship', '{{ $application->task_id }}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-2.5 rounded-lg text-[10px] transition shadow-sm">
+                                                        💼 Offer Intern
+                                                    </button>
+                                                    <button type="button" onclick="openOfferModalFromIndex('{{ $application->student->id }}', '{{ $application->id }}', 'job', '{{ $application->task_id }}')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2.5 rounded-lg text-[10px] transition shadow-sm">
+                                                        🚀 Offer Job
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @elseif($application->startup_hiring_outcome === 'interview_failed')
+                                            <div class="bg-white border border-rose-200 rounded-xl p-3.5 text-xs text-rose-800 font-semibold flex items-center gap-1.5 shadow-sm">
+                                                <span>❌</span>
+                                                <span>Interview Failed. Candidate not selected for placement hiring.</span>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             @endif
@@ -521,16 +689,316 @@
                 }
             }
 
-            function submitStatusChange(applicationId, newStatus) {
-                const card = document.querySelector(`.application-card[data-id="${applicationId}"]`);
-                if (card) {
-                    const select = card.querySelector('select[name="status"]');
-                    if (select) {
-                        select.value = newStatus;
-                        select.closest('form').submit();
-                    }
+            function openScheduleModalFromIndex(studentName, conversationId) {
+                const modal = document.getElementById('index-schedule-modal');
+                const form = document.getElementById('index-schedule-form');
+                const namePlaceholder = document.getElementById('index-student-name-placeholder');
+                if (modal && form) {
+                    namePlaceholder.textContent = studentName;
+                    form.action = `/startup/interviews/schedule/${conversationId}`;
+                    modal.classList.remove('hidden');
                 }
+            }
+            function closeScheduleModalFromIndex() {
+                const modal = document.getElementById('index-schedule-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            }
+            function updateLocationPlaceholderFromIndex(val) {
+                const input = document.getElementById('index-location-input');
+                if (!input) return;
+                if (val === 'online') {
+                    input.placeholder = 'Google Meet link or URL';
+                } else if (val === 'phone') {
+                    input.placeholder = 'e.g. +91 98765 43210';
+                } else {
+                    input.placeholder = 'e.g. Office Address Suite 4B';
+                }
+            }
+            function openOfferModalFromIndex(studentId, applicationId, offerType, taskId) {
+                const modal = document.getElementById('index-offer-modal');
+                if (!modal) return;
+                
+                document.getElementById('index-offer-student-id').value = studentId;
+                document.getElementById('index-offer-type-val').value = offerType;
+                document.getElementById('index-offer-source-task-id').value = taskId;
+                
+                const titleEmoji = document.getElementById('index-offer-title-emoji');
+                const titleText = document.getElementById('index-offer-type-title');
+                const compLabel = document.getElementById('index-compensation-label');
+                const compPeriod = document.getElementById('index-compensation-period');
+                
+                if (offerType === 'internship') {
+                    titleEmoji.textContent = '💼';
+                    titleText.textContent = 'Pitch Internship Offer';
+                    compLabel.textContent = 'Monthly Stipend (₹)';
+                    compPeriod.value = 'monthly';
+                    compPeriod.style.pointerEvents = 'none';
+                } else {
+                    titleEmoji.textContent = '🚀';
+                    titleText.textContent = 'Pitch Full-Time Job Offer';
+                    compLabel.textContent = 'Compensation (₹)';
+                    compPeriod.value = 'annual';
+                    compPeriod.style.pointerEvents = 'auto';
+                }
+                
+                modal.classList.remove('hidden');
+            }
+            function closeOfferModalFromIndex() {
+                const modal = document.getElementById('index-offer-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            }
+
+            let jobModalParams = {};
+            function openJobPathModal(studentName, conversationId, studentId, applicationId, taskId, studentProfileId, startupProfileId) {
+                jobModalParams = { studentName, conversationId, studentId, applicationId, taskId, studentProfileId, startupProfileId };
+                const modal = document.getElementById('index-job-path-modal');
+                if (!modal) return;
+
+                document.getElementById('index-job-student-name').textContent = studentName;
+                
+                const actionContainer = document.getElementById('index-job-interview-action-container');
+                if (conversationId) {
+                    actionContainer.innerHTML = `
+                        <button type="button" onclick="triggerJobSchedule()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-2.5 px-4 rounded-xl text-xs transition shadow-sm text-center">
+                            Schedule Interview
+                        </button>
+                    `;
+                } else {
+                    const chatUrl = `/messages/start/${studentProfileId}/${startupProfileId}/${taskId}`;
+                    actionContainer.innerHTML = `
+                        <a href="${chatUrl}" class="w-full block bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-2.5 px-4 rounded-xl text-xs transition shadow-sm text-center">
+                            💬 Start Chat to Interview
+                        </a>
+                    `;
+                }
+
+                document.getElementById('index-job-direct-btn').onclick = function() {
+                    closeJobPathModal();
+                    openOfferModalFromIndex(studentId, applicationId, 'job', taskId);
+                };
+
+                modal.classList.remove('hidden');
+            }
+            function closeJobPathModal() {
+                const modal = document.getElementById('index-job-path-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            }
+            function triggerJobSchedule() {
+                closeJobPathModal();
+                openScheduleModalFromIndex(jobModalParams.studentName, jobModalParams.conversationId);
             }
         </script>
     @endif
+</div>
+
+<!-- Job Recruitment Path Selection Modal -->
+<div id="index-job-path-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-md transition-opacity duration-300">
+    <div class="bg-white border border-indigo-100 rounded-3xl shadow-2xl p-8 max-w-lg w-full mx-4 transform scale-95 transition-transform duration-300 relative text-gray-900">
+        <button onclick="closeJobPathModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        <h3 class="text-2xl font-black text-gray-900 mb-2 font-poppins flex items-center space-x-2">
+            <span>🚀 Full-Time Job Offer Path</span>
+        </h3>
+        <p class="text-xs text-gray-500 mb-6 font-medium">Select how you want to proceed with full-time recruitment for <span id="index-job-student-name" class="font-bold text-indigo-650"></span>.</p>
+        
+        <div class="grid grid-cols-1 gap-4">
+            <!-- Path 1: Interview First -->
+            <div class="border border-indigo-100 p-5 rounded-2xl bg-indigo-50/30 flex flex-col justify-between space-y-3">
+                <div>
+                    <h4 class="font-bold text-sm text-indigo-950 flex items-center gap-1.5 font-poppins">
+                        <span>📅</span> Schedule Interview
+                    </h4>
+                    <p class="text-[11px] text-gray-500 mt-1 leading-normal">
+                        Recommended to conduct an interview round to align on expectations and confirm technical fit before placing a formal job offer.
+                    </p>
+                </div>
+                <div id="index-job-interview-action-container">
+                    <!-- Rendered by JS -->
+                </div>
+            </div>
+
+            <!-- Path 2: Direct Hire -->
+            <div class="border border-emerald-100 p-5 rounded-2xl bg-emerald-50/30 flex flex-col justify-between space-y-3">
+                <div>
+                    <h4 class="font-bold text-sm text-emerald-950 flex items-center gap-1.5 font-poppins">
+                        <span>🚀</span> Direct Job Offer
+                    </h4>
+                    <p class="text-[11px] text-gray-500 mt-1 leading-normal">
+                        Skip scheduling an interview and send a direct job offer immediately with your custom CTC, start date, and agreement parameters.
+                    </p>
+                </div>
+                <button type="button" id="index-job-direct-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2.5 px-4 rounded-xl text-xs transition shadow-sm text-center">
+                    Send Direct Job Offer
+                </button>
+            </div>
+        </div>
+        
+        <div class="mt-6 pt-4 border-t border-gray-100 flex justify-end">
+            <button type="button" onclick="closeJobPathModal()" class="bg-gray-100 text-gray-700 font-bold px-6 py-2.5 rounded-xl transition text-xs">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Interview Modal -->
+<div id="index-schedule-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-md transition-opacity duration-300">
+    <div class="bg-white border border-purple-100 rounded-3xl shadow-2xl p-8 max-w-lg w-full mx-4 transform scale-95 transition-transform duration-300 relative text-gray-900">
+        <button onclick="closeScheduleModalFromIndex()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        <h3 class="text-2xl font-black text-gray-900 mb-2 font-poppins flex items-center space-x-2">
+            <span>📅 Schedule Interview</span>
+        </h3>
+        <p class="text-xs text-gray-500 mb-6">Send an interview invitation to <span id="index-student-name-placeholder" class="font-bold text-indigo-650"></span>.</p>
+        
+        <form id="index-schedule-form" method="POST" action="" class="space-y-4">
+            @csrf
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Interview Title</label>
+                <input type="text" name="title" required placeholder="e.g. Technical Coding Round"
+                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Scheduled At</label>
+                    <input type="datetime-local" name="scheduled_at" required
+                           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Duration (min)</label>
+                    <select name="duration_minutes" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                        <option value="15">15 Minutes</option>
+                        <option value="30" selected>30 Minutes</option>
+                        <option value="45">45 Minutes</option>
+                        <option value="60">60 Minutes</option>
+                        <option value="90">90 Minutes</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Interview Type</label>
+                    <select name="type" required onchange="updateLocationPlaceholderFromIndex(this.value)"
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                        <option value="online" selected>Google Meet / Zoom</option>
+                        <option value="phone">Phone call</option>
+                        <option value="in_person">In Person / Address</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Location / Contact</label>
+                    <input type="text" name="location" id="index-location-input" required placeholder="Google Meet link or URL"
+                           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Agenda & Prep Notes</label>
+                <textarea name="agenda" rows="3" placeholder="Explain agenda, topics, coding workspace needed..."
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"></textarea>
+            </div>
+            
+            <div class="bg-indigo-50 border border-indigo-150 rounded-xl p-3 flex items-start gap-2">
+                <input type="checkbox" name="agreement" id="interview-agreement-check" required value="1" class="mt-0.5">
+                <label for="interview-agreement-check" class="text-[11px] text-indigo-950 leading-tight">
+                    I confirm that this hiring process will be completed through InternGrowth (Payment Agreement).
+                </label>
+            </div>
+            
+            <div class="flex gap-3 pt-4 border-t border-gray-100">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-6 py-3 rounded-xl transition text-xs shadow-sm">
+                    Schedule & Send Invitation
+                </button>
+                <button type="button" onclick="closeScheduleModalFromIndex()" class="bg-gray-100 text-gray-700 font-bold px-6 py-3 rounded-xl transition text-xs">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Acquisition Offer Modal -->
+<div id="index-offer-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-md transition-opacity duration-300">
+    <div class="bg-white border border-emerald-100 rounded-3xl shadow-2xl p-8 max-w-lg w-full mx-4 transform scale-95 transition-transform duration-300 relative text-gray-900 overflow-y-auto max-h-[90vh]">
+        <button onclick="closeOfferModalFromIndex()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        
+        <h3 class="text-2xl font-black text-gray-900 mb-2 font-poppins flex items-center space-x-2">
+            <span id="index-offer-title-emoji">💼</span>
+            <span id="index-offer-type-title">Pitch Offer</span>
+        </h3>
+        <p class="text-xs text-gray-505 mb-6">Extend a placement proposal directly to candidate.</p>
+        
+        <form action="{{ route('startup.offers.store') }}" method="POST" class="space-y-4">
+            @csrf
+            <input type="hidden" name="student_profile_id" id="index-offer-student-id" value="">
+            <input type="hidden" name="offer_type" id="index-offer-type-val" value="">
+            <input type="hidden" name="source_task_id" id="index-offer-source-task-id" value="">
+
+            <div>
+                <label class="block text-xs font-bold text-gray-750 uppercase tracking-wider mb-2">Offer Title</label>
+                <input type="text" name="title" required placeholder="e.g. Frontend Development Intern" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-750 uppercase tracking-wider mb-2">Role Description</label>
+                <textarea name="description" required rows="3" placeholder="Outline job duties, expectations..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm resize-none"></textarea>
+            </div>
+
+            <input type="hidden" name="compensation_period" id="index-compensation-period" value="monthly">
+            <div>
+                <label id="index-compensation-label" class="block text-xs font-bold text-gray-755 uppercase tracking-wider mb-2">Stipend (₹)</label>
+                <input type="number" name="compensation" required min="0" placeholder="e.g. 15000" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-750 uppercase tracking-wider mb-2">Start Date</label>
+                    <input type="date" name="start_date" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-750 uppercase tracking-wider mb-2">End Date (Optional)</label>
+                    <input type="date" name="end_date" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-755 uppercase tracking-wider mb-2">Perks & Contract Terms</label>
+                <textarea name="contract_terms" rows="2" placeholder="e.g. Certificate, Flexible Hours, Work From Home" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm resize-none"></textarea>
+            </div>
+
+            <div class="bg-indigo-50 border border-indigo-150 rounded-xl p-3 flex items-start gap-2">
+                <input type="checkbox" name="agreement" id="offer-agreement-check" required value="1" class="mt-0.5">
+                <label for="offer-agreement-check" class="text-[11px] text-indigo-950 leading-tight">
+                    I confirm that this hiring process will be completed through InternGrowth (Payment Agreement).
+                </label>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-6 py-3 rounded-xl transition text-xs shadow-sm">
+                    Send Placement Offer
+                </button>
+                <button type="button" onclick="closeOfferModalFromIndex()" class="bg-gray-100 text-gray-700 font-bold px-6 py-3 rounded-xl transition text-xs">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
 </div>

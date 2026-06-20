@@ -8,7 +8,18 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Application extends Model
 {
-    protected $fillable = ['task_id', 'student_profile_id', 'cover_letter', 'status'];
+    protected $fillable = [
+        'task_id', 'student_profile_id', 'cover_letter', 'status',
+        'startup_hiring_outcome', 'hired_via',
+        'agreement_accepted', 'agreement_accepted_at', 'agreement_ip',
+        'hiring_success_rating', 'hiring_success_rated_at'
+    ];
+
+    protected $casts = [
+        'agreement_accepted' => 'boolean',
+        'agreement_accepted_at' => 'datetime',
+        'hiring_success_rated_at' => 'datetime',
+    ];
 
     public function task(): BelongsTo
     {
@@ -23,5 +34,13 @@ class Application extends Model
     public function submission(): HasOne
     {
         return $this->hasOne(Submission::class);
+    }
+
+    /**
+     * Check if contact details are unlocked for this application.
+     */
+    public function contactDetailsUnlocked(): bool
+    {
+        return in_array($this->status, ['internship_accepted', 'hired']);
     }
 }

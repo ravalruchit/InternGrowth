@@ -52,6 +52,59 @@
                         <p class="text-sm font-semibold text-[var(--ig-ink)]">🏫 {{ $profile->college_name ?? 'N/A' }}</p>
                         <p class="text-xs text-[var(--ig-muted)] mt-1">{{ $profile->college_email ?? 'N/A' }}</p>
                     </div>
+
+                    <!-- Contact Details -->
+                    @php
+                        $isContactUnlocked = $profile->contactDetailsUnlockedFor(auth()->user());
+                    @endphp
+                    @if($isContactUnlocked)
+                        <div class="border-t border-[var(--ig-line)] pt-5">
+                            <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2">🔓 Contact Information</h3>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex items-center justify-between py-1 border-b border-emerald-100">
+                                    <span class="text-emerald-800 font-medium">Email</span>
+                                    <span class="font-mono text-gray-900 font-bold select-all">{{ $profile->user->email }}</span>
+                                </div>
+                                <div class="flex items-center justify-between py-1 border-b border-emerald-100">
+                                    <span class="text-emerald-800 font-medium">Phone</span>
+                                    <span class="font-mono text-gray-900 font-bold select-all">+91 98765 43210</span>
+                                </div>
+                                @if($profile->portfolio_links && count($profile->portfolio_links) > 0)
+                                    <div class="py-1">
+                                        <span class="text-emerald-800 font-medium block mb-1">Portfolio & Social URLs</span>
+                                        <div class="space-y-1">
+                                            @foreach($profile->portfolio_links as $link)
+                                                @if($link)
+                                                    <a href="{{ $link }}" target="_blank" class="text-indigo-650 hover:underline block truncate">{{ $link }}</a>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @else
+                        <div class="border-t border-[var(--ig-line)] pt-5">
+                            <h3 class="text-xs font-bold text-[var(--ig-muted)] uppercase tracking-wider mb-2">🔒 Contact Information</h3>
+                            <p class="text-[11px] text-[var(--ig-muted)] leading-relaxed mb-3">
+                                Contact details (email, phone, and socials) are masked until a job/internship offer is accepted.
+                            </p>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex items-center justify-between py-1 border-b border-gray-200">
+                                    <span class="text-[var(--ig-muted)]">Email</span>
+                                    <span class="font-mono text-gray-400">••••••••@••••.•••</span>
+                                </div>
+                                <div class="flex items-center justify-between py-1 border-b border-gray-200">
+                                    <span class="text-[var(--ig-muted)]">Phone</span>
+                                    <span class="font-mono text-gray-400">+91 ••••• •••••</span>
+                                </div>
+                                <div class="flex items-center justify-between py-1">
+                                    <span class="text-[var(--ig-muted)]">Socials / Portfolio</span>
+                                    <span class="font-mono text-gray-400">🔒 Masked</span>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- IPRS Score Card -->

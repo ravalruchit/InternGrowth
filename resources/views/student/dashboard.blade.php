@@ -77,6 +77,82 @@
             </section>
         @endif
 
+        <!-- ─── Scheduled Interviews ─── -->
+        @if($interviews && $interviews->count() > 0)
+            <section class="mb-12 ig-reveal">
+                <div class="ig-section-head">
+                    <div>
+                        <p class="ig-eyebrow mb-2">— Upcoming Rounds</p>
+                        <h2 class="ig-display text-3xl text-[var(--ig-ink)]">Interview Schedule <span class="text-[var(--ig-muted)]">· {{ $interviews->count() }}</span></h2>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    @foreach($interviews as $interview)
+                        <div class="ig-card p-6 flex flex-col justify-between space-y-4">
+                            <div>
+                                <div class="flex items-center justify-between">
+                                    <span class="ig-chip {{ $interview->status === 'accepted' ? 'ig-chip-success' : 'ig-chip-warn' }}">
+                                        {{ strtoupper($interview->status) }}
+                                    </span>
+                                    <span class="text-xs text-[var(--ig-muted)] font-semibold">{{ $interview->duration_minutes }} min</span>
+                                </div>
+                                <h3 class="ig-display text-xl mt-3 text-[var(--ig-ink)]">{{ $interview->title }}</h3>
+                                <p class="ig-mono text-xs mt-1 text-[var(--ig-muted)]">
+                                    with <span class="text-[var(--ig-ink)] font-bold">{{ $interview->startup->company_name }}</span>
+                                    @if($interview->task)
+                                        for <span class="italic">{{ $interview->task->title }}</span>
+                                    @endif
+                                </p>
+                                
+                                <div class="mt-4 space-y-2 text-sm">
+                                    <div class="flex items-center gap-2">
+                                        <span>📅</span>
+                                        <span class="font-bold text-[var(--ig-ink)]">{{ $interview->scheduled_at->format('M d, Y \a\t g:i A') }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span>📍</span>
+                                        <span class="text-[var(--ig-ink-2)]">
+                                            @if($interview->status === 'accepted')
+                                                @if(filter_var($interview->location, FILTER_VALIDATE_URL))
+                                                    <a href="{{ $interview->location }}" target="_blank" class="text-[var(--ig-accent)] hover:underline font-semibold">{{ $interview->location }}</a>
+                                                @else
+                                                    {{ $interview->location }}
+                                                @endif
+                                            @else
+                                                <span class="text-[var(--ig-muted)] italic">Hidden until accepted</span>
+                                            @endif
+                                        </span>
+                                    </div>
+                                    @if($interview->agenda)
+                                        <div class="bg-[var(--ig-bg-2)]/30 border border-[var(--ig-line-2)] rounded-xl p-3 text-[11.5px] leading-relaxed text-[var(--ig-ink-2)] mt-2">
+                                            <strong>Agenda:</strong> {{ $interview->agenda }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            
+                            <div class="pt-3 border-t border-[var(--ig-line)] flex items-center justify-between gap-3">
+                                @if($interview->status === 'pending')
+                                    <form method="POST" action="{{ route('student.interviews.reject', $interview->id) }}" class="flex-1">
+                                        @csrf
+                                        <button class="ig-btn w-full justify-center" style="background:transparent;border:1px solid var(--ig-line-2);color:var(--ig-ink-2);padding:8px 12px;font-size:12px;">Decline</button>
+                                    </form>
+                                    <form method="POST" action="{{ route('student.interviews.accept', $interview->id) }}" class="flex-1">
+                                        @csrf
+                                        <button class="ig-btn ig-btn-lime w-full justify-center" style="padding:8px 12px;font-size:12px;">Accept</button>
+                                    </form>
+                                @else
+                                    <a href="{{ route('messages.show', $interview->conversation_id) }}" class="ig-btn ig-btn-ghost w-full justify-center text-xs">
+                                        💬 View in Chat
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
         <!-- ─── Main Grid: IPRS + Ledger ─── -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12">
 
@@ -263,6 +339,9 @@
                                 @endif
                                 @if($application->submission && $application->submission->status === 'accepted' && !in_array($application->task_id, $reviewedTaskIds))
                                     <button onclick="openReviewModal({{ $application->task_id }}, '{{ addslashes($application->task->startup->company_name) }}')" class="ig-btn ig-btn-lime" style="padding:8px 14px;font-size:12px;"><span>Rate startup</span></button>
+                                @endif
+                                @if(in_array($application->status, ['hired', 'internship_accepted']))
+                                    <a href="{{ route('messages.create', [$profile->id, $application->task->startup_profile_id, $application->task_id]) }}" class="ig-btn" style="padding:8px 14px;font-size:12px;background:var(--ig-accent);color:var(--ig-bg);"><span>💬 Message Startup</span></a>
                                 @endif
                             </div>
                         </div>

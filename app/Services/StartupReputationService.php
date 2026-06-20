@@ -23,6 +23,30 @@ class StartupReputationService
                          ($hiringScore * 0.15) +
                          ($taskCompletionScore * 0.15);
 
+        // Deduct 5 points per startup no-show
+        $noShows = \App\Models\Interview::where('startup_profile_id', $startup->id)
+            ->where('status', 'no_show')
+            ->where('no_show_by', 'startup')
+            ->count();
+        $overallScore -= ($noShows * 5.00);
+
+        // Adjust for hiring success ratings (30-day post-hire feedback)
+        $hiringSuccessRatings = \App\Models\Application::whereHas('task', function($q) use ($startup) {
+            $q->where('startup_profile_id', $startup->id);
+        })->whereNotNull('hiring_success_rating')->get();
+
+        foreach ($hiringSuccessRatings as $app) {
+            if ($app->hiring_success_rating === 'excellent') {
+                $overallScore += 5.00;
+            } elseif ($app->hiring_success_rating === 'average') {
+                $overallScore -= 5.00;
+            } elseif ($app->hiring_success_rating === 'poor') {
+                $overallScore -= 15.00;
+            } elseif ($app->hiring_success_rating === 'terminated') {
+                $overallScore -= 30.00;
+            }
+        }
+
         $overallScore = max(0.00, min(100.00, $overallScore));
 
         // Sync credibility_score to startup_profiles

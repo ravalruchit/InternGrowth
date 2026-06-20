@@ -105,6 +105,8 @@ class TaskController extends Controller
             'stipend'     => 'nullable|numeric|min:0',
             'skills'      => 'required|array|min:1',
             'skills.*'    => 'exists:skills,id',
+            'domain'      => 'required|string|in:' . implode(',', array_keys(\App\Models\StudentProfile::$domains)),
+            'role'        => 'required|string',
         ]);
 
 
@@ -188,6 +190,8 @@ class TaskController extends Controller
             'stipend'     => 'nullable|numeric|min:0',
             'skills'      => 'required|array|min:1',
             'skills.*'    => 'exists:skills,id',
+            'domain'      => 'required|string|in:' . implode(',', array_keys(\App\Models\StudentProfile::$domains)),
+            'role'        => 'required|string',
         ]);
 
 

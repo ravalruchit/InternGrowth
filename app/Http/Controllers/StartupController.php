@@ -53,7 +53,10 @@ class StartupController extends Controller
             $hiringSuccessByDomain[$d] = 0;
         }
 
-        foreach ($tasks as $task) {
+        $allTasksForAnalytics = \App\Models\Task::where('startup_profile_id', $profile->id)->with(['applications.submission'])->get();
+        $allOffersForAnalytics = \App\Models\HiringOffer::where('startup_profile_id', $profile->id)->get();
+
+        foreach ($allTasksForAnalytics as $task) {
             if ($task->domain && isset($applicationsByDomain[$task->domain])) {
                 $applicationsByDomain[$task->domain] += $task->applications->count();
             }
@@ -65,7 +68,7 @@ class StartupController extends Controller
             }
         }
 
-        foreach ($hiringOffers as $offer) {
+        foreach ($allOffersForAnalytics as $offer) {
             if ($offer->status === 'accepted' && $offer->domain && isset($hiringSuccessByDomain[$offer->domain])) {
                 $hiringSuccessByDomain[$offer->domain] += 1;
             }

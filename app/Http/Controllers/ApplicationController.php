@@ -16,6 +16,8 @@ class ApplicationController extends Controller
             'cover_letter' => 'nullable|string',
         ]);
 
+        \App\Helpers\ContactDetector::validate($validated['cover_letter'] ?? '', 'cover_letter');
+
         $validated['task_id'] = $taskId;
         $validated['student_profile_id'] = auth()->user()->studentProfile->id;
 
@@ -100,5 +102,96 @@ class ApplicationController extends Controller
         ]);
 
         return back()->with('success', "Application status updated to {$statusLabel}");
+    }
+
+    public function closeTask($id)
+    {
+        $application = \App\Models\Application::with(['student.user', 'task'])->findOrFail($id);
+
+        // Authorization check: Ensure task belongs to startup
+        if ($application->task->startup_profile_id !== auth()->user()->startupProfile->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $application->update([
+            'startup_hiring_outcome' => 'task_only'
+        ]);
+
+        // Recalculate scores for both sides
+        $reputationService = new \App\Services\ReputationEngineService();
+        $reputationService->updateReputation($application->student_profile_id);
+
+        $startupReputationService = new \App\Services\StartupReputationService();
+        $startupReputationService->updateReputation($application->task->startup_profile_id);
+
+        // Notify student
+        \App\Models\Notification::create([
+            'user_id' => $application->student->user_id,
+            'title' => 'Project Work Completed',
+            'message' => "Your project work for \"{$application->task->title}\" has been completed and finalized.",
+            'type' => 'success'
+        ]);
+
+        return back()->with('success', 'Task successfully closed. The relationship is resolved.');
+    }
+
+    public function rejectHiring($id)
+    {
+        $application = \App\Models\Application::with(['student.user', 'task'])->findOrFail($id);
+
+        // Authorization check
+        if ($application->task->startup_profile_id !== auth()->user()->startupProfile->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $application->update([
+            'startup_hiring_outcome' => 'task_completed_rejected',
+            'status' => 'rejected'
+        ]);
+
+        // Recalculate scores
+        $reputationService = new \App\Services\ReputationEngineService();
+        $reputationService->updateReputation($application->student_profile_id);
+
+        $startupReputationService = new \App\Services\StartupReputationService();
+        $startupReputationService->updateReputation($application->task->startup_profile_id);
+
+        // Notify student
+        \App\Models\Notification::create([
+            'user_id' => $application->student->user_id,
+            'title' => 'Not Selected for Hiring',
+            'message' => "You successfully completed the project for \"{$application->task->title}\" but were not selected for a placement position.",
+            'type' => 'info'
+        ]);
+
+        return back()->with('success', 'Candidate marked as not selected for hiring.');
+    }
+
+    public function rateHiringSuccess(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'rating' => 'required|string|in:excellent,good,average,poor,terminated'
+        ]);
+
+        $application = \App\Models\Application::with(['student.user', 'task'])->findOrFail($id);
+
+        // Authorization check
+        if ($application->task->startup_profile_id !== auth()->user()->startupProfile->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $application->update([
+            'hiring_success_rating' => $validated['rating'],
+            'hiring_success_rated_at' => now()
+        ]);
+
+        // Recalculate scores
+        $reputationService = new \App\Services\ReputationEngineService();
+        $reputationService->updateReputation($application->student_profile_id);
+
+        $startupReputationService = new \App\Services\StartupReputationService();
+        $startupReputationService->updateReputation($application->task->startup_profile_id);
+
+        return back()->with('success', 'Hiring feedback submitted. Reputation scores updated.');
     }
 }

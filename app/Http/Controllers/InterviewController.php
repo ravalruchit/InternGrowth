@@ -18,7 +18,17 @@ class InterviewController extends Controller
             'type' => 'required|string|in:online,phone,in_person',
             'location' => 'required|string|max:255',
             'agenda' => 'nullable|string|max:2000',
+            'agreement' => 'required|accepted',
+        ], [
+            'agreement.accepted' => 'You must agree to process hiring through InternGrowth to schedule an interview.'
         ]);
+
+        // Validate contact leaks
+        \App\Helpers\ContactDetector::validate($validated['title'], 'title');
+        \App\Helpers\ContactDetector::validate($validated['location'], 'location');
+        if (!empty($validated['agenda'])) {
+            \App\Helpers\ContactDetector::validate($validated['agenda'], 'agenda');
+        }
 
         $conversation = Conversation::findOrFail($conversationId);
         
@@ -41,6 +51,22 @@ class InterviewController extends Controller
             'agenda' => $validated['agenda'] ?? null,
             'status' => 'pending',
         ]);
+
+        // Sync the application workflow
+        if ($conversation->task_id) {
+            $application = \App\Models\Application::where('task_id', $conversation->task_id)
+                ->where('student_profile_id', $conversation->student_profile_id)
+                ->first();
+            if ($application) {
+                $application->update([
+                    'agreement_accepted' => true,
+                    'agreement_accepted_at' => now(),
+                    'agreement_ip' => $request->ip(),
+                    'startup_hiring_outcome' => 'interview_scheduled',
+                    'status' => 'interview'
+                ]);
+            }
+        }
 
         // Create Chat message invitation card
         Message::create([
@@ -150,6 +176,10 @@ class InterviewController extends Controller
             'feedback_notes' => 'nullable|string|max:2000',
         ]);
 
+        if (!empty($validated['feedback_notes'])) {
+            \App\Helpers\ContactDetector::validate($validated['feedback_notes'], 'feedback_notes');
+        }
+
         $interview = Interview::findOrFail($id);
         $startup = auth()->user()->startupProfile;
 
@@ -169,6 +199,25 @@ class InterviewController extends Controller
             'problem_solving_rating' => $validated['problem_solving_rating'],
             'feedback_notes' => $validated['feedback_notes'] ?? null,
         ]);
+
+        // Update application workflow
+        if ($interview->task_id) {
+            $application = \App\Models\Application::where('task_id', $interview->task_id)
+                ->where('student_profile_id', $interview->student_profile_id)
+                ->first();
+            if ($application) {
+                if (in_array($validated['outcome'], ['strong_candidate', 'proceed_to_offer', 'keep_in_pipeline'])) {
+                    $application->update([
+                        'startup_hiring_outcome' => 'interview_passed'
+                    ]);
+                } elseif ($validated['outcome'] === 'rejected') {
+                    $application->update([
+                        'status' => 'rejected',
+                        'startup_hiring_outcome' => 'interview_failed'
+                    ]);
+                }
+            }
+        }
 
         // Recalculate student reputation score
         $reputationService = new \App\Services\ReputationEngineService();
@@ -201,7 +250,23 @@ class InterviewController extends Controller
             return back()->with('error', 'Cannot mark this interview as no show.');
         }
 
-        $interview->update(['status' => 'no_show']);
+        $interview->update([
+            'status' => 'no_show',
+            'no_show_by' => 'student'
+        ]);
+
+        // Sync the application outcome if it exists
+        if ($interview->task_id) {
+            $application = \App\Models\Application::where('task_id', $interview->task_id)
+                ->where('student_profile_id', $interview->student_profile_id)
+                ->first();
+            if ($application) {
+                $application->update([
+                    'startup_hiring_outcome' => 'interview_failed',
+                    'status' => 'rejected'
+                ]);
+            }
+        }
 
         // Recalculate student reputation score
         $reputationService = new \App\Services\ReputationEngineService();
@@ -218,5 +283,40 @@ class InterviewController extends Controller
         $interview->conversation->touch();
 
         return back()->with('success', 'Candidate marked as no-show.');
+    }
+
+    public function studentNoShow($id)
+    {
+        $interview = Interview::findOrFail($id);
+        $student = auth()->user()->studentProfile;
+
+        if (!$student || $interview->student_profile_id !== $student->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        if (!in_array($interview->status, ['accepted', 'pending'])) {
+            return back()->with('error', 'Cannot mark this interview as no show.');
+        }
+
+        $interview->update([
+            'status' => 'no_show',
+            'no_show_by' => 'startup'
+        ]);
+
+        // Recalculate startup reputation score
+        $startupReputationService = new \App\Services\StartupReputationService();
+        $startupReputationService->updateReputation($interview->startup_profile_id);
+
+        // Send System message
+        Message::create([
+            'conversation_id' => $interview->conversation_id,
+            'sender_id' => auth()->id(),
+            'type' => 'text',
+            'message' => "⚠️ Startup marked as NO SHOW for scheduled interview: '{$interview->title}'.",
+        ]);
+
+        $interview->conversation->touch();
+
+        return back()->with('success', 'Startup marked as no-show.');
     }
 }

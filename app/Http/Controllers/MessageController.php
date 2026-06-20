@@ -50,6 +50,29 @@ class MessageController extends Controller
         ]);
 
         $conversation = Conversation::findOrFail($conversationId);
+
+        // Check if contact details are unlocked for this student-startup pairing
+        $unlocked = false;
+        $acceptedOfferExists = \App\Models\HiringOffer::where('student_profile_id', $conversation->student_profile_id)
+            ->where('startup_profile_id', $conversation->startup_profile_id)
+            ->where('status', 'accepted')
+            ->exists();
+        if ($acceptedOfferExists) {
+            $unlocked = true;
+        }
+
+        if (!$unlocked && $conversation->task_id) {
+            $application = \App\Models\Application::where('student_profile_id', $conversation->student_profile_id)
+                ->where('task_id', $conversation->task_id)
+                ->first();
+            if ($application && $application->contactDetailsUnlocked()) {
+                $unlocked = true;
+            }
+        }
+
+        if (!$unlocked) {
+            \App\Helpers\ContactDetector::validate($validated['message'], 'message');
+        }
         
         Message::create([
             'conversation_id' => $conversation->id,

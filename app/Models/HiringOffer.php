@@ -23,8 +23,22 @@ class HiringOffer extends Model
         'expires_at',
         'reserved_fee',
         'domain',
-        'role'
+        'role',
+        'counter_compensation',
+        'counter_note'
     ];
+
+    /**
+     * Dynamically expire pending offers in the status accessor.
+     */
+    public function getStatusAttribute($value)
+    {
+        if ($value === 'pending' && $this->expires_at && $this->expires_at->isPast()) {
+            // Automatically update database state or just return 'expired'
+            return 'expired';
+        }
+        return $value;
+    }
 
     protected $casts = [
         'compensation' => 'decimal:2',

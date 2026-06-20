@@ -122,6 +122,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/applications/{id}/approve', [ApplicationController::class, 'approve'])->name('applications.approve');
         Route::post('/applications/{id}/reject', [ApplicationController::class, 'reject'])->name('applications.reject');
         Route::post('/applications/{id}/status', [ApplicationController::class, 'updateStatus'])->name('applications.update-status');
+        Route::post('/applications/{id}/close-task', [ApplicationController::class, 'closeTask'])->name('applications.close-task');
+        Route::post('/applications/{id}/reject-hiring', [ApplicationController::class, 'rejectHiring'])->name('applications.reject-hiring');
+        Route::post('/applications/{id}/rate-hiring-success', [ApplicationController::class, 'rateHiringSuccess'])->name('applications.rate-hiring-success');
         Route::get('/submissions/{id}/review', [SubmissionController::class, 'review'])->name('submissions.review');
         Route::post('/submissions/{id}/accept', [SubmissionController::class, 'accept'])->name('submissions.accept');
         Route::post('/submissions/{id}/reject', [SubmissionController::class, 'reject'])->name('submissions.reject');
@@ -227,6 +230,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/startup/offers/{id}/withdraw', [App\Http\Controllers\HiringOfferController::class, 'withdraw'])->name('startup.offers.withdraw')->middleware('role:startup');
     Route::post('/student/offers/{id}/accept', [App\Http\Controllers\HiringOfferController::class, 'accept'])->name('student.offers.accept')->middleware('role:student');
     Route::post('/student/offers/{id}/reject', [App\Http\Controllers\HiringOfferController::class, 'reject'])->name('student.offers.reject')->middleware('role:student');
+    Route::post('/student/offers/{id}/counter', [App\Http\Controllers\HiringOfferController::class, 'counterOffer'])->name('student.offers.counter')->middleware('role:student');
 
     // Interview Routes
     Route::post('/startup/interviews/schedule/{conversationId}', [App\Http\Controllers\InterviewController::class, 'store'])->name('startup.interviews.store')->middleware('role:startup');
@@ -235,6 +239,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/startup/interviews/{id}/cancel', [App\Http\Controllers\InterviewController::class, 'cancel'])->name('startup.interviews.cancel')->middleware('role:startup');
     Route::post('/startup/interviews/{id}/complete', [App\Http\Controllers\InterviewController::class, 'complete'])->name('startup.interviews.complete')->middleware('role:startup');
     Route::post('/startup/interviews/{id}/noshow', [App\Http\Controllers\InterviewController::class, 'noShow'])->name('startup.interviews.noshow')->middleware('role:startup');
+    Route::post('/student/interviews/{id}/noshow', [App\Http\Controllers\InterviewController::class, 'studentNoShow'])->name('student.interviews.noshow')->middleware('role:student');
 });
 
 require __DIR__.'/auth.php';

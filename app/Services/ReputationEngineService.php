@@ -23,7 +23,7 @@ class ReputationEngineService
         $interviews = $student->interviews;
         $completedInterviews = $interviews->where('status', 'completed');
         $attendedCount = $completedInterviews->count();
-        $noShows = $interviews->where('status', 'no_show')->count();
+        $noShows = $interviews->where('status', 'no_show')->where('no_show_by', 'student')->count();
         
         $strongCandidateCount = $completedInterviews->whereIn('outcome', ['proceed_to_offer', 'keep_in_pipeline', 'strong_candidate'])->count();
         
@@ -67,6 +67,24 @@ class ReputationEngineService
                          ($communicationRating * 0.10) + 
                          ($skillVerificationRating * 0.05) +
                          ($ips * 0.15);
+
+        // Deduct 5 points per student no-show
+        $overallScore = max(0.00, $overallScore - ($noShows * 5.00));
+
+        // Adjust for hiring success ratings (30-day post-hire feedback)
+        $hiringSuccessRatings = $student->applications()->whereNotNull('hiring_success_rating')->get();
+        foreach ($hiringSuccessRatings as $app) {
+            if ($app->hiring_success_rating === 'excellent') {
+                $overallScore += 5.00;
+            } elseif ($app->hiring_success_rating === 'average') {
+                $overallScore -= 5.00;
+            } elseif ($app->hiring_success_rating === 'poor') {
+                $overallScore -= 15.00;
+            } elseif ($app->hiring_success_rating === 'terminated') {
+                $overallScore -= 30.00;
+            }
+        }
+        $overallScore = max(0.00, min(100.00, $overallScore));
 
         $totalProjects = $student->applications()
             ->whereHas('submission', function($query) {
@@ -177,7 +195,7 @@ class ReputationEngineService
         $interviews = $student->interviews()->where('domain', $domain)->get();
         $completedInterviews = $interviews->where('status', 'completed');
         $attendedCount = $completedInterviews->count();
-        $noShows = $interviews->where('status', 'no_show')->count();
+        $noShows = $interviews->where('status', 'no_show')->where('no_show_by', 'student')->count();
         
         if ($attendedCount === 0) {
             $ips = 100.00;

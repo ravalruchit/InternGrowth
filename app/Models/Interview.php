@@ -27,7 +27,8 @@ class Interview extends Model
         'reminder_24h_sent',
         'reminder_1h_sent',
         'domain',
-        'role'
+        'role',
+        'no_show_by'
     ];
 
     protected $casts = [
