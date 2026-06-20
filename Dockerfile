@@ -26,7 +26,7 @@ RUN apk add --no-cache \
     postgresql-dev
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql pdo_pgsql mbstring zip bcmath
+    && docker-php-ext-install gd pdo pdo_mysql pdo_pgsql mbstring zip bcmath opcache
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -49,10 +49,11 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 # Configure PHP-FPM to not clear environment variables so Laravel can read them
 RUN echo "clear_env = no" >> /usr/local/etc/php-fpm.d/www.conf
 
-
 # Copy server configuration files
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+
 
 # Expose port 80
 EXPOSE 80
