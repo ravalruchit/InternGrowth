@@ -13,13 +13,27 @@ class TaskRepository
 
     public function getPosted()
     {
-        return Task::where('status', 'posted')->with('startup.user', 'skills')->latest()->get();
+        return Task::where('status', 'posted')
+            ->with([
+                'startup.user', 
+                'skills', 
+                'applications.student.user', 
+                'applications.submission'
+            ])
+            ->latest()
+            ->get();
     }
 
     public function find($id)
     {
-        return Task::with('startup.user', 'skills', 'applications.student.user', 'applications.submission')->findOrFail($id);
+        return Task::with([
+            'startup.user', 
+            'skills', 
+            'applications.student.user', 
+            'applications.submission'
+        ])->findOrFail($id);
     }
+
 
     public function create(array $data)
     {
