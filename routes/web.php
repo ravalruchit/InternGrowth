@@ -199,15 +199,4 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 
-// Temporary route to run DB sync import on Render free tier (which lacks Shell access)
-Route::get('/import-database-json', function () {
-    try {
-        \Illuminate\Support\Facades\Artisan::call('db:sync-json', ['action' => 'import']);
-        return response(\Illuminate\Support\Facades\Artisan::output(), 200)
-            ->header('Content-Type', 'text/plain');
-    } catch (\Exception $e) {
-        return response("Failed to import database: " . $e->getMessage(), 500)
-            ->header('Content-Type', 'text/plain');
-    }
-});
 
