@@ -100,6 +100,15 @@ class DbJsonSync extends Command
             return 1;
         }
 
+        // 0. Drop PostgreSQL CHECK constraints left over from old enum columns
+        try {
+            DB::statement('ALTER TABLE "tasks" DROP CONSTRAINT IF EXISTS "tasks_status_check"');
+            DB::statement('ALTER TABLE "applications" DROP CONSTRAINT IF EXISTS "applications_status_check"');
+            $this->info('Dropped enum check constraints for compatibility.');
+        } catch (\Exception $e) {
+            // Ignore if constraints don't exist or not running on Postgres
+        }
+
         // 1. Temporarily disable foreign key constraints / triggers in PostgreSQL
         $this->info('Disabling triggers to bypass foreign key constraints...');
         foreach ($this->tables as $table) {
