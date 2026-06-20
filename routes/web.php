@@ -11,8 +11,48 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    // ── Real counts ──
+    $studentsCount  = \App\Models\StudentProfile::count();
+    $startupsCount  = \App\Models\StartupProfile::count();
+    $verifiedTasks  = \App\Models\Submission::where('status', 'accepted')->count();
+    $totalTasks     = \App\Models\Task::count();
+
+    // ── Top student (leaderboard #1) ──
+    $topStudent = \App\Models\StudentProfile::with(['user', 'reputationScore', 'skills'])
+        ->leftJoin('reputation_scores', 'student_profiles.id', '=', 'reputation_scores.student_profile_id')
+        ->orderByRaw('COALESCE(reputation_scores.overall_score, 50.00) desc')
+        ->select('student_profiles.*')
+        ->first();
+
+    // ── Real startup company names for marquee ──
+    $startupNames = \App\Models\StartupProfile::whereNotNull('company_name')
+        ->where('company_name', '!=', '')
+        ->where('company_name', 'not like', '%test%')
+        ->where('company_name', 'not like', '%demo%')
+        ->where('company_name', 'not like', '%dummy%')
+        ->where('company_name', 'not like', '%example%')
+        ->pluck('company_name')
+        ->toArray();
+
+    // ── Latest real tasks for the "For Students" section ──
+    $latestTasks = \App\Models\Task::with(['startup', 'skills'])
+        ->orderBy('created_at', 'desc')
+        ->limit(3)
+        ->get();
+
+    return view('welcome', compact(
+        'studentsCount', 'startupsCount', 'verifiedTasks', 'totalTasks',
+        'topStudent', 'startupNames', 'latestTasks'
+    ));
 });
+
+Route::get('/test-landing', function () {
+    $studentsCount = \App\Models\StudentProfile::count();
+    $startupsCount = \App\Models\StartupProfile::count();
+    $tasksCount = \App\Models\Task::count(); // Let's use total tasks as tasks count
+
+    return view('welcome_test', compact('studentsCount', 'startupsCount', 'tasksCount'));
+})->name('test-landing');
 
 // Google OAuth routes
 Route::get('auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');

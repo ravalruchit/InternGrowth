@@ -260,7 +260,7 @@ body.ig-body::before {
 .ig-marquee {
     display: flex; gap: 56px;
     width: max-content;
-    animation: ig-marquee 28s linear infinite;
+    animation: ig-marquee 45s linear infinite;
 }
 
 /* -------------- Hero orb (mouse-follow gradient) -------------- */
