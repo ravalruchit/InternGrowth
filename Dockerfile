@@ -46,6 +46,10 @@ RUN composer install --no-dev --optimize-autoloader
 # Set permissions for storage and cache directories
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
+# Configure PHP-FPM to not clear environment variables so Laravel can read them
+RUN echo "clear_env = no" >> /usr/local/etc/php-fpm.d/www.conf
+
+
 # Copy server configuration files
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
