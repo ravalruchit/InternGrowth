@@ -9,7 +9,6 @@ use App\Models\Task;
 use App\Models\Application;
 use App\Models\Submission;
 use App\Models\Skill;
-use App\Models\PointsWallet;
 use App\Models\Portfolio;
 use App\Models\PortfolioItem;
 use App\Models\SkillVerification;
@@ -49,11 +48,6 @@ class PortfolioTest extends TestCase
             'reliability_score' => 0.85,
         ]);
 
-        PointsWallet::create([
-            'student_profile_id' => $this->studentProfile->id,
-            'balance' => 0,
-        ]);
-
         // Create a startup user and profile
         $this->startupUser = User::create([
             'name' => 'Tech Startup',
@@ -79,7 +73,6 @@ class PortfolioTest extends TestCase
             'startup_profile_id' => $this->startupProfile->id,
             'title' => 'Laravel Task',
             'description' => 'Build Laravel API',
-            'reward_points' => 100,
             'stipend' => 1000,
             'status' => 'posted',
             'required_skills' => json_encode(['Laravel']),

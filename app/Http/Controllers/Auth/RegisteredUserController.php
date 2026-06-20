@@ -56,10 +56,6 @@ class RegisteredUserController extends Controller
                 'primary_domain' => $request->primary_domain,
                 'preferred_role' => $request->preferred_role,
             ]);
-            \App\Models\PointsWallet::create([
-                'student_profile_id' => $profile->id,
-                'balance' => 0,
-            ]);
         } elseif ($user->isStartup()) {
             \App\Models\StartupProfile::create([
                 'user_id' => $user->id,

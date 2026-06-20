@@ -204,7 +204,6 @@
                             </div>
                             <p class="text-sm text-[var(--ig-ink-2)] line-clamp-2 mb-4">{{ $task->description }}</p>
                             <div class="flex items-center justify-between pt-4 border-t border-dashed border-[var(--ig-line)]">
-                                <span class="ig-chip ig-chip-ink">{{ $task->reward_points }} pts</span>
                                 @if($task->match_score >= 80)
                                     <span class="ig-chip ig-chip-lime">Perfect match</span>
                                 @elseif($task->match_score >= 60)

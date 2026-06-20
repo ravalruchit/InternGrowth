@@ -97,15 +97,11 @@ class StudentProfile extends Model
         return $this->hasMany(Application::class);
     }
 
-    public function wallet(): HasOne
-    {
-        return $this->hasOne(PointsWallet::class);
-    }
-
     public function certificates(): HasMany
     {
         return $this->hasMany(Certificate::class);
     }
+
 
     public function ratings(): HasMany
     {

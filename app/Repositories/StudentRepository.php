@@ -13,7 +13,7 @@ class StudentRepository
 
     public function find($id)
     {
-        return StudentProfile::with('user', 'skills', 'wallet')->findOrFail($id);
+        return StudentProfile::with('user', 'skills', 'reputationScore')->findOrFail($id);
     }
 
     public function update($id, array $data)
@@ -25,9 +25,9 @@ class StudentRepository
 
     public function getLeaderboard()
     {
-        return StudentProfile::with('user', 'wallet')
-            ->join('points_wallets', 'student_profiles.id', '=', 'points_wallets.student_profile_id')
-            ->orderBy('points_wallets.balance', 'desc')
+        return StudentProfile::with(['user', 'reputationScore'])
+            ->leftJoin('reputation_scores', 'student_profiles.id', '=', 'reputation_scores.student_profile_id')
+            ->orderByRaw('COALESCE(reputation_scores.overall_score, 50.00) desc')
             ->select('student_profiles.*')
             ->limit(10)
             ->get();

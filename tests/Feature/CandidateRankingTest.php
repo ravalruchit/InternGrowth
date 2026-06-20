@@ -8,7 +8,6 @@ use App\Models\StartupProfile;
 use App\Models\Task;
 use App\Models\Application;
 use App\Models\Skill;
-use App\Models\PointsWallet;
 use App\Models\ReputationScore;
 use App\Services\CandidateRankingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -52,7 +51,6 @@ class CandidateRankingTest extends TestCase
             'startup_profile_id' => $this->startupProfile->id,
             'title' => 'Backend Development Task',
             'description' => 'Build Laravel applications and PHP scripts',
-            'reward_points' => 120,
             'stipend' => 1500,
             'status' => 'posted',
             'required_skills' => json_encode(['Laravel', 'PHP']),
@@ -85,8 +83,6 @@ class CandidateRankingTest extends TestCase
             'portfolio_links' => ['github' => 'https://github.com/johnnew'],
         ]);
         $newStudentProfile->skills()->attach([$laravel->id, $php->id]);
-        PointsWallet::create(['student_profile_id' => $newStudentProfile->id, 'balance' => 0]);
-
         // Calculate John New score using CandidateRankingService
         $rankingService = new CandidateRankingService();
         $newStudentResult = $rankingService->calculateMatchScore($newStudentProfile, $this->task);
@@ -119,8 +115,6 @@ class CandidateRankingTest extends TestCase
             'availability' => 'full_time',
         ]);
         $studentA->skills()->attach([$laravel->id, $php->id]);
-        PointsWallet::create(['student_profile_id' => $studentA->id, 'balance' => 0]);
-
         // Student B: Low Pedigree/State College, Remote Location
         $userB = User::create([
             'name' => 'Bob Remote',
@@ -135,8 +129,6 @@ class CandidateRankingTest extends TestCase
             'availability' => 'full_time',
         ]);
         $studentB->skills()->attach([$laravel->id, $php->id]);
-        PointsWallet::create(['student_profile_id' => $studentB->id, 'balance' => 0]);
-
         // Compute scores
         $rankingService = new CandidateRankingService();
         $resultA = $rankingService->calculateMatchScore($studentA, $this->task);
@@ -164,8 +156,6 @@ class CandidateRankingTest extends TestCase
             'user_id' => $user->id,
             'bio' => 'PHP Programmer',
         ]);
-        PointsWallet::create(['student_profile_id' => $student->id, 'balance' => 500]);
-        
         $application = Application::create([
             'student_profile_id' => $student->id,
             'task_id' => $this->task->id,

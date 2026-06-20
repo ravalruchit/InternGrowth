@@ -11,7 +11,7 @@
             </div>
             <div class="md:col-span-4 md:text-right">
                 <p class="text-sm text-[var(--ig-muted)] max-w-xs md:ml-auto">
-                    Rankings are updated live based on total verified points earned and your IPRS/reliability scores.
+                    Rankings are updated live based on your overall IPRS reputation score and reliability metrics.
                 </p>
             </div>
         </div>
@@ -24,7 +24,7 @@
                         <tr class="border-b border-[var(--ig-line)] pb-4 text-[var(--ig-muted)]">
                             <th class="ig-eyebrow pb-4 w-20">Rank</th>
                             <th class="ig-eyebrow pb-4">Student</th>
-                            <th class="ig-eyebrow pb-4 text-right pr-6">Points</th>
+                            <th class="ig-eyebrow pb-4 text-right pr-6">IPRS Score</th>
                             <th class="ig-eyebrow pb-4 text-right">Reliability</th>
                         </tr>
                     </thead>
@@ -56,8 +56,7 @@
                                 </td>
                                 <td class="py-5 text-right font-semibold pr-6">
                                     <span class="ig-display text-xl text-[var(--ig-ink)]">
-                                        {{ number_format($student->wallet->balance ?? 0) }}
-                                        <span class="text-[11px] text-[var(--ig-muted)] font-normal ml-0.5">pts</span>
+                                        {{ number_format($student->reputationScore->overall_score ?? 50.00, 0) }}%
                                     </span>
                                 </td>
                                 <td class="py-5 text-right">

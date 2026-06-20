@@ -75,22 +75,16 @@
                 </div>
 
                 <!-- Rewards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 ig-reveal">
-                    <div class="ig-card p-6">
-                        <p class="ig-eyebrow mb-2">Reward Points</p>
-                        <p class="ig-display text-4xl text-[var(--ig-accent)]">
-                            {{ $task->reward_points }} <span class="text-sm font-normal text-[var(--ig-muted)]">points</span>
-                        </p>
-                    </div>
-                    @if($task->stipend)
+                @if($task->stipend)
+                    <div class="grid grid-cols-1 gap-4 ig-reveal">
                         <div class="ig-card p-6">
                             <p class="ig-eyebrow mb-2">Stipend</p>
                             <p class="ig-display text-4xl text-[var(--ig-lime-deep)]">
                                 ₹{{ number_format($task->stipend, 0) }}
                             </p>
                         </div>
-                    @endif
-                </div>
+                    </div>
+                @endif
 
                 <!-- Startup Action / Student Application List (Startup Owner Dashboard View) -->
                 @if(auth()->check() && auth()->user()->isStartup() && $task->startup_profile_id === auth()->user()->startupProfile->id)

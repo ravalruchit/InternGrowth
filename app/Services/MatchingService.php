@@ -122,11 +122,10 @@ class MatchingService
             }
             $score += $domainAlignmentScore * 0.20;
             
-            // Points/difficulty matching (15% weight)
-            if ($task->reward_points) {
-                $difficultyScore = min(100, ($task->reward_points / 10) * 10);
-                $score += $difficultyScore * 0.15;
-            }
+            // Difficulty score based on required skills count (15% weight)
+            $requiredSkillsCount = count($taskSkills);
+            $difficultyScore = min(100, $requiredSkillsCount * 25);
+            $score += $difficultyScore * 0.15;
             
             // Recency bonus (20% weight)
             $daysOld = now()->diffInDays($task->created_at);
@@ -138,11 +137,10 @@ class MatchingService
             $skillMatchPercentage = count($taskSkills) > 0 ? (count($matchingSkills) / count($taskSkills)) * 100 : 100;
             $score += $skillMatchPercentage * 0.6;
             
-            // Points/difficulty matching (20% weight)
-            if ($task->reward_points) {
-                $difficultyScore = min(100, ($task->reward_points / 10) * 10);
-                $score += $difficultyScore * 0.2;
-            }
+            // Difficulty score based on required skills count (20% weight)
+            $requiredSkillsCount = count($taskSkills);
+            $difficultyScore = min(100, $requiredSkillsCount * 25);
+            $score += $difficultyScore * 0.2;
             
             // Recency bonus (20% weight)
             $daysOld = now()->diffInDays($task->created_at);

@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\{User, StudentProfile, StartupProfile, Skill, PointsWallet};
+use App\Models\{User, StudentProfile, StartupProfile, Skill};
 
 class DatabaseSeeder extends Seeder
 {
@@ -35,11 +35,6 @@ class DatabaseSeeder extends Seeder
             'bio' => 'Passionate developer looking for opportunities',
             'portfolio_links' => ['https://github.com/johndoe'],
             'reliability_score' => 0.85,
-        ]);
-
-        PointsWallet::create([
-            'student_profile_id' => $studentProfile->id,
-            'balance' => 0,
         ]);
 
         // Create Startup

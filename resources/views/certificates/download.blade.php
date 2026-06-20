@@ -363,8 +363,8 @@
                     <div class="detail-value">{{ $certificate->issued_at->format('F d, Y') }}</div>
                 </div>
                 <div class="detail-item">
-                    <div class="detail-label">Reward Points</div>
-                    <div class="detail-value">{{ $certificate->task->reward_points }} Points</div>
+                    <div class="detail-label">Domain</div>
+                    <div class="detail-value">{{ $certificate->task->domain }}</div>
                 </div>
             </div>
             

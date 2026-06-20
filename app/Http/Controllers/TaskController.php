@@ -107,13 +107,6 @@ class TaskController extends Controller
             'skills.*'    => 'exists:skills,id',
         ]);
 
-        // Auto-calculate reward points
-        $validated['reward_points'] = $this->calculatePoints(
-            $validated['stipend'] ?? 0,
-            count($validated['skills']),
-            strlen($validated['description']),
-            !empty($validated['requirements'])
-        );
 
         // Get skill names for required_skills JSON field
         $skillIds   = $validated['skills'];
@@ -197,13 +190,6 @@ class TaskController extends Controller
             'skills.*'    => 'exists:skills,id',
         ]);
 
-        // Recalculate points
-        $validated['reward_points'] = $this->calculatePoints(
-            $validated['stipend'] ?? 0,
-            count($validated['skills']),
-            strlen($validated['description']),
-            false
-        );
 
         $skillIds   = $validated['skills'];
         $skillNames = Skill::whereIn('id', $skillIds)->pluck('name')->toArray();
@@ -216,25 +202,7 @@ class TaskController extends Controller
     }
 
 
-    /**
-     * Auto-calculate reward points based on task data.
-     * Formula:
-     *   Base:         50 pts
-     *   Stipend:      ₹1 = 0.5 pts  (capped at +200)
-     *   Skills:       each skill = +20 pts (capped at +100)
-     *   Description:  every 100 chars = +10 pts (capped at +50)
-     *   Requirements: +30 pts if set
-     */
-    private function calculatePoints(float $stipend, int $skillCount, int $descLength, bool $hasRequirements): int
-    {
-        $base         = 50;
-        $stipendBonus = min((int)($stipend * 0.5), 200);
-        $skillBonus   = min($skillCount * 20, 100);
-        $descBonus    = min((int)($descLength / 100) * 10, 50);
-        $reqBonus     = $hasRequirements ? 30 : 0;
 
-        return $base + $stipendBonus + $skillBonus + $descBonus + $reqBonus;
-    }
 
     public function destroy($id)
     {

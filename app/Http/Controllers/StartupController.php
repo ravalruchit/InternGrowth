@@ -32,9 +32,6 @@ class StartupController extends Controller
             })->count() > 0;
         });
         
-        // Calculate total points given
-        $totalPointsGiven = $completedTasks->sum('reward_points');
-        
         $hiringOffers = \App\Models\HiringOffer::where('startup_profile_id', $profile->id)
             ->with('student.user')
             ->latest()
@@ -95,7 +92,6 @@ class StartupController extends Controller
             'profile', 
             'tasks', 
             'completedTasks', 
-            'totalPointsGiven', 
             'hiringOffers',
             'applicationsByDomain',
             'hiringSuccessByDomain',

@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Submission;
 use App\Models\Rating;
-use App\Models\PointsWallet;
-use App\Models\PointsTransaction;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 
@@ -112,23 +110,6 @@ class SubmissionController extends Controller
         // Update task status to completed
         $task = $submission->application->task;
         $task->update(['status' => 'completed']);
-
-        $wallet = PointsWallet::firstOrCreate(
-            ['student_profile_id' => $submission->application->student_profile_id],
-            ['balance' => 0]
-        );
-
-        $points = $submission->application->task->reward_points;
-        $wallet->increment('balance', $points);
-
-        PointsTransaction::create([
-            'points_wallet_id' => $wallet->id,
-            'task_id' => $submission->application->task_id,
-            'amount' => $points,
-            'type' => 'earned',
-            'description' => 'Task completed'
-        ]);
-
         // Release escrow money
         $escrow = $task->escrow;
         $moneyMessage = '';

@@ -19,17 +19,11 @@
         </div>
 
         <!-- Stats Overview -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12 ig-anim-fade-up ig-delay-1">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12 ig-anim-fade-up ig-delay-1">
             <div class="ig-card p-6">
                 <p class="ig-eyebrow mb-1">Tasks Completed</p>
                 <p class="ig-stat-num text-4xl mt-3" data-counter="{{ $analytics['completed_tasks'] }}">0</p>
                 <p class="ig-mono text-[10px] text-[var(--ig-muted)] mt-2">{{ $analytics['pending_tasks'] }} in progress</p>
-            </div>
-
-            <div class="ig-card p-6">
-                <p class="ig-eyebrow mb-1">Current Points</p>
-                <p class="ig-stat-num text-4xl mt-3" data-counter="{{ (int)($profile->wallet->balance ?? 0) }}">0</p>
-                <p class="ig-mono text-[10px] text-[var(--ig-muted)] mt-2">{{ number_format($totalPoints) }} earned total</p>
             </div>
 
             <div class="ig-card p-6">
@@ -162,9 +156,10 @@
                             @endif
                         </div>
                         <div class="sm:text-right flex-shrink-0">
-                            <p class="ig-display text-2xl text-[var(--ig-accent)]">{{ $task->task->reward_points }} <span class="text-xs text-[var(--ig-muted)] font-normal">pts</span></p>
                             @if($task->task->stipend)
-                                <p class="text-xs font-semibold text-[var(--ig-lime-deep)] mt-1">₹{{ number_format($task->task->stipend, 0) }}</p>
+                                <p class="ig-display text-2xl text-[var(--ig-lime-deep)] font-bold">₹{{ number_format($task->task->stipend, 0) }}</p>
+                            @else
+                                <p class="text-xs text-[var(--ig-muted)] font-medium">Experience Task</p>
                             @endif
                         </div>
                     </div>

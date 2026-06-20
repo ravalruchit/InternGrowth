@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\{User, StudentProfile, ReputationScore, Skill, PointsWallet, Portfolio, PortfolioItem, HiringOffer, Task, Application, Submission};
+use App\Models\{User, StudentProfile, ReputationScore, Skill, Portfolio, PortfolioItem, HiringOffer, Task, Application, Submission};
 
 class CandidatesTestSeeder extends Seeder
 {
@@ -65,7 +65,6 @@ class CandidatesTestSeeder extends Seeder
             'reliability_score' => 0.92,
         ]);
 
-        PointsWallet::create(['student_profile_id' => $p1->id, 'balance' => 12500]);
         $p1->skills()->sync([$php->id, $laravel->id, $js->id]);
 
         // Verifications
@@ -94,7 +93,6 @@ class CandidatesTestSeeder extends Seeder
             'title' => 'Laravel Optimized Setup',
             'description' => 'Development verification task',
             'required_skills' => ['PHP', 'Laravel'],
-            'reward_points' => 200,
             'status' => 'completed'
         ]);
         $a1 = Application::create(['task_id' => $t1->id, 'student_profile_id' => $p1->id, 'status' => 'approved']);
@@ -165,7 +163,6 @@ class CandidatesTestSeeder extends Seeder
             'reliability_score' => 0.88,
         ]);
 
-        PointsWallet::create(['student_profile_id' => $p2->id, 'balance' => 8000]);
         $p2->skills()->sync([$python->id, $js->id]);
 
         \App\Models\SkillVerification::create(['student_profile_id' => $p2->id, 'skill_id' => $python->id, 'verification_method' => 'task_completion', 'score' => 88, 'verified_at' => now()]);
@@ -189,7 +186,6 @@ class CandidatesTestSeeder extends Seeder
             'title' => 'Python Data Cleaning',
             'description' => 'Development verification task',
             'required_skills' => ['Python'],
-            'reward_points' => 150,
             'status' => 'completed'
         ]);
         $a2 = Application::create(['task_id' => $t2->id, 'student_profile_id' => $p2->id, 'status' => 'approved']);
@@ -256,7 +252,6 @@ class CandidatesTestSeeder extends Seeder
             'reliability_score' => 0.81,
         ]);
 
-        PointsWallet::create(['student_profile_id' => $p3->id, 'balance' => 4500]);
         $p3->skills()->sync([$js->id, $react->id, $uiux->id]);
 
         ReputationScore::create([
@@ -278,7 +273,6 @@ class CandidatesTestSeeder extends Seeder
             'title' => 'React Component Development',
             'description' => 'Development verification task',
             'required_skills' => ['React', 'JavaScript'],
-            'reward_points' => 120,
             'status' => 'completed'
         ]);
         $a3 = Application::create(['task_id' => $t3->id, 'student_profile_id' => $p3->id, 'status' => 'approved']);
@@ -331,7 +325,6 @@ class CandidatesTestSeeder extends Seeder
             'reliability_score' => 0.95,
         ]);
 
-        PointsWallet::create(['student_profile_id' => $p4->id, 'balance' => 9500]);
         $p4->skills()->sync([$writing->id]);
 
         \App\Models\SkillVerification::create(['student_profile_id' => $p4->id, 'skill_id' => $writing->id, 'verification_method' => 'task_completion', 'score' => 95, 'verified_at' => now()]);
@@ -355,7 +348,6 @@ class CandidatesTestSeeder extends Seeder
             'title' => 'Blog Content Creation',
             'description' => 'Development verification task',
             'required_skills' => ['Content Writing'],
-            'reward_points' => 80,
             'status' => 'completed'
         ]);
         $a4 = Application::create(['task_id' => $t4->id, 'student_profile_id' => $p4->id, 'status' => 'approved']);

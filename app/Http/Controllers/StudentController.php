@@ -236,10 +236,6 @@ class StudentController extends Controller
             return $app->status === 'approved' && (!$app->submission || $app->submission->status !== 'accepted');
         });
 
-        $totalPoints = $completedTasks->sum(function($app) {
-            return $app->task->reward_points;
-        });
-
         $totalStipend = $completedTasks->sum(function($app) {
             return $app->task->stipend ?? 0;
         });
@@ -312,7 +308,6 @@ class StudentController extends Controller
         $analytics = [
             'completed_tasks' => $completedTasksCount, // Use certificate count instead
             'pending_tasks' => $pendingTasks->count(),
-            'total_points' => $totalPoints,
             'total_stipend' => $totalStipend,
             'avg_rating' => $avgRating,
             'skills_stats' => array_slice($skillsStats, 0, 5), // Top 5 skills
@@ -324,7 +319,7 @@ class StudentController extends Controller
             'internships_by_domain' => $internshipsByDomain
         ];
 
-        return view('student.analytics', compact('profile', 'analytics', 'totalPoints'));
+        return view('student.analytics', compact('profile', 'analytics'));
     }
 
     public function downloadCV()
@@ -349,15 +344,11 @@ class StudentController extends Controller
                 ->first();
         }
 
-        $totalPoints = $completedTasks->sum(function($app) {
-            return $app->task->reward_points;
-        });
-
         $totalStipend = $completedTasks->sum(function($app) {
             return $app->task->stipend ?? 0;
         });
 
-        return view('student.cv-download', compact('profile', 'completedTasks', 'totalPoints', 'totalStipend'));
+        return view('student.cv-download', compact('profile', 'completedTasks', 'totalStipend'));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
