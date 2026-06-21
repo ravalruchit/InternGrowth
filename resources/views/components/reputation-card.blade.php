@@ -12,14 +12,14 @@
 
     @if($compact)
         <!-- Compact Banner Mode -->
-        <div class="relative overflow-hidden bg-gradient-to-r from-[var(--ig-ink)] via-slate-900 to-[var(--ig-accent)]/10 rounded-2xl border border-[var(--ig-accent)]/20 px-5 py-4 shadow-lg backdrop-blur-md text-white transition hover:scale-[1.005] hover:shadow-[var(--ig-accent)]/5 flex items-start space-x-3.5">
+        <div class="relative overflow-hidden bg-[var(--ig-surface-ink)] rounded-2xl border border-[var(--ig-line-2)] px-5 py-4 shadow-lg text-white transition hover:scale-[1.005] flex items-start space-x-3.5">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--ig-accent)] to-[#E03E0B] flex items-center justify-center shadow-md shadow-[var(--ig-accent)]/10 flex-shrink-0">
                 <span class="text-lg">💡</span>
             </div>
             <div class="flex-1 min-w-0">
                 <h4 class="text-xs font-black uppercase tracking-widest text-[var(--ig-accent)] mb-0.5">Reputation Tip</h4>
                 <p class="text-xs text-slate-300 leading-relaxed font-normal">
-                    Every verified task completed through InternGrowth strengthens your IPRS (<span class="font-bold text-white">{{ $iprs }}</span>), Experience Ledger (<span class="font-bold text-white">{{ $verifiedTasks }}</span> tasks), and future hiring opportunities.
+                    Work speaks louder than resumes. Every verified task builds your IPRS, expands your experience record, and increases visibility to hiring startups.
                 </p>
             </div>
         </div>
