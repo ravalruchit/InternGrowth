@@ -86,6 +86,85 @@
             </section>
         <?php endif; ?>
 
+        <!-- ─── Scheduled Interviews ─── -->
+        <?php if($interviews && $interviews->count() > 0): ?>
+            <section class="mb-12 ig-reveal">
+                <div class="ig-section-head">
+                    <div>
+                        <p class="ig-eyebrow mb-2">— Upcoming Rounds</p>
+                        <h2 class="ig-display text-3xl text-[var(--ig-ink)]">Interview Schedule <span class="text-[var(--ig-muted)]">· <?php echo e($interviews->count()); ?></span></h2>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <?php $__currentLoopData = $interviews; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $interview): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <div class="ig-card p-6 flex flex-col justify-between space-y-4">
+                            <div>
+                                <div class="flex items-center justify-between">
+                                    <span class="ig-chip <?php echo e($interview->status === 'accepted' ? 'ig-chip-success' : 'ig-chip-warn'); ?>">
+                                        <?php echo e(strtoupper($interview->status)); ?>
+
+                                    </span>
+                                    <span class="text-xs text-[var(--ig-muted)] font-semibold"><?php echo e($interview->duration_minutes); ?> min</span>
+                                </div>
+                                <h3 class="ig-display text-xl mt-3 text-[var(--ig-ink)]"><?php echo e($interview->title); ?></h3>
+                                <p class="ig-mono text-xs mt-1 text-[var(--ig-muted)]">
+                                    with <span class="text-[var(--ig-ink)] font-bold"><?php echo e($interview->startup->company_name); ?></span>
+                                    <?php if($interview->task): ?>
+                                        for <span class="italic"><?php echo e($interview->task->title); ?></span>
+                                    <?php endif; ?>
+                                </p>
+                                
+                                <div class="mt-4 space-y-2 text-sm">
+                                    <div class="flex items-center gap-2">
+                                        <span>📅</span>
+                                        <span class="font-bold text-[var(--ig-ink)]"><?php echo e($interview->scheduled_at->format('M d, Y \a\t g:i A')); ?></span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span>📍</span>
+                                        <span class="text-[var(--ig-ink-2)]">
+                                            <?php if($interview->status === 'accepted'): ?>
+                                                <?php if(filter_var($interview->location, FILTER_VALIDATE_URL)): ?>
+                                                    <a href="<?php echo e($interview->location); ?>" target="_blank" class="text-[var(--ig-accent)] hover:underline font-semibold"><?php echo e($interview->location); ?></a>
+                                                <?php else: ?>
+                                                    <?php echo e($interview->location); ?>
+
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <span class="text-[var(--ig-muted)] italic">Hidden until accepted</span>
+                                            <?php endif; ?>
+                                        </span>
+                                    </div>
+                                    <?php if($interview->agenda): ?>
+                                        <div class="bg-[var(--ig-bg-2)]/30 border border-[var(--ig-line-2)] rounded-xl p-3 text-[11.5px] leading-relaxed text-[var(--ig-ink-2)] mt-2">
+                                            <strong>Agenda:</strong> <?php echo e($interview->agenda); ?>
+
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            
+                            <div class="pt-3 border-t border-[var(--ig-line)] flex items-center justify-between gap-3">
+                                <?php if($interview->status === 'pending'): ?>
+                                    <form method="POST" action="<?php echo e(route('student.interviews.reject', $interview->id)); ?>" class="flex-1">
+                                        <?php echo csrf_field(); ?>
+                                        <button class="ig-btn w-full justify-center" style="background:transparent;border:1px solid var(--ig-line-2);color:var(--ig-ink-2);padding:8px 12px;font-size:12px;">Decline</button>
+                                    </form>
+                                    <form method="POST" action="<?php echo e(route('student.interviews.accept', $interview->id)); ?>" class="flex-1">
+                                        <?php echo csrf_field(); ?>
+                                        <button class="ig-btn ig-btn-lime w-full justify-center" style="padding:8px 12px;font-size:12px;">Accept</button>
+                                    </form>
+                                <?php else: ?>
+                                    <a href="<?php echo e(route('messages.show', $interview->conversation_id)); ?>" class="ig-btn ig-btn-ghost w-full justify-center text-xs">
+                                        💬 View in Chat
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
+            </section>
+        <?php endif; ?>
+
         <!-- ─── Main Grid: IPRS + Ledger ─── -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12">
 
@@ -232,7 +311,6 @@
                             </div>
                             <p class="text-sm text-[var(--ig-ink-2)] line-clamp-2 mb-4"><?php echo e($task->description); ?></p>
                             <div class="flex items-center justify-between pt-4 border-t border-dashed border-[var(--ig-line)]">
-                                <span class="ig-chip ig-chip-ink"><?php echo e($task->reward_points); ?> pts</span>
                                 <?php if($task->match_score >= 80): ?>
                                     <span class="ig-chip ig-chip-lime">Perfect match</span>
                                 <?php elseif($task->match_score >= 60): ?>
@@ -292,6 +370,9 @@
                                 <?php endif; ?>
                                 <?php if($application->submission && $application->submission->status === 'accepted' && !in_array($application->task_id, $reviewedTaskIds)): ?>
                                     <button onclick="openReviewModal(<?php echo e($application->task_id); ?>, '<?php echo e(addslashes($application->task->startup->company_name)); ?>')" class="ig-btn ig-btn-lime" style="padding:8px 14px;font-size:12px;"><span>Rate startup</span></button>
+                                <?php endif; ?>
+                                <?php if(in_array($application->status, ['hired', 'internship_accepted'])): ?>
+                                    <a href="<?php echo e(route('messages.create', [$profile->id, $application->task->startup_profile_id, $application->task_id])); ?>" class="ig-btn" style="padding:8px 14px;font-size:12px;background:var(--ig-accent);color:var(--ig-bg);"><span>💬 Message Startup</span></a>
                                 <?php endif; ?>
                             </div>
                         </div>

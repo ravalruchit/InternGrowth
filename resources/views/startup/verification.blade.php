@@ -2,8 +2,8 @@
     <div class="ig-container py-12">
         <div class="ig-card p-6 sm:p-10 md:p-12 relative overflow-hidden transition-all duration-300">
             <!-- Glow Accents -->
-            <div class="absolute -top-12 -right-12 w-48 h-48 bg-purple-300/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-indigo-300/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -top-12 -right-12 w-48 h-48 bg-[var(--ig-lime)]/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-[var(--ig-accent)]/10 rounded-full blur-3xl pointer-events-none"></div>
 
             <div class="relative z-10 space-y-8 ig-anim-fade-up">
                 <!-- Header -->
@@ -369,7 +369,7 @@
                                             <span class="text-[9px] text-[var(--ig-accent)] font-bold uppercase tracking-wider">{{ str_replace('_', ' ', $key) }}</span>
                                             <span class="text-[var(--ig-ink-2)] truncate font-semibold mt-0.5" title="{{ $doc['name'] }}">{{ $doc['name'] }}</span>
                                         </div>
-                                        <a href="{{ asset('storage/' . $doc['path']) }}" target="_blank" class="text-[var(--ig-azure)] hover:text-indigo-850 font-bold flex-shrink-0">
+                                        <a href="{{ asset('storage/' . $doc['path']) }}" target="_blank" class="text-[var(--ig-azure)] hover:text-[var(--ig-accent)] font-bold flex-shrink-0">
                                             View ↗
                                         </a>
                                     </div>

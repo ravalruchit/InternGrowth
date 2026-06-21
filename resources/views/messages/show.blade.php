@@ -7,10 +7,10 @@
         <!-- Main Chat Panel -->
         <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col h-[600px]">
             <!-- Header -->
-            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 flex-shrink-0">
+            <div class="bg-gradient-to-r from-[var(--ig-accent)] to-[#E03E0B] px-6 py-4 flex-shrink-0">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
-                        <a href="{{ route('messages.index') }}" class="text-white hover:text-indigo-100 transition">
+                        <a href="{{ route('messages.index') }}" class="text-white hover:opacity-85 transition">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                             </svg>
@@ -20,7 +20,7 @@
                                 {{ auth()->user()->isStudent() ? $conversation->startup->company_name : $conversation->student->user->name }}
                             </h2>
                             @if($conversation->task)
-                                <p class="text-indigo-100 text-xs font-semibold">Project Ref: {{ $conversation->task->title }}</p>
+                                <p class="text-white/85 text-xs font-semibold">Project Ref: {{ $conversation->task->title }}</p>
                             @endif
                         </div>
                     </div>
@@ -71,7 +71,7 @@
                                     $statusColors = match($interview->status) {
                                         'pending' => 'border-yellow-250 bg-yellow-50/80 shadow-yellow-50/20',
                                         'accepted' => 'border-green-250 bg-green-50/80 shadow-green-50/20',
-                                        'completed' => 'border-indigo-250 bg-indigo-50/80 shadow-indigo-50/20',
+                                        'completed' => 'border-[var(--ig-accent)]/25 bg-[var(--ig-accent-soft)]/20 shadow-[var(--ig-accent)]/5',
                                         'rejected' => 'border-red-250 bg-red-50/80 shadow-red-50/20',
                                         'cancelled' => 'border-gray-250 bg-gray-50/80 shadow-gray-50/20',
                                         'no_show' => 'border-orange-250 bg-orange-50/80 shadow-orange-50/20',
@@ -80,7 +80,7 @@
                                     $badgeStyle = match($interview->status) {
                                         'pending' => 'bg-yellow-100 text-yellow-800 border border-yellow-200',
                                         'accepted' => 'bg-green-100 text-green-800 border border-green-200',
-                                        'completed' => 'bg-indigo-100 text-indigo-800 border border-indigo-200',
+                                        'completed' => 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] border border-[var(--ig-accent)]/20',
                                         'rejected' => 'bg-red-100 text-red-800 border border-red-200',
                                         'cancelled' => 'bg-gray-100 text-gray-850 border border-gray-250',
                                         'no_show' => 'bg-orange-100 text-orange-800 border border-orange-200',
@@ -96,7 +96,7 @@
                                             </span>
                                             <h4 class="text-base font-extrabold text-gray-950">{{ $interview->title }}</h4>
                                         </div>
-                                        <span class="text-[10px] font-extrabold text-indigo-750 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md">
+                                        <span class="text-[10px] font-extrabold text-[var(--ig-accent)] bg-[var(--ig-accent-soft)] border border-[var(--ig-accent)]/20 px-2 py-0.5 rounded-md">
                                             {{ $interview->duration_minutes }} min
                                         </span>
                                     </div>
@@ -112,7 +112,7 @@
                                         <div class="flex items-center space-x-2">
                                             <span class="text-sm">📍</span>
                                             @if($interview->type === 'online')
-                                                <a href="{{ Str::startsWith($interview->location, 'http') ? $interview->location : 'https://' . $interview->location }}" target="_blank" class="text-indigo-650 hover:underline font-bold flex items-center space-x-0.5">
+                                                <a href="{{ Str::startsWith($interview->location, 'http') ? $interview->location : 'https://' . $interview->location }}" target="_blank" class="text-[var(--ig-accent)] hover:underline font-bold flex items-center space-x-0.5">
                                                     <span>Join Online Session</span>
                                                     <span>↗</span>
                                                 </a>
@@ -145,7 +145,7 @@
                                                         };
                                                         $outcomeBadge = match($interview->outcome) {
                                                             'proceed_to_offer' => 'bg-emerald-100 text-emerald-800 border border-emerald-200',
-                                                            'keep_in_pipeline' => 'bg-indigo-100 text-indigo-800 border border-indigo-200',
+                                                            'keep_in_pipeline' => 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] border border-[var(--ig-accent)]/20',
                                                             'needs_another_round' => 'bg-yellow-100 text-yellow-850 border border-yellow-200',
                                                             'rejected' => 'bg-rose-100 text-rose-800 border border-rose-200',
                                                             default => 'bg-slate-100 text-slate-800 border border-slate-200',
@@ -161,7 +161,7 @@
                                                     <div class="bg-white border border-gray-200 rounded-xl p-3.5 space-y-1.5 shadow-inner">
                                                         <div class="flex justify-between items-center pb-1.5 border-b border-gray-100 mb-1.5">
                                                             <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Internal Skill Rating</span>
-                                                            <span class="text-[9px] text-indigo-600 bg-indigo-50 font-bold px-1.5 py-0.5 rounded">Startup & Admin Only</span>
+                                                            <span class="text-[9px] text-[var(--ig-accent)] bg-[var(--ig-accent-soft)] font-bold px-1.5 py-0.5 rounded">Startup & Admin Only</span>
                                                         </div>
                                                         <div class="flex justify-between">
                                                             <span class="text-gray-650 font-medium">Technical Competency:</span>
@@ -179,8 +179,8 @@
                                                 @endif
 
                                                 @if($interview->feedback_notes)
-                                                    <div class="bg-indigo-50/50 border border-indigo-100/60 rounded-xl p-3.5 text-indigo-950">
-                                                        <p class="font-bold text-[10px] uppercase tracking-wider text-indigo-800 mb-1">Feedback Notes:</p>
+                                                    <div class="bg-[var(--ig-accent-soft)]/30 border border-[var(--ig-accent)]/15 rounded-xl p-3.5 text-gray-900">
+                                                        <p class="font-bold text-[10px] uppercase tracking-wider text-[var(--ig-accent)] mb-1">Feedback Notes:</p>
                                                         <p class="text-xs leading-relaxed font-medium text-slate-800">{{ $interview->feedback_notes }}</p>
                                                     </div>
                                                 @endif
@@ -190,7 +190,7 @@
                                                 <div class="flex items-center space-x-2">
                                                     <form method="POST" action="{{ route('student.interviews.accept', $interview->id) }}" class="flex-1">
                                                         @csrf
-                                                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-2 rounded-xl text-xs transition shadow-sm">
+                                                        <button type="submit" class="w-full bg-[var(--ig-accent)] hover:bg-[#E03E0B] text-white font-extrabold py-2 rounded-xl text-xs transition shadow-sm">
                                                             Accept Invitation
                                                         </button>
                                                     </form>
@@ -202,7 +202,7 @@
                                                     </form>
                                                 </div>
                                             @else
-                                                <div class="flex justify-between items-center text-xs text-gray-550">
+                                                <div class="flex justify-between items-center text-xs text-gray-555">
                                                     <span>Waiting for student confirmation</span>
                                                     <form method="POST" action="{{ route('startup.interviews.cancel', $interview->id) }}">
                                                         @csrf
@@ -215,7 +215,7 @@
                                         @elseif($interview->status === 'accepted')
                                             @if(auth()->user()->isStartup())
                                                 <div class="space-y-2">
-                                                    <button type="button" onclick="openCompleteModal({{ $interview->id }})" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-lg text-white font-black py-2.5 px-4 rounded-xl text-xs transition">
+                                                    <button type="button" onclick="openCompleteModal({{ $interview->id }})" class="w-full bg-gradient-to-r from-[var(--ig-accent)] to-[#E03E0B] hover:shadow-lg text-white font-black py-2.5 px-4 rounded-xl text-xs transition">
                                                         Complete & Evaluate Candidate
                                                     </button>
                                                     <div class="flex items-center justify-between text-xs pt-1">
@@ -259,8 +259,8 @@
                                 </div>
                             @else
                                 <!-- Standard text message layout -->
-                                <div class="{{ $message->sender_id === auth()->id() ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-indigo-100' : 'bg-white text-gray-900 border border-gray-150' }} rounded-2xl px-4 py-3 shadow-sm">
-                                    <p class="text-xs font-bold mb-1 {{ $message->sender_id === auth()->id() ? 'text-indigo-200' : 'text-gray-500' }}">{{ $message->sender->name }}</p>
+                                <div class="{{ $message->sender_id === auth()->id() ? 'bg-gradient-to-r from-[var(--ig-accent)] to-[#E03E0B] text-white shadow-[var(--ig-accent)]/5' : 'bg-white text-gray-900 border border-gray-150' }} rounded-2xl px-4 py-3 shadow-sm">
+                                    <p class="text-xs font-bold mb-1 {{ $message->sender_id === auth()->id() ? 'text-white/80' : 'text-gray-500' }}">{{ $message->sender->name }}</p>
                                     <p class="text-sm leading-relaxed">{{ $message->message }}</p>
                                 </div>
                             @endif
@@ -283,8 +283,8 @@
                 <form method="POST" action="{{ route('messages.store', $conversation->id) }}" class="flex space-x-3">
                     @csrf
                     <input type="text" name="message" placeholder="Type your message..." required autocomplete="off"
-                        class="flex-1 border-gray-250 rounded-full px-5 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                    <button type="submit" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-7 py-3 rounded-full font-black text-sm hover:shadow-lg transition">
+                        class="flex-1 border-gray-250 rounded-full px-5 py-3 text-sm focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent">
+                    <button type="submit" class="bg-gradient-to-r from-[var(--ig-accent)] to-[#E03E0B] text-white px-7 py-3 rounded-full font-black text-sm hover:shadow-lg transition">
                         Send
                     </button>
                 </form>
@@ -295,7 +295,7 @@
     <!-- Schedule Interview Modal (Startup Only) -->
     @if(auth()->user()->isStartup())
         <div id="schedule-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-md transition-opacity duration-300">
-            <div class="bg-white/95 backdrop-blur-lg border border-purple-100 rounded-3xl shadow-2xl p-8 max-w-lg w-full mx-4 transform scale-95 transition-transform duration-300 relative text-gray-900">
+            <div class="bg-white/95 backdrop-blur-lg border border-[var(--ig-accent)]/25 rounded-3xl shadow-2xl p-8 max-w-lg w-full mx-4 transform scale-95 transition-transform duration-300 relative text-gray-900">
                 <button onclick="closeScheduleModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-650 transition">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -311,18 +311,18 @@
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Interview Title</label>
                         <input type="text" name="title" required placeholder="e.g. Technical Coding Round"
-                               class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                               class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Scheduled At</label>
                             <input type="datetime-local" name="scheduled_at" required
-                                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Duration (min)</label>
-                            <select name="duration_minutes" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                            <select name="duration_minutes" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                                 <option value="15">15 Minutes</option>
                                 <option value="30" selected>30 Minutes</option>
                                 <option value="45">45 Minutes</option>
@@ -336,7 +336,7 @@
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Interview Type</label>
                             <select name="type" required onchange="updateLocationPlaceholder(this.value)"
-                                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                                 <option value="online" selected>Google Meet / Zoom</option>
                                 <option value="phone">Phone call</option>
                                 <option value="in_person">In Person / Address</option>
@@ -345,18 +345,18 @@
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Location / Contact</label>
                             <input type="text" name="location" id="location-input" required placeholder="Google Meet link or URL"
-                                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                         </div>
                     </div>
                     
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Agenda & Prep Notes</label>
                         <textarea name="agenda" rows="3" placeholder="Explain agenda, topics, coding workspace needed..."
-                                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"></textarea>
+                                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm"></textarea>
                     </div>
                     
                     <div class="flex gap-3 pt-4 border-t border-gray-100">
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-6 py-3 rounded-xl transition text-xs shadow-sm">
+                        <button type="submit" class="bg-[var(--ig-accent)] hover:bg-[#E03E0B] text-white font-extrabold px-6 py-3 rounded-xl transition text-xs shadow-sm">
                             Schedule & Send
                         </button>
                         <button type="button" onclick="closeScheduleModal()" class="bg-gray-100 text-gray-700 font-bold px-6 py-3 rounded-xl transition text-xs">
@@ -369,8 +369,8 @@
 
         <!-- Evaluation / Complete Modal (Startup Only) -->
         <div id="complete-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-md transition-opacity duration-300">
-            <div class="bg-white/95 backdrop-blur-lg border border-purple-100 rounded-3xl shadow-2xl p-8 max-w-lg w-full mx-4 transform scale-95 transition-transform duration-300 relative text-gray-900">
-                <button onclick="closeCompleteModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-655 transition">
+            <div class="bg-white/95 backdrop-blur-lg border border-[var(--ig-accent)]/25 rounded-3xl shadow-2xl p-8 max-w-lg w-full mx-4 transform scale-95 transition-transform duration-300 relative text-gray-900">
+                <button onclick="closeCompleteModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-650 transition">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -384,7 +384,7 @@
                     @csrf
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Hiring Outcome Decision</label>
-                        <select name="outcome" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                        <select name="outcome" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                             <option value="proceed_to_offer">Proceed to Offer</option>
                             <option value="keep_in_pipeline">Keep in Pipeline</option>
                             <option value="needs_another_round">Needs Another Round</option>
@@ -396,28 +396,28 @@
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Technical (1-10)</label>
                             <input type="number" name="technical_rating" required min="1" max="10" value="7"
-                                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Communication (1-10)</label>
                             <input type="number" name="communication_rating" required min="1" max="10" value="7"
-                                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Problem Solving (1-10)</label>
                             <input type="number" name="problem_solving_rating" required min="1" max="10" value="7"
-                                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                         </div>
                     </div>
                     
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Feedback & Key Learnings (Shown to student)</label>
                         <textarea name="feedback_notes" rows="4" required placeholder="E.g. Work on API design and database optimization..."
-                                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"></textarea>
+                                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm"></textarea>
                     </div>
                     
                     <div class="flex gap-3 pt-4 border-t border-gray-100">
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-6 py-3 rounded-xl transition text-xs shadow-sm">
+                        <button type="submit" class="bg-[var(--ig-accent)] hover:bg-[#E03E0B] text-white font-extrabold px-6 py-3 rounded-xl transition text-xs shadow-sm">
                             Submit Evaluation
                         </button>
                         <button type="button" onclick="closeCompleteModal()" class="bg-gray-100 text-gray-700 font-bold px-6 py-3 rounded-xl transition text-xs">
@@ -532,7 +532,7 @@
                                 <div class="space-y-1">
                                     @foreach($conversation->student->portfolio_links as $link)
                                         @if($link)
-                                            <a href="{{ $link }}" target="_blank" class="text-indigo-650 hover:underline block truncate">{{ $link }}</a>
+                                            <a href="{{ $link }}" target="_blank" class="text-[var(--ig-accent)] hover:underline block truncate">{{ $link }}</a>
                                         @endif
                                     @endforeach
                                 </div>

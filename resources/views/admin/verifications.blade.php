@@ -80,12 +80,12 @@
                                     @endphp
 
                                     <div class="mb-6 bg-[#0f1217] text-white rounded-2xl p-5 border border-white/10 relative overflow-hidden group">
-                                        <div class="absolute -top-16 -right-16 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all duration-500"></div>
+                                        <div class="absolute -top-16 -right-16 w-32 h-32 bg-[var(--ig-accent)]/5 rounded-full blur-2xl group-hover:bg-[var(--ig-accent)]/10 transition-all duration-500"></div>
                                         
                                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 relative z-10">
                                             <div>
                                                 <div class="flex flex-wrap gap-2 items-center">
-                                                    <span class="text-[9px] bg-white/10 text-indigo-300 font-extrabold px-2 py-0.5 rounded border border-white/10 uppercase tracking-wider">Priority {{ $priorityNum }}</span>
+                                                    <span class="text-[9px] bg-white/10 text-[var(--ig-accent-soft)] font-extrabold px-2 py-0.5 rounded border border-white/10 uppercase tracking-wider">Priority {{ $priorityNum }}</span>
                                                     
                                                     @if($level === 'A')
                                                         <span class="text-[9px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-500/20">🟢 LEVEL A (Pre-Approved)</span>

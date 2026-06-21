@@ -123,53 +123,15 @@
 
     <!-- ───────── FOOTER ───────── -->
     <footer class="ig-footer relative overflow-hidden mt-24">
-        <div class="absolute -top-32 -left-32 w-[420px] h-[420px] rounded-full blur-[100px] opacity-30" style="background:radial-gradient(circle, var(--ig-accent) 0%, transparent 65%);"></div>
-        <div class="absolute -bottom-32 -right-20 w-[380px] h-[380px] rounded-full blur-[100px] opacity-20" style="background:radial-gradient(circle, var(--ig-lime) 0%, transparent 65%);"></div>
-
-        <div class="ig-container relative py-20">
-            <!-- Big editorial line -->
-            <div class="mb-16">
-                <p class="ig-eyebrow text-[var(--ig-lime)] mb-4">— Built for the next generation</p>
-                <h2 class="ig-display text-4xl md:text-6xl text-white max-w-3xl">
-                    Verified work. Real reputation. <span class="ig-serif text-[var(--ig-lime)]">No filler.</span>
-                </h2>
+        <div class="ig-container py-10 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-[var(--ig-ink)] ig-display text-sm font-semibold">IG</div>
+                <span class="ig-mono text-[11px] opacity-60">© <?php echo e(date('Y')); ?> InternGrowth · Built for students who ship.</span>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-                <div class="md:col-span-2">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-[var(--ig-ink)] ig-display text-lg">IG</div>
-                        <span class="ig-display text-xl text-white">InternGrowth</span>
-                    </div>
-                    <p class="text-sm max-w-md leading-relaxed">A marketplace where students build a verifiable portfolio of real startup work — and earn reputation that gets them hired.</p>
-                </div>
-
-                <div>
-                    <h4 class="text-sm mb-4">Platform</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="<?php echo e(route('tasks.index')); ?>">Marketplace</a></li>
-                        <li><a href="<?php echo e(route('leaderboard')); ?>">Leaderboard</a></li>
-                        <li><a href="<?php echo e(route('dashboard')); ?>">Dashboard</a></li>
-                        <?php if(auth()->guard()->check()): ?><li><a href="<?php echo e(route('report.show')); ?>">Report Issue</a></li><?php endif; ?>
-                    </ul>
-                </div>
-
-                <div>
-                    <h4 class="text-sm mb-4">Company</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="<?php echo e(route('contact')); ?>">Contact</a></li>
-                        <li><a href="<?php echo e(route('privacy')); ?>">Privacy</a></li>
-                        <li><a href="<?php echo e(route('terms')); ?>">Terms</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pt-8 border-t border-white/10">
-                <p class="ig-mono text-[11px] text-white/50">© <?php echo e(date('Y')); ?> InternGrowth · Made for students who ship.</p>
-                <p class="ig-mono text-[11px] text-white/50 flex items-center gap-2">
-                    <span class="inline-block w-2 h-2 rounded-full bg-[var(--ig-lime)] animate-pulse"></span>
-                    Status: All systems operational
-                </p>
+            <div class="flex gap-6 text-[12px]">
+                <a href="<?php echo e(route('privacy')); ?>">Privacy</a>
+                <a href="<?php echo e(route('terms')); ?>">Terms</a>
+                <a href="<?php echo e(route('contact')); ?>">Contact</a>
             </div>
         </div>
     </footer>

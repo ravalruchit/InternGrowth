@@ -80,7 +80,7 @@
                                     ];
                                 @endphp
                                 @foreach($domainDetails as $domName => $info)
-                                    <div data-domain="{{ $domName }}" class="domain-card cursor-pointer p-4 bg-white border-2 border-gray-200 rounded-2xl shadow-sm hover:shadow-xl hover:scale-105 hover:border-indigo-400 active:scale-95 transition-all duration-300 flex flex-col justify-between group">
+                                    <div data-domain="{{ $domName }}" class="domain-card cursor-pointer p-4 bg-white border-2 border-gray-200 rounded-2xl shadow-sm hover:shadow-xl hover:scale-105 hover:border-[var(--ig-accent)]/60 active:scale-95 transition-all duration-300 flex flex-col justify-between group">
                                         <div>
                                             <div class="text-3xl mb-2 transition-transform duration-300 group-hover:scale-110">{{ $info['icon'] }}</div>
                                             <h4 class="font-bold text-sm text-[var(--ig-ink)] mb-1">{{ $domName }}</h4>
@@ -122,8 +122,8 @@
                             <div class="flex flex-wrap gap-2" id="skills-chips-container">
                                 @foreach($skills as $skill)
                                     <div data-skill-id="{{ $skill->id }}" data-domain="{{ $skill->domain }}" data-name="{{ strtolower($skill->name) }}"
-                                         class="skill-chip cursor-pointer px-4 py-2 bg-white border border-[var(--ig-line)] rounded-xl text-xs font-semibold text-[var(--ig-ink-2)] hover:border-indigo-400 hover:scale-105 active:scale-95 transition-all duration-200 select-none flex items-center gap-1.5">
-                                        <span class="status-icon text-indigo-500 font-bold hidden">✓</span>
+                                         class="skill-chip cursor-pointer px-4 py-2 bg-white border border-[var(--ig-line)] rounded-xl text-xs font-semibold text-[var(--ig-ink-2)] hover:border-[var(--ig-accent)]/60 hover:scale-105 active:scale-95 transition-all duration-200 select-none flex items-center gap-1.5">
+                                        <span class="status-icon text-[var(--ig-accent)] font-bold hidden">✓</span>
                                         <span>{{ $skill->name }}</span>
                                     </div>
                                 @endforeach
@@ -232,9 +232,9 @@
                 domainCards.forEach(c => {
                     if (c.getAttribute('data-domain') === domainName) {
                         c.classList.remove('border-gray-200');
-                        c.classList.add('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.25)]');
+                        c.classList.add('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]/20', 'ring-4', 'ring-[var(--ig-accent)]/15', 'shadow-[0_0_15px_rgba(255,79,25,0.25)]');
                     } else {
-                        c.classList.remove('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.25)]');
+                        c.classList.remove('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]/20', 'ring-4', 'ring-[var(--ig-accent)]/15', 'shadow-[0_0_15px_rgba(255,79,25,0.25)]');
                         c.classList.add('border-gray-200');
                     }
                 });
@@ -252,7 +252,7 @@
                     // Render cards
                     roleSectionWrapper.style.display = 'block';
                     roleCardsContainer.innerHTML = roles.map(role => `
-                        <div data-role="${role}" class="role-card cursor-pointer p-3 bg-white border-2 border-gray-200 rounded-2xl text-center shadow-sm hover:shadow-md hover:scale-105 hover:border-indigo-400 active:scale-95 transition-all duration-300 group">
+                        <div data-role="${role}" class="role-card cursor-pointer p-3 bg-white border-2 border-gray-200 rounded-2xl text-center shadow-sm hover:shadow-md hover:scale-105 hover:border-[var(--ig-accent)]/60 active:scale-95 transition-all duration-300 group">
                             <p class="font-bold text-xs text-[var(--ig-ink-2)] group-hover:text-[var(--ig-ink)]">${role}</p>
                         </div>
                     `).join('');
@@ -282,9 +282,9 @@
                 roleCardsContainer.querySelectorAll('.role-card').forEach(c => {
                     if (c.getAttribute('data-role') === roleName) {
                         c.classList.remove('border-gray-200');
-                        c.classList.add('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.2)]');
+                        c.classList.add('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]/20', 'ring-4', 'ring-[var(--ig-accent)]/15', 'shadow-[0_0_15px_rgba(255,79,25,0.2)]');
                     } else {
-                        c.classList.remove('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.2)]');
+                        c.classList.remove('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]/20', 'ring-4', 'ring-[var(--ig-accent)]/15', 'shadow-[0_0_15px_rgba(255,79,25,0.2)]');
                         c.classList.add('border-gray-200');
                     }
                 });
@@ -298,7 +298,7 @@
 
                 // Sync initial state from check state
                 if (cb && cb.checked) {
-                    chip.classList.add('border-indigo-600', 'bg-indigo-50', 'text-indigo-900', 'shadow-[0_2px_8px_rgba(99,102,241,0.15)]');
+                    chip.classList.add('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]', 'text-[var(--ig-accent)]', 'shadow-[0_2px_8px_rgba(255,79,25,0.15)]');
                     if (icon) icon.classList.remove('hidden');
                 }
 
@@ -306,7 +306,7 @@
                     if (cb.checked) {
                         cb.checked = false;
                         cb.dispatchEvent(new Event('change'));
-                        chip.classList.remove('border-indigo-600', 'bg-indigo-50', 'text-indigo-900', 'shadow-[0_2px_8px_rgba(99,102,241,0.15)]');
+                        chip.classList.remove('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]', 'text-[var(--ig-accent)]', 'shadow-[0_2px_8px_rgba(255,79,25,0.15)]');
                         if (icon) icon.classList.add('hidden');
                     } else {
                         const checkedCount = document.querySelectorAll('.skill-checkbox-hidden:checked').length;
@@ -317,7 +317,7 @@
                         }
                         cb.checked = true;
                         cb.dispatchEvent(new Event('change'));
-                        chip.classList.add('border-indigo-600', 'bg-indigo-50', 'text-indigo-900', 'shadow-[0_2px_8px_rgba(99,102,241,0.15)]');
+                        chip.classList.add('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]', 'text-[var(--ig-accent)]', 'shadow-[0_2px_8px_rgba(255,79,25,0.15)]');
                         if (icon) icon.classList.remove('hidden');
                     }
                     updateSelectedSkillsCount();

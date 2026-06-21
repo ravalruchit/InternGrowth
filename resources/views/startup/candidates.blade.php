@@ -665,11 +665,11 @@
             if (data.availability === 'open_to_work') {
                 availBadge.classList.add('text-emerald-700', 'bg-emerald-50', 'border-emerald-250');
             } else if (data.availability === 'looking_for_internship') {
-                availBadge.classList.add('text-indigo-700', 'bg-indigo-50', 'border-indigo-250');
+                availBadge.classList.add('text-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]', 'border-[var(--ig-accent)]/25');
             } else if (data.availability === 'looking_for_job') {
                 availBadge.classList.add('text-blue-700', 'bg-blue-50', 'border-blue-250');
             } else {
-                availBadge.classList.add('text-purple-700', 'bg-purple-50', 'border-purple-250');
+                availBadge.classList.add('text-[var(--ig-lime-deep)]', 'bg-[var(--ig-lime)]/10', 'border-[var(--ig-lime)]/30');
             }
 
             document.getElementById('drawer-overall').innerText = parseFloat(data.overall_score).toFixed(0);
@@ -689,7 +689,7 @@
             if (data.skills && data.skills.length > 0) {
                 data.skills.forEach(skill => {
                     const pill = document.createElement('span');
-                    pill.className = 'text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-150';
+                    pill.className = 'text-[10px] font-semibold text-[var(--ig-accent)] bg-[var(--ig-accent-soft)] px-2 py-0.5 rounded-full border border-[var(--ig-accent)]/20';
                     pill.innerText = skill;
                     skillsContainer.appendChild(pill);
                 });

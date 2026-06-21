@@ -112,12 +112,6 @@ class AdminController extends Controller
             'reliability_score' => 1.0,
         ]);
 
-        // Create points wallet
-        \App\Models\PointsWallet::create([
-            'student_profile_id' => $profile->id,
-            'balance' => 0,
-        ]);
-
         return redirect()->route('admin.students')->with('success', 'Student created successfully');
     }
 

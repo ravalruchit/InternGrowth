@@ -62,6 +62,59 @@
                         <p class="text-sm font-semibold text-[var(--ig-ink)]">🏫 <?php echo e($profile->college_name ?? 'N/A'); ?></p>
                         <p class="text-xs text-[var(--ig-muted)] mt-1"><?php echo e($profile->college_email ?? 'N/A'); ?></p>
                     </div>
+
+                    <!-- Contact Details -->
+                    <?php
+                        $isContactUnlocked = $profile->contactDetailsUnlockedFor(auth()->user());
+                    ?>
+                    <?php if($isContactUnlocked): ?>
+                        <div class="border-t border-[var(--ig-line)] pt-5">
+                            <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2">🔓 Contact Information</h3>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex items-center justify-between py-1 border-b border-emerald-100">
+                                    <span class="text-emerald-800 font-medium">Email</span>
+                                    <span class="font-mono text-gray-900 font-bold select-all"><?php echo e($profile->user->email); ?></span>
+                                </div>
+                                <div class="flex items-center justify-between py-1 border-b border-emerald-100">
+                                    <span class="text-emerald-800 font-medium">Phone</span>
+                                    <span class="font-mono text-gray-900 font-bold select-all">+91 98765 43210</span>
+                                </div>
+                                <?php if($profile->portfolio_links && count($profile->portfolio_links) > 0): ?>
+                                    <div class="py-1">
+                                        <span class="text-emerald-800 font-medium block mb-1">Portfolio & Social URLs</span>
+                                        <div class="space-y-1">
+                                            <?php $__currentLoopData = $profile->portfolio_links; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $link): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <?php if($link): ?>
+                                                    <a href="<?php echo e($link); ?>" target="_blank" class="text-[var(--ig-accent)] hover:underline block truncate"><?php echo e($link); ?></a>
+                                                <?php endif; ?>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <div class="border-t border-[var(--ig-line)] pt-5">
+                            <h3 class="text-xs font-bold text-[var(--ig-muted)] uppercase tracking-wider mb-2">🔒 Contact Information</h3>
+                            <p class="text-[11px] text-[var(--ig-muted)] leading-relaxed mb-3">
+                                Contact details (email, phone, and socials) are masked until a job/internship offer is accepted.
+                            </p>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex items-center justify-between py-1 border-b border-gray-200">
+                                    <span class="text-[var(--ig-muted)]">Email</span>
+                                    <span class="font-mono text-gray-400">••••••••@••••.•••</span>
+                                </div>
+                                <div class="flex items-center justify-between py-1 border-b border-gray-200">
+                                    <span class="text-[var(--ig-muted)]">Phone</span>
+                                    <span class="font-mono text-gray-400">+91 ••••• •••••</span>
+                                </div>
+                                <div class="flex items-center justify-between py-1">
+                                    <span class="text-[var(--ig-muted)]">Socials / Portfolio</span>
+                                    <span class="font-mono text-gray-400">🔒 Masked</span>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- IPRS Score Card -->
@@ -83,11 +136,11 @@
                     <div class="space-y-4 text-xs">
                         <?php
                             $metrics = [
-                                ['label' => 'Trust Score', 'value' => $score ? round($score->trust_score) : 50, 'color' => 'bg-indigo-400'],
+                                ['label' => 'Trust Score', 'value' => $score ? round($score->trust_score) : 50, 'color' => 'bg-[var(--ig-accent)]'],
                                 ['label' => 'Completion Rate', 'value' => $score ? round($score->completion_rate) : 100, 'color' => 'bg-[var(--ig-lime)]'],
                                 ['label' => 'On-Time Delivery', 'value' => $score ? round($score->on_time_rate) : 100, 'color' => 'bg-amber-400'],
                                 ['label' => 'Startup Satisfaction', 'value' => $score ? round($score->satisfaction_rating * 20) : 100, 'color' => 'bg-cyan-400'],
-                                ['label' => 'Interview Performance', 'value' => $score ? round($score->interview_performance_score) : 100, 'color' => 'bg-purple-400'],
+                                ['label' => 'Interview Performance', 'value' => $score ? round($score->interview_performance_score) : 100, 'color' => 'bg-[var(--ig-forest)]'],
                             ];
                         ?>
 

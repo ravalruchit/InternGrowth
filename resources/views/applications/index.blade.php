@@ -6,11 +6,11 @@
             <p class="text-sm text-gray-500 mt-1">Manage and rank candidates in your hiring funnel</p>
         </div>
         @if($applications->count() > 0)
-            <div class="flex items-center space-x-3 bg-indigo-50 border border-indigo-100 px-4 py-2.5 rounded-xl self-start sm:self-auto shadow-sm">
-                <span class="text-xs font-bold text-indigo-700 tracking-wider uppercase font-poppins flex items-center gap-1.5">
+            <div class="flex items-center space-x-3 bg-[var(--ig-accent-soft)] border border-[var(--ig-accent)]/20 px-4 py-2.5 rounded-xl self-start sm:self-auto shadow-sm">
+                <span class="text-xs font-bold text-[var(--ig-accent)] tracking-wider uppercase font-poppins flex items-center gap-1.5">
                     <span class="flex h-2 w-2 relative">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--ig-accent)] opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-[var(--ig-accent)]"></span>
                     </span>
                     AI Candidate Ranking
                 </span>
@@ -62,7 +62,7 @@
                                 <h3 class="font-bold text-lg text-gray-850 font-poppins">{{ $student->user->name }}</h3>
                                 
                                 <!-- Match Score Badge (AI-only) -->
-                                <span class="ai-info hidden bg-indigo-100 text-indigo-800 border border-indigo-200 px-2.5 py-0.5 rounded-full text-xs font-extrabold font-poppins shadow-sm">
+                                <span class="ai-info hidden bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] border border-[var(--ig-accent)]/20 px-2.5 py-0.5 rounded-full text-xs font-extrabold font-poppins shadow-sm">
                                     Match Score: {{ $matchScore }}%
                                 </span>
                                 
@@ -73,11 +73,11 @@
                                     </span>
                                 @endif
                             </div>
-                            <p class="text-xs font-medium text-gray-450 mt-0.5">{{ $student->user->email }}</p>
+                            <p class="text-xs font-medium text-gray-455 mt-0.5">{{ $student->user->email }}</p>
 
                             <!-- Reputation/Indicators Row -->
                             <div class="flex flex-wrap items-center gap-3 mt-3">
-                                <span class="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full border border-indigo-100">
+                                <span class="inline-flex items-center gap-1 bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] text-xs font-bold px-3 py-1 rounded-full border border-[var(--ig-accent)]/20">
                                     <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.368 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118L10 15.347l-3.952 2.878c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.064 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.285-3.957z"/>
                                     </svg>
@@ -98,7 +98,7 @@
                                     </span>
                                 @endif
                                 <a href="{{ route('students.public-profile', $student->id) }}" target="_blank"
-                                   class="text-xs text-indigo-600 hover:text-indigo-800 underline font-semibold flex items-center gap-0.5">
+                                   class="text-xs text-[var(--ig-accent)] hover:text-[#E03E0B] underline font-semibold flex items-center gap-0.5">
                                     View Full Profile
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                 </a>
@@ -114,7 +114,7 @@
                             @elseif($application->status === 'shortlisted' || $application->status === 'interview') 
                                 bg-blue-100 text-blue-800 border border-blue-250
                             @elseif($application->status === 'internship_offered')
-                                bg-purple-100 text-purple-800 border border-purple-200
+                                bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] border border-[var(--ig-accent)]/20le-200
                             @else 
                                 bg-yellow-100 text-yellow-800 border border-yellow-250
                             @endif">
@@ -124,14 +124,14 @@
 
                     <!-- AI Explanation / "Why Recommended" (AI-only) -->
                     @if(isset($rankingDetails['explanations']) && count($rankingDetails['explanations']) > 0)
-                        <div class="ai-info hidden mt-4 p-4 bg-indigo-50/40 border border-indigo-100 rounded-xl">
-                            <h4 class="text-xs font-bold text-indigo-800 tracking-wider uppercase mb-2 font-poppins flex items-center gap-1.5">
-                                <svg class="w-4 h-4 text-indigo-650" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="ai-info hidden mt-4 p-4 bg-[var(--ig-accent-soft)]/20 border border-[var(--ig-accent)]/15 rounded-xl">
+                            <h4 class="text-xs font-bold text-[var(--ig-accent)] tracking-wider uppercase mb-2 font-poppins flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-[var(--ig-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 Why Recommended
                             </h4>
-                            <ul class="space-y-1.5 text-xs text-indigo-900 font-medium">
+                            <ul class="space-y-1.5 text-xs text-slate-805 font-medium">
                                 @foreach($rankingDetails['explanations'] as $expl)
                                     <li class="flex items-start gap-2">
                                         <span class="text-emerald-500 font-bold">✓</span>
@@ -157,7 +157,7 @@
                                     @if(!empty($rankingDetails['best_evidence']['skills_demonstrated']))
                                         <div class="flex flex-wrap gap-1.5 mt-2">
                                             @foreach($rankingDetails['best_evidence']['skills_demonstrated'] as $sk)
-                                                <span class="bg-indigo-50 border border-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-bold font-poppins">{{ $sk }}</span>
+                                                <span class="bg-[var(--ig-accent-soft)] border border-[var(--ig-accent)]/20 text-[var(--ig-accent)] px-2 py-0.5 rounded text-[10px] font-bold font-poppins">{{ $sk }}</span>
                                             @endforeach
                                         </div>
                                     @endif
@@ -174,16 +174,16 @@
 
                     <!-- AI Insights Drawer (AI-only) -->
                     @if(isset($rankingDetails['insights']))
-                        <div class="ai-info hidden mt-4 border border-indigo-100 rounded-xl overflow-hidden shadow-sm">
+                        <div class="ai-info hidden mt-4 border border-[var(--ig-accent)]/20 rounded-xl overflow-hidden shadow-sm">
                             <button type="button" 
-                                    class="w-full text-left px-4 py-3 bg-indigo-50 hover:bg-indigo-100 transition flex items-center justify-between text-xs font-bold text-indigo-900 uppercase tracking-wider font-poppins" 
+                                    class="w-full text-left px-4 py-3 bg-[var(--ig-accent-soft)] hover:bg-[var(--ig-accent-soft)]/80 transition flex items-center justify-between text-xs font-bold text-[var(--ig-accent)] uppercase tracking-wider font-poppins" 
                                     onclick="toggleInsightsDrawer('insights-drawer-{{ $application->id }}')">
                                 <span class="flex items-center gap-1.5">
                                     🔍 Candidate Insights (Strengths, Risks & Interview Questions)
                                 </span>
                                 <span class="arrow transition-transform duration-200 select-none">▼</span>
                             </button>
-                            <div id="insights-drawer-{{ $application->id }}" class="hidden p-5 bg-white border-t border-indigo-100 space-y-4">
+                            <div id="insights-drawer-{{ $application->id }}" class="hidden p-5 bg-white border-t border-[var(--ig-accent)]/20 space-y-4">
                                 
                                 <!-- Strengths -->
                                 <div>
@@ -210,7 +210,7 @@
                                 <!-- Interview Questions -->
                                 @if(count($rankingDetails['insights']['interview_questions']) > 0)
                                     <div class="pt-3 border-t border-gray-150">
-                                        <h5 class="text-xs font-bold text-indigo-700 tracking-wide uppercase mb-1.5 font-poppins flex items-center gap-1">💬 Suggested Interview Questions</h5>
+                                        <h5 class="text-xs font-bold text-[var(--ig-accent)] tracking-wide uppercase mb-1.5 font-poppins flex items-center gap-1">💬 Suggested Interview Questions</h5>
                                         <ul class="list-decimal pl-5 text-xs text-gray-750 space-y-1.5">
                                             @foreach($rankingDetails['insights']['interview_questions'] as $qs)
                                                 <li class="italic font-medium text-gray-800">"{{ $qs }}"</li>
@@ -257,45 +257,45 @@
                             <!-- Step 1: Applied -->
                             <div class="flex items-center flex-1 last:flex-none">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 1 ? 'bg-indigo-600 text-white' : 'bg-gray-205 text-gray-500' }}">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 1 ? 'bg-[var(--ig-accent)] text-white' : 'bg-gray-205 text-gray-500' }}">
                                         @if($stepActive > 1) ✓ @else 1 @endif
                                     </div>
                                     <span class="text-[9px] font-bold mt-1 text-gray-600">Applied</span>
                                 </div>
-                                <div class="h-0.5 flex-1 mx-2 {{ $stepActive > 1 ? 'bg-indigo-600' : 'bg-gray-200' }}"></div>
+                                <div class="h-0.5 flex-1 mx-2 {{ $stepActive > 1 ? 'bg-[var(--ig-accent)]' : 'bg-gray-200' }}"></div>
                             </div>
 
                             <!-- Step 2: Task Assigned -->
                             <div class="flex items-center flex-1 last:flex-none">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 2 ? 'bg-indigo-600 text-white' : 'bg-gray-205 text-gray-500' }}">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 2 ? 'bg-[var(--ig-accent)] text-white' : 'bg-gray-205 text-gray-500' }}">
                                         @if($stepActive > 2) ✓ @else 2 @endif
                                     </div>
                                     <span class="text-[9px] font-bold mt-1 text-gray-600">Task Started</span>
                                 </div>
-                                <div class="h-0.5 flex-1 mx-2 {{ $stepActive > 2 ? 'bg-indigo-600' : 'bg-gray-200' }}"></div>
+                                <div class="h-0.5 flex-1 mx-2 {{ $stepActive > 2 ? 'bg-[var(--ig-accent)]' : 'bg-gray-200' }}"></div>
                             </div>
 
                             <!-- Step 3: Task Completed -->
                             <div class="flex items-center flex-1 last:flex-none">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 3 ? 'bg-indigo-600 text-white' : 'bg-gray-205 text-gray-500' }}">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 3 ? 'bg-[var(--ig-accent)] text-white' : 'bg-gray-205 text-gray-500' }}">
                                         @if($stepActive > 3) ✓ @else 3 @endif
                                     </div>
                                     <span class="text-[9px] font-bold mt-1 text-gray-600">Task Completed</span>
                                 </div>
-                                <div class="h-0.5 flex-1 mx-2 {{ $stepActive > 3 ? 'bg-indigo-600' : 'bg-gray-200' }}"></div>
+                                <div class="h-0.5 flex-1 mx-2 {{ $stepActive > 3 ? 'bg-[var(--ig-accent)]' : 'bg-gray-200' }}"></div>
                             </div>
 
                             <!-- Step 4: Interview -->
                             <div class="flex items-center flex-1 last:flex-none">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 4 ? 'bg-indigo-600 text-white' : 'bg-gray-205 text-gray-500' }}">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 4 ? 'bg-[var(--ig-accent)] text-white' : 'bg-gray-205 text-gray-500' }}">
                                         @if($stepActive > 4) ✓ @else 4 @endif
                                     </div>
                                     <span class="text-[9px] font-bold mt-1 text-gray-600">Interview</span>
                                 </div>
-                                <div class="h-0.5 flex-1 mx-2 {{ $stepActive > 4 ? 'bg-indigo-600' : 'bg-gray-200' }}"></div>
+                                <div class="h-0.5 flex-1 mx-2 {{ $stepActive > 4 ? 'bg-[var(--ig-accent)]' : 'bg-gray-200' }}"></div>
                             </div>
 
                             <!-- Step 5: Hired -->
@@ -315,7 +315,7 @@
                                 <div class="flex gap-2">
                                     <form method="POST" action="{{ route('startup.applications.approve', $application->id) }}" class="flex-1">
                                         @csrf
-                                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-755 text-white font-extrabold py-2 rounded-xl text-xs transition shadow-sm">
+                                        <button type="submit" class="w-full bg-[var(--ig-accent)] hover:bg-[#E03E0B] text-white font-extrabold py-2 rounded-xl text-xs transition shadow-sm">
                                             ✓ Approve Candidate to Start Task
                                         </button>
                                     </form>
@@ -377,7 +377,7 @@
                                                     @if(is_array($file) && !empty($file) && isset($file['path']) && isset($file['name']))
                                                         <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200">
                                                             <div class="flex items-center space-x-3 flex-1">
-                                                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <svg class="w-5 h-5 text-[var(--ig-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                                                 </svg>
                                                                 <div class="flex-1">
@@ -399,7 +399,7 @@
                                                                     </p>
                                                                 </div>
                                                             </div>
-                                                            <a href="{{ route('startup.submissions.review', $application->submission->id) }}" class="text-indigo-650 hover:text-indigo-850 text-xs font-semibold ml-3 px-3 py-1.5 bg-indigo-50 rounded-lg border border-indigo-200 shadow-sm transition">
+                                                            <a href="{{ route('startup.submissions.review', $application->submission->id) }}" class="text-[var(--ig-accent)] hover:text-[#E03E0B] text-xs font-semibold ml-3 px-3 py-1.5 bg-[var(--ig-accent-soft)] rounded-lg border border-[var(--ig-accent)]/20 shadow-sm transition">
                                                                 👁️ View Preview
                                                             </a>
                                                         </div>
@@ -465,7 +465,7 @@
                                     <!-- Decision Card -->
                                     <div class="border-t border-green-200 pt-4 space-y-4">
                                         @if(!$application->startup_hiring_outcome)
-                                            <h4 class="text-xs font-bold text-indigo-900 uppercase tracking-wider font-poppins">Choose Next Action</h4>
+                                            <h4 class="text-xs font-bold text-[var(--ig-accent)] uppercase tracking-wider font-poppins">Choose Next Action</h4>
                                             
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <!-- Option 1: Close Task -->
@@ -484,10 +484,10 @@
                                                 </div>
 
                                                 <!-- Option 2: Explore Hiring -->
-                                                <div class="bg-white border border-indigo-200 p-4 rounded-xl flex flex-col justify-between space-y-3 shadow-sm">
+                                                <div class="bg-white border border-[var(--ig-accent)]/25 p-4 rounded-xl flex flex-col justify-between space-y-3 shadow-sm">
                                                     <div>
-                                                        <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-wider block mb-1 font-poppins">Option 2</span>
-                                                        <h5 class="font-extrabold text-xs text-indigo-950">Explore Hiring</h5>
+                                                        <span class="text-[10px] font-bold text-[var(--ig-accent)] uppercase tracking-wider block mb-1 font-poppins">Option 2</span>
+                                                        <h5 class="font-extrabold text-xs text-slate-900 font-poppins">Explore Hiring</h5>
                                                         <p class="text-[11px] text-gray-500 leading-normal mt-1">For startups that liked the student and want to recruit them.</p>
                                                         <div class="space-y-1.5 mt-3">
                                                             <div class="flex gap-1.5">
@@ -500,7 +500,7 @@
                                                                 <button type="button" onclick="openOfferModalFromIndex('{{ $application->student->id }}', '{{ $application->id }}', 'internship', '{{ $application->task_id }}')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-2.5 rounded-lg text-[11px] text-center transition">
                                                                     💼 Intern Offer
                                                                 </button>
-                                                                <button type="button" onclick="openJobPathModal('{{ addslashes($application->student->user->name) }}', '{{ $conversation ? $conversation->id : '' }}', '{{ $application->student->id }}', '{{ $application->id }}', '{{ $application->task_id }}', '{{ $application->student_profile_id }}', '{{ auth()->user()->startupProfile->id }}')" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-1.5 px-2.5 rounded-lg text-[11px] text-center transition">
+                                                                <button type="button" onclick="openJobPathModal('{{ addslashes($application->student->user->name) }}', '{{ $conversation ? $conversation->id : '' }}', '{{ $application->student->id }}', '{{ $application->id }}', '{{ $application->task_id }}', '{{ $application->student_profile_id }}', '{{ auth()->user()->startupProfile->id }}')" class="flex-1 bg-[var(--ig-ink)] hover:opacity-90 text-white font-bold py-1.5 px-2.5 rounded-lg text-[11px] text-center transition">
                                                                     🚀 Job Offer
                                                                 </button>
                                                             </div>
@@ -525,7 +525,7 @@
                                                         <span>🎉</span>
                                                         <span>Candidate hired as {{ $application->startup_hiring_outcome === 'hired_intern' ? 'Intern' : 'Full-time Employee' }}!</span>
                                                     </div>
-                                                    <a href="{{ route('messages.create', [$application->student_profile_id, auth()->user()->startupProfile->id, $application->task_id]) }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg text-[10px] text-center transition flex items-center gap-1 shadow-sm">
+                                                    <a href="{{ route('messages.create', [$application->student_profile_id, auth()->user()->startupProfile->id, $application->task_id]) }}" class="bg-[var(--ig-accent)] hover:bg-[#E03E0B] text-white font-bold py-1.5 px-3 rounded-lg text-[10px] text-center transition flex items-center gap-1 shadow-sm">
                                                         💬 Message Candidate
                                                     </a>
                                                 </div>
@@ -565,7 +565,7 @@
                                                     <button type="button" onclick="openOfferModalFromIndex('{{ $application->student->id }}', '{{ $application->id }}', 'internship', '{{ $application->task_id }}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-2.5 rounded-lg text-[10px] transition shadow-sm">
                                                         💼 Offer Intern
                                                     </button>
-                                                    <button type="button" onclick="openOfferModalFromIndex('{{ $application->student->id }}', '{{ $application->id }}', 'job', '{{ $application->task_id }}')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2.5 rounded-lg text-[10px] transition shadow-sm">
+                                                    <button type="button" onclick="openOfferModalFromIndex('{{ $application->student->id }}', '{{ $application->id }}', 'job', '{{ $application->task_id }}')" class="bg-[var(--ig-ink)] hover:opacity-90 text-white font-bold py-1 px-2.5 rounded-lg text-[10px] transition shadow-sm">
                                                         🚀 Offer Job
                                                     </button>
                                                 </div>
@@ -580,7 +580,7 @@
                                                     <button type="button" onclick="openOfferModalFromIndex('{{ $application->student->id }}', '{{ $application->id }}', 'internship', '{{ $application->task_id }}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-2.5 rounded-lg text-[10px] transition shadow-sm">
                                                         💼 Offer Intern
                                                     </button>
-                                                    <button type="button" onclick="openOfferModalFromIndex('{{ $application->student->id }}', '{{ $application->id }}', 'job', '{{ $application->task_id }}')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2.5 rounded-lg text-[10px] transition shadow-sm">
+                                                    <button type="button" onclick="openOfferModalFromIndex('{{ $application->student->id }}', '{{ $application->id }}', 'job', '{{ $application->task_id }}')" class="bg-[var(--ig-ink)] hover:opacity-90 text-white font-bold py-1 px-2.5 rounded-lg text-[10px] transition shadow-sm">
                                                         🚀 Offer Job
                                                     </button>
                                                 </div>
@@ -620,7 +620,7 @@
                 if (newState) {
                     // AI Ranking Enabled
                     bg.classList.remove('bg-gray-300');
-                    bg.classList.add('bg-indigo-600');
+                    bg.classList.add('bg-[var(--ig-accent)]');
                     handle.classList.remove('translate-x-0');
                     handle.classList.add('translate-x-5');
                     
@@ -650,7 +650,7 @@
                     });
                 } else {
                     // Normal View
-                    bg.classList.remove('bg-indigo-600');
+                    bg.classList.remove('bg-[var(--ig-accent)]');
                     bg.classList.add('bg-gray-300');
                     handle.classList.remove('translate-x-5');
                     handle.classList.add('translate-x-0');
@@ -682,10 +682,10 @@
                 
                 if (drawer.classList.contains('hidden')) {
                     arrow.style.transform = 'rotate(0deg)';
-                    button.classList.remove('bg-indigo-100');
+                    button.classList.remove('bg-[var(--ig-accent-soft)]');
                 } else {
                     arrow.style.transform = 'rotate(180deg)';
-                    button.classList.add('bg-indigo-100');
+                    button.classList.add('bg-[var(--ig-accent-soft)]');
                 }
             }
 
@@ -763,14 +763,14 @@
                 const actionContainer = document.getElementById('index-job-interview-action-container');
                 if (conversationId) {
                     actionContainer.innerHTML = `
-                        <button type="button" onclick="triggerJobSchedule()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-2.5 px-4 rounded-xl text-xs transition shadow-sm text-center">
+                        <button type="button" onclick="triggerJobSchedule()" class="w-full bg-[var(--ig-accent)] hover:bg-[#E03E0B] text-white font-extrabold py-2.5 px-4 rounded-xl text-xs transition shadow-sm text-center">
                             Schedule Interview
                         </button>
                     `;
                 } else {
                     const chatUrl = `/messages/start/${studentProfileId}/${startupProfileId}/${taskId}`;
                     actionContainer.innerHTML = `
-                        <a href="${chatUrl}" class="w-full block bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-2.5 px-4 rounded-xl text-xs transition shadow-sm text-center">
+                        <a href="${chatUrl}" class="w-full block bg-[var(--ig-accent)] hover:bg-[#E03E0B] text-white font-extrabold py-2.5 px-4 rounded-xl text-xs transition shadow-sm text-center">
                             💬 Start Chat to Interview
                         </a>
                     `;
@@ -799,7 +799,7 @@
 
 <!-- Job Recruitment Path Selection Modal -->
 <div id="index-job-path-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-md transition-opacity duration-300">
-    <div class="bg-white border border-indigo-100 rounded-3xl shadow-2xl p-8 max-w-lg w-full mx-4 transform scale-95 transition-transform duration-300 relative text-gray-900">
+    <div class="bg-white border border-[var(--ig-accent)]/20 rounded-3xl shadow-2xl p-8 max-w-lg w-full mx-4 transform scale-95 transition-transform duration-300 relative text-gray-900">
         <button onclick="closeJobPathModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -808,13 +808,13 @@
         <h3 class="text-2xl font-black text-gray-900 mb-2 font-poppins flex items-center space-x-2">
             <span>🚀 Full-Time Job Offer Path</span>
         </h3>
-        <p class="text-xs text-gray-500 mb-6 font-medium">Select how you want to proceed with full-time recruitment for <span id="index-job-student-name" class="font-bold text-indigo-650"></span>.</p>
+        <p class="text-xs text-gray-500 mb-6 font-medium">Select how you want to proceed with full-time recruitment for <span id="index-job-student-name" class="font-bold text-[var(--ig-accent)]"></span>.</p>
         
         <div class="grid grid-cols-1 gap-4">
             <!-- Path 1: Interview First -->
-            <div class="border border-indigo-100 p-5 rounded-2xl bg-indigo-50/30 flex flex-col justify-between space-y-3">
+            <div class="border border-[var(--ig-accent)]/20 p-5 rounded-2xl bg-[var(--ig-accent-soft)]/20 flex flex-col justify-between space-y-3">
                 <div>
-                    <h4 class="font-bold text-sm text-indigo-950 flex items-center gap-1.5 font-poppins">
+                    <h4 class="font-bold text-sm text-[var(--ig-accent)] flex items-center gap-1.5 font-poppins">
                         <span>📅</span> Schedule Interview
                     </h4>
                     <p class="text-[11px] text-gray-500 mt-1 leading-normal">
@@ -852,7 +852,7 @@
 
 <!-- Schedule Interview Modal -->
 <div id="index-schedule-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-md transition-opacity duration-300">
-    <div class="bg-white border border-purple-100 rounded-3xl shadow-2xl p-8 max-w-lg w-full mx-4 transform scale-95 transition-transform duration-300 relative text-gray-900">
+    <div class="bg-white border border-[var(--ig-accent)]/25 rounded-3xl shadow-2xl p-8 max-w-lg w-full mx-4 transform scale-95 transition-transform duration-300 relative text-gray-900">
         <button onclick="closeScheduleModalFromIndex()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -861,25 +861,25 @@
         <h3 class="text-2xl font-black text-gray-900 mb-2 font-poppins flex items-center space-x-2">
             <span>📅 Schedule Interview</span>
         </h3>
-        <p class="text-xs text-gray-500 mb-6">Send an interview invitation to <span id="index-student-name-placeholder" class="font-bold text-indigo-650"></span>.</p>
+        <p class="text-xs text-gray-500 mb-6">Send an interview invitation to <span id="index-student-name-placeholder" class="font-bold text-[var(--ig-accent)]"></span>.</p>
         
         <form id="index-schedule-form" method="POST" action="" class="space-y-4">
             @csrf
             <div>
                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Interview Title</label>
                 <input type="text" name="title" required placeholder="e.g. Technical Coding Round"
-                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
             </div>
             
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Scheduled At</label>
                     <input type="datetime-local" name="scheduled_at" required
-                           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Duration (min)</label>
-                    <select name="duration_minutes" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                    <select name="duration_minutes" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                         <option value="15">15 Minutes</option>
                         <option value="30" selected>30 Minutes</option>
                         <option value="45">45 Minutes</option>
@@ -893,7 +893,7 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Interview Type</label>
                     <select name="type" required onchange="updateLocationPlaceholderFromIndex(this.value)"
-                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                         <option value="online" selected>Google Meet / Zoom</option>
                         <option value="phone">Phone call</option>
                         <option value="in_person">In Person / Address</option>
@@ -902,25 +902,25 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Location / Contact</label>
                     <input type="text" name="location" id="index-location-input" required placeholder="Google Meet link or URL"
-                           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                 </div>
             </div>
             
             <div>
                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Agenda & Prep Notes</label>
                 <textarea name="agenda" rows="3" placeholder="Explain agenda, topics, coding workspace needed..."
-                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"></textarea>
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-255 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm"></textarea>
             </div>
             
-            <div class="bg-indigo-50 border border-indigo-150 rounded-xl p-3 flex items-start gap-2">
+            <div class="bg-[var(--ig-accent-soft)]/30 border border-[var(--ig-accent)]/20 rounded-xl p-3 flex items-start gap-2">
                 <input type="checkbox" name="agreement" id="interview-agreement-check" required value="1" class="mt-0.5">
-                <label for="interview-agreement-check" class="text-[11px] text-indigo-950 leading-tight">
+                <label for="interview-agreement-check" class="text-[11px] text-[var(--ig-accent)] leading-tight font-semibold">
                     I confirm that this hiring process will be completed through InternGrowth (Payment Agreement).
                 </label>
             </div>
             
             <div class="flex gap-3 pt-4 border-t border-gray-100">
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-6 py-3 rounded-xl transition text-xs shadow-sm">
+                <button type="submit" class="bg-[var(--ig-accent)] hover:bg-[#E03E0B] text-white font-extrabold px-6 py-3 rounded-xl transition text-xs shadow-sm">
                     Schedule & Send Invitation
                 </button>
                 <button type="button" onclick="closeScheduleModalFromIndex()" class="bg-gray-100 text-gray-700 font-bold px-6 py-3 rounded-xl transition text-xs">
@@ -954,39 +954,39 @@
 
             <div>
                 <label class="block text-xs font-bold text-gray-750 uppercase tracking-wider mb-2">Offer Title</label>
-                <input type="text" name="title" required placeholder="e.g. Frontend Development Intern" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                <input type="text" name="title" required placeholder="e.g. Frontend Development Intern" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-gray-750 uppercase tracking-wider mb-2">Role Description</label>
-                <textarea name="description" required rows="3" placeholder="Outline job duties, expectations..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm resize-none"></textarea>
+                <textarea name="description" required rows="3" placeholder="Outline job duties, expectations..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm resize-none"></textarea>
             </div>
 
             <input type="hidden" name="compensation_period" id="index-compensation-period" value="monthly">
             <div>
                 <label id="index-compensation-label" class="block text-xs font-bold text-gray-755 uppercase tracking-wider mb-2">Stipend (₹)</label>
-                <input type="number" name="compensation" required min="0" placeholder="e.g. 15000" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                <input type="number" name="compensation" required min="0" placeholder="e.g. 15000" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
             </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-750 uppercase tracking-wider mb-2">Start Date</label>
-                    <input type="date" name="start_date" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                    <input type="date" name="start_date" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-750 uppercase tracking-wider mb-2">End Date (Optional)</label>
-                    <input type="date" name="end_date" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                    <input type="date" name="end_date" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm">
                 </div>
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-gray-755 uppercase tracking-wider mb-2">Perks & Contract Terms</label>
-                <textarea name="contract_terms" rows="2" placeholder="e.g. Certificate, Flexible Hours, Work From Home" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm resize-none"></textarea>
+                <textarea name="contract_terms" rows="2" placeholder="e.g. Certificate, Flexible Hours, Work From Home" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent text-sm resize-none"></textarea>
             </div>
 
-            <div class="bg-indigo-50 border border-indigo-150 rounded-xl p-3 flex items-start gap-2">
+            <div class="bg-[var(--ig-accent-soft)]/30 border border-[var(--ig-accent)]/20 rounded-xl p-3 flex items-start gap-2">
                 <input type="checkbox" name="agreement" id="offer-agreement-check" required value="1" class="mt-0.5">
-                <label for="offer-agreement-check" class="text-[11px] text-indigo-950 leading-tight">
+                <label for="offer-agreement-check" class="text-[11px] text-[var(--ig-accent)] leading-tight font-semibold">
                     I confirm that this hiring process will be completed through InternGrowth (Payment Agreement).
                 </label>
             </div>

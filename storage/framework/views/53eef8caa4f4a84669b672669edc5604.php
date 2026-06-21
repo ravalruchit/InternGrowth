@@ -136,7 +136,7 @@
                         ];
                     ?>
                     <?php $__currentLoopData = $domainDetails; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $domName => $info): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <div data-domain="<?php echo e($domName); ?>" class="domain-card cursor-pointer p-4 bg-white border-2 border-gray-200 rounded-2xl shadow-sm hover:shadow-xl hover:scale-105 hover:border-indigo-400 active:scale-95 transition-all duration-300 flex flex-col justify-between group">
+                        <div data-domain="<?php echo e($domName); ?>" class="domain-card cursor-pointer p-4 bg-white border-2 border-gray-200 rounded-2xl shadow-sm hover:shadow-xl hover:scale-105 hover:border-[var(--ig-accent)]/60 active:scale-95 transition-all duration-300 flex flex-col justify-between group">
                             <div>
                                 <div class="text-3xl mb-2 transition-transform duration-300 group-hover:scale-110"><?php echo e($info['icon']); ?></div>
                                 <h4 class="font-bold text-sm text-[var(--ig-ink)] mb-1"><?php echo e($domName); ?></h4>
@@ -227,7 +227,7 @@
                 roleSelect.innerHTML = '<option value="">Select Role (Select Domain first)</option>';
                 
                 domainCards.forEach(c => {
-                    c.classList.remove('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.25)]');
+                    c.classList.remove('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]/20', 'ring-4', 'ring-[var(--ig-accent)]/15', 'shadow-[0_0_15px_rgba(255,79,25,0.25)]');
                     c.classList.add('border-gray-200');
                 });
                 roleSectionWrapper.style.display = 'none';
@@ -242,9 +242,9 @@
                 domainCards.forEach(c => {
                     if (c.getAttribute('data-domain') === domainName) {
                         c.classList.remove('border-gray-200');
-                        c.classList.add('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.25)]');
+                        c.classList.add('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]/20', 'ring-4', 'ring-[var(--ig-accent)]/15', 'shadow-[0_0_15px_rgba(255,79,25,0.25)]');
                     } else {
-                        c.classList.remove('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.25)]');
+                        c.classList.remove('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]/20', 'ring-4', 'ring-[var(--ig-accent)]/15', 'shadow-[0_0_15px_rgba(255,79,25,0.25)]');
                         c.classList.add('border-gray-200');
                     }
                 });
@@ -262,7 +262,7 @@
                     // Render Role Cards
                     roleSectionWrapper.style.display = 'block';
                     roleCardsContainer.innerHTML = roles.map(role => `
-                        <div data-role="${role}" class="role-card cursor-pointer p-3 bg-white border-2 border-gray-200 rounded-2xl text-center shadow-sm hover:shadow-md hover:scale-105 hover:border-indigo-400 active:scale-95 transition-all duration-300 group">
+                        <div data-role="${role}" class="role-card cursor-pointer p-3 bg-white border-2 border-gray-200 rounded-2xl text-center shadow-sm hover:shadow-md hover:scale-105 hover:border-[var(--ig-accent)]/60 active:scale-95 transition-all duration-300 group">
                             <p class="font-bold text-xs text-[var(--ig-ink-2)] group-hover:text-[var(--ig-ink)]">${role}</p>
                         </div>
                     `).join('');
@@ -289,9 +289,9 @@
                 roleCardsContainer.querySelectorAll('.role-card').forEach(c => {
                     if (c.getAttribute('data-role') === roleName) {
                         c.classList.remove('border-gray-200');
-                        c.classList.add('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.2)]');
+                        c.classList.add('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]/20', 'ring-4', 'ring-[var(--ig-accent)]/15', 'shadow-[0_0_15px_rgba(255,79,25,0.2)]');
                     } else {
-                        c.classList.remove('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.2)]');
+                        c.classList.remove('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]/20', 'ring-4', 'ring-[var(--ig-accent)]/15', 'shadow-[0_0_15px_rgba(255,79,25,0.2)]');
                         c.classList.add('border-gray-200');
                     }
                 });

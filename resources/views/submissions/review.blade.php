@@ -69,7 +69,7 @@
                                 @endphp
                                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                                     <div class="flex items-center space-x-3 mb-3">
-                                        <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-6 h-6 text-[var(--ig-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                         </svg>
                                         <div class="flex-1">
@@ -102,7 +102,7 @@
                                     @else
                                         <!-- Pending/Revision: Show Preview Only -->
                                         @if($isImage)
-                                            <button onclick="document.getElementById('image-preview-{{ $loop->index }}').classList.toggle('hidden')" class="mb-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium">
+                                            <button onclick="document.getElementById('image-preview-{{ $loop->index }}').classList.toggle('hidden')" class="mb-2 bg-[var(--ig-ink)] hover:bg-[var(--ig-accent)] text-white px-4 py-2 rounded-lg text-sm font-medium transition">
                                                 Preview
                                             </button>
                                             <div id="image-preview-{{ $loop->index }}" class="hidden select-none" style="user-select: none; -webkit-user-select: none;" oncontextmenu="return false;">
@@ -110,7 +110,7 @@
                                             </div>
                                             <p class="text-xs text-gray-500 mt-2">🔒 Preview only - Right-click disabled</p>
                                         @elseif($isPdf)
-                                            <button onclick="document.getElementById('pdf-preview-{{ $loop->index }}').classList.toggle('hidden')" class="mb-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium">
+                                            <button onclick="document.getElementById('pdf-preview-{{ $loop->index }}').classList.toggle('hidden')" class="mb-2 bg-[var(--ig-ink)] hover:bg-[var(--ig-accent)] text-white px-4 py-2 rounded-lg text-sm font-medium transition">
                                                Preview
                                             </button>
                                             <div id="pdf-preview-{{ $loop->index }}" class="hidden bg-white rounded border border-gray-300 overflow-auto" style="max-height: 500px;">
@@ -118,7 +118,7 @@
                                             </div>
                                             <p class="text-xs text-gray-500 mt-2">🔒 Preview only - Scroll to view all pages</p>
                                         @elseif($isText)
-                                            <button onclick="document.getElementById('text-preview-{{ $loop->index }}').classList.toggle('hidden')" class="mb-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium">
+                                            <button onclick="document.getElementById('text-preview-{{ $loop->index }}').classList.toggle('hidden')" class="mb-2 bg-[var(--ig-ink)] hover:bg-[var(--ig-accent)] text-white px-4 py-2 rounded-lg text-sm font-medium transition">
                                                Preview
                                             </button>
                                             <div id="text-preview-{{ $loop->index }}" class="hidden bg-gray-900 text-green-400 p-4 rounded border border-gray-300 overflow-auto select-none" style="max-height: 500px; user-select: none; -webkit-user-select: none; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5;" oncontextmenu="return false;" oncopy="return false;">
@@ -203,32 +203,29 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Comment (Optional)</label>
                             <textarea name="comment" rows="3" class="w-full border-gray-300 rounded-lg" placeholder="Share your feedback about the student's work..."></textarea>
                         </div>
-                        <button class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-semibold">Submit Rating</button>
+                        <button class="bg-[var(--ig-ink)] hover:bg-[var(--ig-accent)] text-white px-6 py-3 rounded-lg font-semibold transition hover:shadow-lg">Submit Rating</button>
                     </form>
                 </div>
             @elseif($rating)
-                <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            	<div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <h3 class="text-lg font-semibold text-gray-700 mb-2">✓ Rating Submitted</h3>
-                    <p class="text-gray-600">Rating: <span class="font-bold text-indigo-600">{{ $rating->rating }}/5 ⭐</span></p>
+                    <p class="text-gray-600">Rating: <span class="font-bold text-[var(--ig-accent)]">{{ $rating->rating }}/5 ⭐</span></p>
                     @if($rating->comment)
                         <p class="text-gray-600 mt-2">Comment: "{{ $rating->comment }}"</p>
                     @endif
                 </div>
             @endif
 
-            {{-- ══════════════════════════════════════════════════════════ --}}
-            {{-- 🛡️ STARTUP VERIFIED SKILLS SECTION (after acceptance)    --}}
-            {{-- ══════════════════════════════════════════════════════════ --}}
-            @if($submission->status === 'accepted' && $taskSkills->isNotEmpty())
-                <div class="mt-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-slate-50 rounded-2xl border border-indigo-200/60 p-8 shadow-lg relative overflow-hidden">
+            {{-- ══════════════════════════════════════════════════            @if($submission->status === 'accepted' && $taskSkills->isNotEmpty())
+                <div class="mt-8 bg-gradient-to-br from-[var(--ig-accent-soft)] via-[var(--ig-bg-2)] to-[var(--ig-bg)] rounded-2xl border border-[var(--ig-line-2)] p-8 shadow-lg relative overflow-hidden">
                     {{-- Decorative background glow --}}
-                    <div class="absolute -top-20 -right-20 w-60 h-60 bg-indigo-400/10 rounded-full blur-3xl"></div>
-                    <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-purple-400/10 rounded-full blur-3xl"></div>
-
+                    <div class="absolute -top-20 -right-20 w-60 h-60 bg-[var(--ig-accent)]/10 rounded-full blur-3xl"></div>
+                    <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-[var(--ig-lime)]/10 rounded-full blur-3xl"></div>
+ 
                     <div class="relative">
                         <div class="flex items-center justify-between mb-6">
                             <div class="flex items-center space-x-3">
-                                <div class="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                                <div class="w-12 h-12 bg-gradient-to-br from-[var(--ig-accent)] to-[#E03E0B] rounded-2xl flex items-center justify-center shadow-lg shadow-[var(--ig-accent)]/20">
                                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
                                     </svg>
@@ -238,10 +235,11 @@
                                     <p class="text-xs text-gray-500 mt-0.5">Select the skills this student demonstrated and rate their proficiency.</p>
                                 </div>
                             </div>
-                            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-100 border border-indigo-200 px-3 py-1 rounded-full uppercase tracking-wider">
+                            <span class="text-[10px] font-bold text-[var(--ig-accent)] bg-[var(--ig-accent-soft)] border border-[var(--ig-accent-soft)] px-3 py-1 rounded-full uppercase tracking-wider">
                                 Work-Based Verification
                             </span>
                         </div>
+
 
                         @if($existingVerifications->isNotEmpty())
                             {{-- Already verified state --}}
@@ -278,7 +276,7 @@
                             </div>
 
                             {{-- Allow re-verification --}}
-                            <button onclick="document.getElementById('reverify-form').classList.toggle('hidden')" class="mt-4 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center space-x-1">
+                            <button onclick="document.getElementById('reverify-form').classList.toggle('hidden')" class="mt-4 text-xs font-bold text-[var(--ig-accent)] hover:text-[#E03E0B] transition flex items-center space-x-1">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                 </svg>
@@ -294,27 +292,27 @@
                             <div class="space-y-4">
                                 @foreach($taskSkills as $index => $skill)
                                     @php $existingV = $existingVerifications->get($skill->id); @endphp
-                                    <div class="skill-verification-card bg-white/90 backdrop-blur-sm border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-300 group" 
+                                    <div class="skill-verification-card bg-white/90 backdrop-blur-sm border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-[var(--ig-accent)]/60 transition-all duration-300 group" 
                                          id="skill-card-{{ $skill->id }}" data-skill-id="{{ $skill->id }}">
                                         <div class="flex items-start justify-between">
                                             <div class="flex items-center space-x-3">
                                                 <label class="relative flex items-center cursor-pointer">
                                                     <input type="checkbox" 
-                                                           class="skill-checkbox w-5 h-5 text-indigo-600 bg-gray-50 border-2 border-gray-300 rounded-lg focus:ring-indigo-500 focus:ring-2 transition"
+                                                           class="skill-checkbox w-5 h-5 text-[var(--ig-accent)] bg-gray-50 border-2 border-gray-300 rounded-lg focus:ring-[var(--ig-accent)] focus:ring-2 transition"
                                                            data-skill-index="{{ $index }}"
                                                            {{ $existingV ? 'checked' : '' }}
                                                            onchange="toggleSkillFields({{ $skill->id }}, this.checked, {{ $index }})">
                                                 </label>
                                                 <div>
-                                                    <span class="font-bold text-gray-900 text-sm group-hover:text-indigo-700 transition-colors">{{ $skill->name }}</span>
+                                                    <span class="font-bold text-gray-900 text-sm group-hover:text-[var(--ig-accent)] transition-colors">{{ $skill->name }}</span>
                                                     <p class="text-[10px] text-gray-400 mt-0.5">Click to verify this skill was demonstrated</p>
                                                 </div>
                                             </div>
-                                            <div class="skill-badge hidden items-center space-x-1 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-full" id="badge-{{ $skill->id }}">
-                                                <svg class="w-3 h-3 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <div class="skill-badge hidden items-center space-x-1 bg-[var(--ig-accent-soft)] border border-[var(--ig-accent-soft)] px-2.5 py-1 rounded-full" id="badge-{{ $skill->id }}">
+                                                <svg class="w-3 h-3 text-[var(--ig-accent)]" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                                 </svg>
-                                                <span class="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">Verified</span>
+                                                <span class="text-[10px] font-bold text-[var(--ig-accent)] uppercase tracking-wider">Verified</span>
                                             </div>
                                         </div>
 
@@ -347,7 +345,7 @@
                                                     <input type="text" name="skills[{{ $index }}][notes]" 
                                                            value="{{ $existingV?->notes ?? '' }}"
                                                            placeholder="e.g. Strong API design skills"
-                                                           class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                                                           class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900 focus:ring-2 focus:ring-[var(--ig-accent)] focus:border-transparent transition"
                                                            {{ $existingV ? '' : 'disabled' }}>
                                                 </div>
                                             </div>
@@ -361,7 +359,7 @@
                                     <span class="font-bold text-gray-500" id="selected-count">{{ $existingVerifications->count() }}</span> skill(s) selected for verification
                                 </p>
                                 <button type="submit" 
-                                        class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold py-3 px-8 rounded-xl text-sm transition-all duration-300 shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        class="bg-[var(--ig-ink)] hover:bg-[var(--ig-accent)] text-white font-extrabold py-3 px-8 rounded-xl text-sm transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[var(--ig-accent)]/20 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                         id="verify-submit-btn">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
@@ -395,6 +393,59 @@
     </div>
 
     <script>
+        function toggleSkillFields(skillId, checked, index) {
+            const details = document.getElementById('details-' + skillId);
+            const badge = document.getElementById('badge-' + skillId);
+            if (details) {
+                const inputs = details.querySelectorAll('input');
+                if (checked) {
+                    details.classList.remove('hidden');
+                    if (badge) {
+                        badge.classList.remove('hidden');
+                        badge.classList.add('flex');
+                    }
+                    inputs.forEach(input => input.disabled = false);
+                } else {
+                    details.classList.add('hidden');
+                    if (badge) {
+                        badge.classList.add('hidden');
+                        badge.classList.remove('flex');
+                    }
+                    inputs.forEach(input => input.disabled = true);
+                }
+            }
+            updateSelectedCount();
+        }
+
+        function setRating(skillId, rating, index) {
+            const starsContainer = document.getElementById('stars-' + skillId);
+            const label = document.getElementById('rating-label-' + skillId);
+            const ratingInput = document.getElementById('rating-input-' + skillId);
+            
+            if (ratingInput) ratingInput.value = rating;
+            if (label) label.textContent = rating + '/5';
+            
+            if (starsContainer) {
+                const buttons = starsContainer.querySelectorAll('.star-btn');
+                buttons.forEach((btn, idx) => {
+                    if (idx < rating) {
+                        btn.className = 'star-btn w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 bg-amber-100 text-amber-500 border border-amber-200';
+                    } else {
+                        btn.className = 'star-btn w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 bg-gray-50 text-gray-300 border border-gray-200 hover:bg-amber-50 hover:text-amber-400';
+                    }
+                });
+            }
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const checkedCount = document.querySelectorAll('.skill-checkbox:checked').length;
+            const countLabel = document.getElementById('selected-count');
+            if (countLabel) {
+                countLabel.textContent = checkedCount;
+            }
+        }
+
         // Auto-hide success and error messages after 4 seconds
         document.addEventListener('DOMContentLoaded', function() {
             const successMsg = document.getElementById('success-message');
@@ -413,6 +464,8 @@
                     setTimeout(() => errorMsg.remove(), 500);
                 }, 4000);
             }
+            
+            updateSelectedCount();
         });
     </script>
 </x-app-layout>

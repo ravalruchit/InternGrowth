@@ -1,6 +1,6 @@
 <x-guest-layout>
     <div class="text-center mb-6">
-        <h2 class="text-3xl font-black font-poppins bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+        <h2 class="text-3xl font-black font-poppins bg-gradient-to-r from-[var(--ig-accent)] to-[#E03E0B] bg-clip-text text-transparent mb-2">
             Welcome! 🎉
         </h2>
         <p class="text-gray-600 text-sm font-medium">Choose your account type to continue</p>
@@ -12,7 +12,7 @@
         <div class="space-y-3">
             <label class="block">
                 <input type="radio" name="role" value="student" class="sr-only peer" required>
-                <div class="p-4 border-2 border-gray-200 rounded-xl cursor-pointer peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-indigo-300 transition-all">
+                <div class="p-4 border-2 border-gray-200 rounded-xl cursor-pointer peer-checked:border-[var(--ig-accent)] peer-checked:bg-[var(--ig-accent-soft)]/20 hover:border-[var(--ig-accent)]/60 transition-all">
                     <div class="flex items-center space-x-3">
                         <div class="text-3xl">🎓</div>
                         <div>
@@ -25,7 +25,7 @@
             
             <label class="block">
                 <input type="radio" name="role" value="startup" class="sr-only peer" required>
-                <div class="p-4 border-2 border-gray-200 rounded-xl cursor-pointer peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-indigo-300 transition-all">
+                <div class="p-4 border-2 border-gray-200 rounded-xl cursor-pointer peer-checked:border-[var(--ig-accent)] peer-checked:bg-[var(--ig-accent-soft)]/20 hover:border-[var(--ig-accent)]/60 transition-all">
                     <div class="flex items-center space-x-3">
                         <div class="text-3xl">🚀</div>
                         <div>
@@ -64,7 +64,7 @@
                         ];
                     @endphp
                     @foreach($domainDetails as $domName => $info)
-                        <div data-domain="{{ $domName }}" class="domain-card cursor-pointer p-4 bg-white border-2 border-gray-200 rounded-2xl shadow-sm hover:shadow-xl hover:scale-105 hover:border-indigo-400 active:scale-95 transition-all duration-300 flex flex-col justify-between group">
+                        <div data-domain="{{ $domName }}" class="domain-card cursor-pointer p-4 bg-white border-2 border-gray-200 rounded-2xl shadow-sm hover:shadow-xl hover:scale-105 hover:border-[var(--ig-accent)]/60 active:scale-95 transition-all duration-300 flex flex-col justify-between group">
                             <div>
                                 <div class="text-3xl mb-2 transition-transform duration-300 group-hover:scale-110">{{ $info['icon'] }}</div>
                                 <h4 class="font-bold text-sm text-[var(--ig-ink)] mb-1">{{ $domName }}</h4>
@@ -115,7 +115,7 @@
                 roleSelect.innerHTML = '<option value="">Select Role (Select Domain first)</option>';
                 
                 domainCards.forEach(c => {
-                    c.classList.remove('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.25)]');
+                    c.classList.remove('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]/20', 'ring-4', 'ring-[var(--ig-accent)]/15', 'shadow-[0_0_15px_rgba(255,79,25,0.25)]');
                     c.classList.add('border-gray-200');
                 });
                 roleSectionWrapper.style.display = 'none';
@@ -130,9 +130,9 @@
                 domainCards.forEach(c => {
                     if (c.getAttribute('data-domain') === domainName) {
                         c.classList.remove('border-gray-200');
-                        c.classList.add('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.25)]');
+                        c.classList.add('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]/20', 'ring-4', 'ring-[var(--ig-accent)]/15', 'shadow-[0_0_15px_rgba(255,79,25,0.25)]');
                     } else {
-                        c.classList.remove('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.25)]');
+                        c.classList.remove('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]/20', 'ring-4', 'ring-[var(--ig-accent)]/15', 'shadow-[0_0_15px_rgba(255,79,25,0.25)]');
                         c.classList.add('border-gray-200');
                     }
                 });
@@ -150,7 +150,7 @@
                     // Render Role Cards
                     roleSectionWrapper.style.display = 'block';
                     roleCardsContainer.innerHTML = roles.map(role => `
-                        <div data-role="${role}" class="role-card cursor-pointer p-3 bg-white border-2 border-gray-200 rounded-2xl text-center shadow-sm hover:shadow-md hover:scale-105 hover:border-indigo-400 active:scale-95 transition-all duration-300 group">
+                        <div data-role="${role}" class="role-card cursor-pointer p-3 bg-white border-2 border-gray-200 rounded-2xl text-center shadow-sm hover:shadow-md hover:scale-105 hover:border-[var(--ig-accent)]/60 active:scale-95 transition-all duration-300 group">
                             <p class="font-bold text-xs text-[var(--ig-ink-2)] group-hover:text-[var(--ig-ink)]">${role}</p>
                         </div>
                     `).join('');
@@ -177,9 +177,9 @@
                 roleCardsContainer.querySelectorAll('.role-card').forEach(c => {
                     if (c.getAttribute('data-role') === roleName) {
                         c.classList.remove('border-gray-200');
-                        c.classList.add('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.2)]');
+                        c.classList.add('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]/20', 'ring-4', 'ring-[var(--ig-accent)]/15', 'shadow-[0_0_15px_rgba(255,79,25,0.2)]');
                     } else {
-                        c.classList.remove('border-indigo-600', 'bg-indigo-50/20', 'ring-4', 'ring-indigo-500/15', 'shadow-[0_0_15px_rgba(99,102,241,0.2)]');
+                        c.classList.remove('border-[var(--ig-accent)]', 'bg-[var(--ig-accent-soft)]/20', 'ring-4', 'ring-[var(--ig-accent)]/15', 'shadow-[0_0_15px_rgba(255,79,25,0.2)]');
                         c.classList.add('border-gray-200');
                     }
                 });
@@ -216,7 +216,7 @@
         @endif
 
         <button type="submit" class="group relative w-full py-3 rounded-xl text-white font-bold overflow-hidden transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl mt-6">
-            <span class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 animate-gradient bg-[length:200%_200%]"></span>
+            <span class="absolute inset-0 bg-gradient-to-r from-[var(--ig-accent)] via-[#FF6738] to-[#E03E0B] animate-gradient bg-[length:200%_200%]"></span>
             <span class="relative">Continue</span>
         </button>
     </form>

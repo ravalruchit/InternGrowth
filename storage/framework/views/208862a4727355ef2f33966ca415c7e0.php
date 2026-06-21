@@ -39,7 +39,7 @@ unset($__defined_vars, $__key, $__value); ?>
         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200"
         :class="copied
             ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-            : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 border border-indigo-500/30'"
+            : 'bg-[var(--ig-ink)] hover:bg-[var(--ig-accent)] text-white shadow-lg shadow-[var(--ig-ink)]/20 border border-[var(--ig-accent)]/30'"
     >
         <template x-if="!copied">
             <span class="flex items-center gap-2">

@@ -214,7 +214,7 @@
                                 <span class="font-bold text-[var(--ig-ink)]">{{ number_format($verifyScore, 0) }}%</span>
                             </div>
                             <div class="w-full bg-[var(--ig-bg-2)] rounded-full h-1.5 overflow-hidden">
-                                <div class="bg-indigo-500 h-1.5 rounded-full" style="width: {{ $verifyScore }}%"></div>
+                                <div class="bg-[var(--ig-accent)] h-1.5 rounded-full" style="width: {{ $verifyScore }}%"></div>
                             </div>
                         </div>
                         
@@ -247,7 +247,7 @@
                                 <span class="font-bold text-[var(--ig-ink)]">{{ number_format($hiringScore, 0) }}%</span>
                             </div>
                             <div class="w-full bg-[var(--ig-bg-2)] rounded-full h-1.5 overflow-hidden">
-                                <div class="bg-purple-500 h-1.5 rounded-full" style="width: {{ $hiringScore }}%"></div>
+                                <div class="bg-[var(--ig-forest)] h-1.5 rounded-full" style="width: {{ $hiringScore }}%"></div>
                             </div>
                         </div>
                         

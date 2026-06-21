@@ -42,8 +42,8 @@ class PortfolioItem extends Model
     {
         return match ($this->verification_badge) {
             'outstanding_performance' => ['emoji' => '🏆', 'label' => 'Outstanding Performance', 'color' => 'amber'],
-            'certified' => ['emoji' => '🎓', 'label' => 'Certified', 'color' => 'indigo'],
-            'featured' => ['emoji' => '⭐', 'label' => 'Featured', 'color' => 'purple'],
+            'certified' => ['emoji' => '🎓', 'label' => 'Certified', 'color' => 'accent'],
+            'featured' => ['emoji' => '⭐', 'label' => 'Featured', 'color' => 'lime'],
             default => ['emoji' => '✅', 'label' => 'Verified Project', 'color' => 'emerald'],
         };
     }

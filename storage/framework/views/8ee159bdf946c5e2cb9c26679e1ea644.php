@@ -123,11 +123,11 @@
                     <div class="space-y-4 text-xs">
                         <?php
                             $metrics = [
-                                ['label' => 'Trust Score', 'value' => $score ? round($score->trust_score) : 50, 'color' => 'bg-indigo-400'],
+                                ['label' => 'Trust Score', 'value' => $score ? round($score->trust_score) : 50, 'color' => 'bg-[var(--ig-accent)]'],
                                 ['label' => 'Completion Rate', 'value' => $score ? round($score->completion_rate) : 100, 'color' => 'bg-[var(--ig-lime)]'],
                                 ['label' => 'On-Time Delivery', 'value' => $score ? round($score->on_time_rate) : 100, 'color' => 'bg-amber-400'],
                                 ['label' => 'Startup Satisfaction', 'value' => $score ? round($score->satisfaction_rating * 20) : 100, 'color' => 'bg-cyan-400'],
-                                ['label' => 'Interview Performance', 'value' => $score ? round($score->interview_performance_score) : 100, 'color' => 'bg-purple-400'],
+                                ['label' => 'Interview Performance', 'value' => $score ? round($score->interview_performance_score) : 100, 'color' => 'bg-[var(--ig-forest)]'],
                             ];
                         ?>
 
@@ -193,7 +193,7 @@
 
                                             </span>
                                         <?php else: ?>
-                                            <span class="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
+                                            <span class="text-[9px] font-bold text-[var(--ig-accent)] bg-[var(--ig-accent-soft)] px-2 py-0.5 rounded-md">
                                                 ✓ Verified
                                             </span>
                                         <?php endif; ?>

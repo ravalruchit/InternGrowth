@@ -53,7 +53,7 @@
                         };
                     @endphp
                     <div onclick="window.location='{{ $notification->target_url }}'"
-                         class="cursor-pointer bg-white rounded-xl shadow-sm border {{ $notification->is_read ? 'border-gray-100 opacity-75' : 'border-indigo-200 ring-1 ring-indigo-100' }} p-4 flex items-start gap-4 transition hover:shadow-md hover:border-indigo-400">
+                         class="cursor-pointer bg-white rounded-xl shadow-sm border {{ $notification->is_read ? 'border-gray-100 opacity-75' : 'border-[var(--ig-accent)]/20 ring-1 ring-[var(--ig-accent)]/10' }} p-4 flex items-start gap-4 transition hover:shadow-md hover:border-[var(--ig-accent)]/60">
                         <!-- Icon -->
                         <div class="flex-shrink-0 w-10 h-10 rounded-full {{ $iconBg }} flex items-center justify-center">
                             <svg class="w-5 h-5 {{ $iconColor }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,10 +64,10 @@
                         <!-- Content -->
                         <div class="flex-1 min-w-0">
                             <div class="flex items-start justify-between gap-2">
-                                <p class="font-semibold text-gray-900 text-sm {{ $notification->is_read ? '' : 'text-indigo-900' }}">
+                                <p class="font-semibold text-gray-900 text-sm {{ $notification->is_read ? '' : 'text-[var(--ig-accent)]' }}">
                                     {{ $notification->title }}
                                     @if(!$notification->is_read)
-                                        <span class="ml-2 inline-block w-2 h-2 bg-indigo-500 rounded-full align-middle"></span>
+                                        <span class="ml-2 inline-block w-2 h-2 bg-[var(--ig-accent)] rounded-full align-middle"></span>
                                     @endif
                                 </p>
                                 <span class="text-xs text-gray-400 whitespace-nowrap flex-shrink-0">

@@ -88,14 +88,8 @@
                 </div>
 
                 <!-- Rewards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 ig-reveal">
-                    <div class="ig-card p-6">
-                        <p class="ig-eyebrow mb-2">Reward Points</p>
-                        <p class="ig-display text-4xl text-[var(--ig-accent)]">
-                            <?php echo e($task->reward_points); ?> <span class="text-sm font-normal text-[var(--ig-muted)]">points</span>
-                        </p>
-                    </div>
-                    <?php if($task->stipend): ?>
+                <?php if($task->stipend): ?>
+                    <div class="grid grid-cols-1 gap-4 ig-reveal">
                         <div class="ig-card p-6">
                             <p class="ig-eyebrow mb-2">Stipend</p>
                             <p class="ig-display text-4xl text-[var(--ig-lime-deep)]">
@@ -103,8 +97,8 @@
 
                             </p>
                         </div>
-                    <?php endif; ?>
-                </div>
+                    </div>
+                <?php endif; ?>
 
                 <!-- Startup Action / Student Application List (Startup Owner Dashboard View) -->
                 <?php if(auth()->check() && auth()->user()->isStartup() && $task->startup_profile_id === auth()->user()->startupProfile->id): ?>
@@ -141,6 +135,13 @@
                                         This task has been successfully completed by 
                                         <strong><?php echo e($acceptedApplication ? $acceptedApplication->student->user->name : 'a student'); ?></strong>.
                                     </p>
+                                    <?php if($existingApplication && in_array($existingApplication->status, ['hired', 'internship_accepted'])): ?>
+                                        <div class="mt-4">
+                                            <a href="<?php echo e(route('messages.create', [$existingApplication->student_profile_id, $task->startup_profile_id, $task->id])); ?>" class="ig-btn ig-btn-lime w-full justify-center" style="padding: 10px; font-size: 13px;">
+                                                <span>💬 Message Startup</span>
+                                            </a>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         <?php elseif($hasApprovedApplication && !$existingApplication): ?>

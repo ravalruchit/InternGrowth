@@ -169,7 +169,7 @@
                             <span class="text-[var(--ig-ink)] font-bold"><?php echo e($ts ? number_format($ts->hiring_score, 0) : '100'); ?>%</span>
                         </div>
                         <div class="w-full bg-[var(--ig-bg-2)] rounded-full h-1.5 overflow-hidden">
-                            <div class="bg-purple-500 h-1.5 rounded-full" style="width: <?php echo e($ts ? $ts->hiring_score : '100'); ?>%"></div>
+                            <div class="bg-[var(--ig-forest)] h-1.5 rounded-full" style="width: <?php echo e($ts ? $ts->hiring_score : '100'); ?>%"></div>
                         </div>
                     </div>
                 </div>
@@ -205,6 +205,82 @@
                 </div>
             </div>
 
+        </div>
+
+        <!-- Recruitment & Conversion Funnel Analytics -->
+        <?php
+            $allApplications = $tasks->flatMap(fn($t) => $t->applications);
+            $appliedCount = $allApplications->count();
+            $assignedCount = $allApplications->filter(fn($app) => in_array($app->status, ['approved', 'internship_offered', 'internship_accepted', 'hired']) || ($app->submission && $app->submission->status === 'accepted'))->count();
+            $completedCount = $allApplications->filter(fn($app) => $app->submission && $app->submission->status === 'accepted')->count();
+            $interviewedCount = $allApplications->filter(fn($app) => in_array($app->startup_hiring_outcome, ['interview_scheduled', 'interview_passed', 'interview_failed', 'hired_intern', 'hired_job']))->count();
+            $hiredCount = $allApplications->filter(fn($app) => in_array($app->startup_hiring_outcome, ['hired_intern', 'hired_job']))->count() + $hiringOffers->where('status', 'accepted')->count();
+
+            $completionRate = $assignedCount > 0 ? ($completedCount / $assignedCount) * 100 : 0;
+            $hiringRate = $completedCount > 0 ? ($hiredCount / $completedCount) * 100 : 0;
+        ?>
+        <div class="ig-card p-6 bg-white space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--ig-line)] pb-4">
+                <div>
+                    <p class="ig-eyebrow mb-1">— Pipeline Analytics</p>
+                    <h2 class="ig-display text-2xl text-[var(--ig-ink)]">Recruitment & Conversion Funnel</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="ig-chip ig-chip-lime text-[10px] font-bold uppercase tracking-wider">Conversion Rates</span>
+                </div>
+            </div>
+
+            <!-- Funnel Stepper UI -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 text-center items-stretch">
+                <!-- Step 1 -->
+                <div class="bg-[var(--ig-bg)]/30 border border-[var(--ig-line-2)] rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-[var(--ig-muted)] block mb-1">1. Applied</span>
+                        <p class="ig-display text-3xl text-[var(--ig-ink)] font-mono"><?php echo e($appliedCount); ?></p>
+                    </div>
+                    <p class="text-[10px] text-[var(--ig-faint)] mt-2">Task applicants</p>
+                </div>
+                <!-- Step 2 -->
+                <div class="bg-[var(--ig-bg)]/30 border border-[var(--ig-line-2)] rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-[var(--ig-muted)] block mb-1">2. Assigned</span>
+                        <p class="ig-display text-3xl text-[var(--ig-ink)] font-mono"><?php echo e($assignedCount); ?></p>
+                    </div>
+                    <?php if($appliedCount > 0): ?>
+                        <p class="text-[10px] text-[var(--ig-accent)] font-bold mt-2"><?php echo e(number_format(($assignedCount / $appliedCount) * 100, 0)); ?>% conversion</p>
+                    <?php else: ?>
+                        <p class="text-[10px] text-[var(--ig-faint)] mt-2">working candidates</p>
+                    <?php endif; ?>
+                </div>
+                <!-- Step 3 -->
+                <div class="bg-[var(--ig-bg)]/30 border border-[var(--ig-line-2)] rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-[var(--ig-muted)] block mb-1">3. Completed</span>
+                        <p class="ig-display text-3xl text-[var(--ig-ink)] font-mono"><?php echo e($completedCount); ?></p>
+                    </div>
+                    <p class="text-[10px] text-emerald-700 font-bold mt-2"><?php echo e(number_format($completionRate, 0)); ?>% completion</p>
+                </div>
+                <!-- Step 4 -->
+                <div class="bg-[var(--ig-bg)]/30 border border-[var(--ig-line-2)] rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-[var(--ig-muted)] block mb-1">4. Interviewed</span>
+                        <p class="ig-display text-3xl text-[var(--ig-ink)] font-mono"><?php echo e($interviewedCount); ?></p>
+                    </div>
+                    <?php if($completedCount > 0): ?>
+                        <p class="text-[10px] text-[var(--ig-accent)] font-bold mt-2"><?php echo e(number_format(($interviewedCount / $completedCount) * 100, 0)); ?>% conversion</p>
+                    <?php else: ?>
+                        <p class="text-[10px] text-[var(--ig-faint)] mt-2">pipeline selection</p>
+                    <?php endif; ?>
+                </div>
+                <!-- Step 5 -->
+                <div class="bg-emerald-50/40 border border-emerald-150 rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-emerald-800 block mb-1">5. Hired / Placed</span>
+                        <p class="ig-display text-3xl text-emerald-750 font-mono"><?php echo e($hiredCount); ?></p>
+                    </div>
+                    <p class="text-[10px] text-emerald-700 font-bold mt-2"><?php echo e(number_format($hiringRate, 0)); ?>% hiring success</p>
+                </div>
+            </div>
         </div>
 
         <!-- Domain-Specific Hiring & Acquisition Analytics -->

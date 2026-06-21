@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\StudentProfile;
 use App\Models\StartupProfile;
-use App\Models\PointsWallet;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
@@ -115,12 +114,6 @@ class GoogleAuthController extends Controller
                 'reliability_score' => 1.0,
                 'primary_domain' => $primaryDomain,
                 'preferred_role' => $preferredRole,
-            ]);
-            
-            // Create points wallet for student
-            PointsWallet::create([
-                'student_profile_id' => $profile->id,
-                'balance' => 0,
             ]);
         } else {
             StartupProfile::create([

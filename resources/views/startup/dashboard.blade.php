@@ -159,7 +159,7 @@
                             <span class="text-[var(--ig-ink)] font-bold">{{ $ts ? number_format($ts->hiring_score, 0) : '100' }}%</span>
                         </div>
                         <div class="w-full bg-[var(--ig-bg-2)] rounded-full h-1.5 overflow-hidden">
-                            <div class="bg-purple-500 h-1.5 rounded-full" style="width: {{ $ts ? $ts->hiring_score : '100' }}%"></div>
+                            <div class="bg-[var(--ig-forest)] h-1.5 rounded-full" style="width: {{ $ts ? $ts->hiring_score : '100' }}%"></div>
                         </div>
                     </div>
                 </div>
@@ -237,7 +237,7 @@
                         <p class="ig-display text-3xl text-[var(--ig-ink)] font-mono">{{ $assignedCount }}</p>
                     </div>
                     @if($appliedCount > 0)
-                        <p class="text-[10px] text-indigo-650 font-bold mt-2">{{ number_format(($assignedCount / $appliedCount) * 100, 0) }}% conversion</p>
+                        <p class="text-[10px] text-[var(--ig-accent)] font-bold mt-2">{{ number_format(($assignedCount / $appliedCount) * 100, 0) }}% conversion</p>
                     @else
                         <p class="text-[10px] text-[var(--ig-faint)] mt-2">working candidates</p>
                     @endif
@@ -257,7 +257,7 @@
                         <p class="ig-display text-3xl text-[var(--ig-ink)] font-mono">{{ $interviewedCount }}</p>
                     </div>
                     @if($completedCount > 0)
-                        <p class="text-[10px] text-indigo-650 font-bold mt-2">{{ number_format(($interviewedCount / $completedCount) * 100, 0) }}% conversion</p>
+                        <p class="text-[10px] text-[var(--ig-accent)] font-bold mt-2">{{ number_format(($interviewedCount / $completedCount) * 100, 0) }}% conversion</p>
                     @else
                         <p class="text-[10px] text-[var(--ig-faint)] mt-2">pipeline selection</p>
                     @endif

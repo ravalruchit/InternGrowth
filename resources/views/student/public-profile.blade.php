@@ -75,7 +75,7 @@
                                         <div class="space-y-1">
                                             @foreach($profile->portfolio_links as $link)
                                                 @if($link)
-                                                    <a href="{{ $link }}" target="_blank" class="text-indigo-650 hover:underline block truncate">{{ $link }}</a>
+                                                    <a href="{{ $link }}" target="_blank" class="text-[var(--ig-accent)] hover:underline block truncate">{{ $link }}</a>
                                                 @endif
                                             @endforeach
                                         </div>
@@ -126,11 +126,11 @@
                     <div class="space-y-4 text-xs">
                         @php
                             $metrics = [
-                                ['label' => 'Trust Score', 'value' => $score ? round($score->trust_score) : 50, 'color' => 'bg-indigo-400'],
+                                ['label' => 'Trust Score', 'value' => $score ? round($score->trust_score) : 50, 'color' => 'bg-[var(--ig-accent)]'],
                                 ['label' => 'Completion Rate', 'value' => $score ? round($score->completion_rate) : 100, 'color' => 'bg-[var(--ig-lime)]'],
                                 ['label' => 'On-Time Delivery', 'value' => $score ? round($score->on_time_rate) : 100, 'color' => 'bg-amber-400'],
                                 ['label' => 'Startup Satisfaction', 'value' => $score ? round($score->satisfaction_rating * 20) : 100, 'color' => 'bg-cyan-400'],
-                                ['label' => 'Interview Performance', 'value' => $score ? round($score->interview_performance_score) : 100, 'color' => 'bg-purple-400'],
+                                ['label' => 'Interview Performance', 'value' => $score ? round($score->interview_performance_score) : 100, 'color' => 'bg-[var(--ig-forest)]'],
                             ];
                         @endphp
 

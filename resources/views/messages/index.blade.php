@@ -10,20 +10,20 @@
                 <a href="{{ route('messages.show', $conversation->id) }}" class="block hover:bg-gray-50 transition border-b border-gray-100 last:border-0">
                     <div class="p-6 flex items-start space-x-4">
                         <div class="flex-shrink-0">
-                            <div class="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-r from-[var(--ig-accent)] to-[#E03E0B] flex items-center justify-center text-white font-bold text-lg">
                                 {{ substr(auth()->user()->isStudent() ? $conversation->startup->company_name : $conversation->student->user->name, 0, 1) }}
                             </div>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-lg font-semibold text-gray-900 truncate">
-                                    {{ auth()->user()->isStudent() ? $conversation->startup->company_name : $conversation->student->user->name }}
-                                </h3>
-                                <span class="text-sm text-gray-500">{{ $conversation->updated_at->diffForHumans() }}</span>
-                            </div>
-                            @if($conversation->task)
-                                <p class="text-sm text-indigo-600 font-medium">Re: {{ $conversation->task->title }}</p>
-                            @endif
+                             <div class="flex items-center justify-between">
+                                 <h3 class="text-lg font-semibold text-gray-900 truncate">
+                                     {{ auth()->user()->isStudent() ? $conversation->startup->company_name : $conversation->student->user->name }}
+                                 </h3>
+                                 <span class="text-sm text-gray-500">{{ $conversation->updated_at->diffForHumans() }}</span>
+                             </div>
+                             @if($conversation->task)
+                                 <p class="text-sm text-[var(--ig-accent)] font-medium">Re: {{ $conversation->task->title }}</p>
+                             @endif
                             @if($conversation->latestMessage)
                                 <p class="text-sm text-gray-600 truncate mt-1">{{ $conversation->latestMessage->message }}</p>
                             @endif
