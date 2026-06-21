@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <title><?php echo e(config('app.name', 'InternGrowth')); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
     <link rel="stylesheet" href="<?php echo e(asset('css/design-system.css')); ?>">
 </head>
 <body class="ig-body antialiased min-h-screen">

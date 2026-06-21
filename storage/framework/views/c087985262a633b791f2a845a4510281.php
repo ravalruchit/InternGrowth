@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>InternGrowth — Verified Work for Students</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
     <link rel="stylesheet" href="<?php echo e(asset('css/design-system.css')); ?>?v=1.2">
 </head>
 <body class="ig-body antialiased min-h-screen">
