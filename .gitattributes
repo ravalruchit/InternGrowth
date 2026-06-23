@@ -1,5 +1,12 @@
 * text=auto eol=lf
 
+# Binary files
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+
 *.blade.php diff=html
 *.css diff=css
 *.html diff=html
