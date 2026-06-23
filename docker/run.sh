@@ -10,6 +10,9 @@ php artisan view:cache
 echo "Running database migrations..."
 php artisan migrate --force
 
+# Fix permissions for files created by artisan commands during startup
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
 # Start Supervisor to run both PHP-FPM and Nginx
 echo "Starting supervisor..."
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
