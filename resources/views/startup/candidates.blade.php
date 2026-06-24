@@ -772,6 +772,22 @@
             }
         }
 
+        function toggleInsightsDrawer(id) {
+            const drawer = document.getElementById(id);
+            const button = drawer.previousElementSibling;
+            const arrow = button.querySelector('.arrow');
+            
+            drawer.classList.toggle('hidden');
+            
+            if (drawer.classList.contains('hidden')) {
+                arrow.style.transform = 'rotate(0deg)';
+                button.classList.remove('bg-[var(--ig-accent-soft)]');
+            } else {
+                arrow.style.transform = 'rotate(180deg)';
+                button.classList.add('bg-[var(--ig-accent-soft)]');
+            }
+        }
+
         // Dynamic search filters domain & role synchronization
         const filterDomainSelect = document.getElementById('filter_domain');
         const filterRoleSelect = document.getElementById('filter_role');

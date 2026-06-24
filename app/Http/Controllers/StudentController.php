@@ -19,7 +19,7 @@ class StudentController extends Controller
     {
         $profile = auth()->user()->studentProfile->load(['skills', 'reputationScore', 'portfolio.items', 'startupReviews']);
         $hiringOffers = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
-            ->where('status', 'pending')
+            ->whereIn('status', ['pending', 'pending_joining', 'joined'])
             ->with('startup')
             ->get();
 
@@ -61,6 +61,54 @@ class StudentController extends Controller
             ->orderBy('scheduled_at', 'asc')
             ->get();
 
+        // Calculate student dashboard widgets
+        $rankingService = app(\App\Services\CandidateRankingService::class);
+        $bestMatchingDomain = $profile->primary_domain ?? 'Software Development';
+        $topSkillCategory = $profile->skills->groupBy('domain')->sortByDesc(fn($g) => $g->count())->keys()->first() ?? $profile->primary_domain ?? 'Software Development';
+        
+        $portfolioScoreVal = $rankingService->calculatePortfolioStrength($profile);
+        $portfolioStrengthLabel = $rankingService->getPortfolioLabel($portfolioScoreVal);
+
+        // Calculate Hiring Readiness Score:
+        // 1. IPRS overall (35%)
+        $iprsPart = ($profile->reputationScore->overall_score ?? 50.0) * 0.35;
+
+        // 2. Profile Completion (25%)
+        $completionScore = 0;
+        if (!empty($profile->bio)) $completionScore += 25;
+        if ($profile->skills->isNotEmpty()) $completionScore += 25;
+        if ($profile->portfolio && $profile->portfolio->items->isNotEmpty()) $completionScore += 25;
+        if (!empty($profile->availability)) $completionScore += 25;
+        $completionPart = $completionScore * 0.25;
+
+        // 3. Completed Tasks (25%)
+        $completedTasksCountForReadiness = \App\Models\Application::where('student_profile_id', $profile->id)
+            ->whereHas('submission', fn($q) => $q->where('status', 'accepted'))->count();
+        $internshipCountForReadiness = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
+            ->where('offer_type', 'internship')->whereIn('status', ['accepted', 'joined', 'completed'])->count();
+        $jobCountForReadiness = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
+            ->where('offer_type', 'job')->whereIn('status', ['accepted', 'joined', 'completed'])->count();
+        $verifiedPortfolioCountForReadiness = $profile->portfolio ? $profile->portfolio->items->whereNotNull('verification_badge')->count() : 0;
+        
+        $totalCompletedForReadiness = $completedTasksCountForReadiness + $internshipCountForReadiness + $jobCountForReadiness + $verifiedPortfolioCountForReadiness;
+        if ($totalCompletedForReadiness === 0) {
+            $readinessWorkScore = 0;
+        } elseif ($totalCompletedForReadiness >= 1 && $totalCompletedForReadiness <= 3) {
+            $readinessWorkScore = 40;
+        } elseif ($totalCompletedForReadiness >= 4 && $totalCompletedForReadiness <= 7) {
+            $readinessWorkScore = 70;
+        } elseif ($totalCompletedForReadiness >= 8 && $totalCompletedForReadiness <= 15) {
+            $readinessWorkScore = 90;
+        } else {
+            $readinessWorkScore = 100;
+        }
+        $completedTasksPart = $readinessWorkScore * 0.25;
+
+        // 4. Verified Profile (15%)
+        $verifiedProfilePart = ($profile->is_verified ? 100.0 : 0.0) * 0.15;
+
+        $hiringReadinessScore = round($iprsPart + $completionPart + $completedTasksPart + $verifiedProfilePart);
+
         return view('student.dashboard', compact(
             'profile', 
             'recommendedTasks', 
@@ -72,7 +120,12 @@ class StudentController extends Controller
             'reviewedTaskIds',
             'completedTasks',
             'ratings',
-            'interviews'
+            'interviews',
+            'bestMatchingDomain',
+            'topSkillCategory',
+            'portfolioScoreVal',
+            'portfolioStrengthLabel',
+            'hiringReadinessScore'
         ));
     }
 
@@ -121,7 +174,17 @@ class StudentController extends Controller
     public function publicProfile($id)
     {
         $profile = $this->repository->find($id)->load(['reputationScore', 'portfolio.items', 'skillVerifications.skill']);
-        return view('student.public-profile', compact('profile'));
+        
+        $startupVerificationCounts = \App\Services\SkillVerificationService::getStartupVerificationCounts($profile->id);
+        $verifiedSkills = $profile->skillVerifications->pluck('skill_id')->unique()->toArray();
+        $skillScores = $profile->skillVerifications
+            ->groupBy('skill_id')
+            ->map(function ($verifications) {
+                return $verifications->max('score');
+            })
+            ->toArray();
+
+        return view('student.public-profile', compact('profile', 'startupVerificationCounts', 'verifiedSkills', 'skillScores'));
     }
 
     public function verification()
@@ -306,7 +369,7 @@ class StudentController extends Controller
         // Internships by Domain
         $internshipsByDomain = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
             ->where('offer_type', 'internship')
-            ->where('status', 'accepted')
+            ->whereIn('status', ['accepted', 'joined', 'completed'])
             ->select('domain', \DB::raw('count(*) as count'))
             ->whereNotNull('domain')
             ->groupBy('domain')
@@ -479,6 +542,69 @@ class StudentController extends Controller
             'id_card_verification_status' => $profile->id_card_verification_status,
             'verification_method'         => $profile->verification_method,
         ]);
+    }
+
+    public function storePortfolioItem(Request $request)
+    {
+        $validated = $request->validate([
+            'project_title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'github_url' => 'required_without:demo_url|nullable|url|max:500',
+            'demo_url' => 'required_without:github_url|nullable|url|max:500',
+            'skills_demonstrated' => 'required|array|min:1',
+            'skills_demonstrated.*' => 'exists:skills,id',
+        ], [
+            'github_url.required_without' => 'Please provide at least a GitHub URL or a Demo URL.',
+            'demo_url.required_without' => 'Please provide at least a GitHub URL or a Demo URL.',
+            'skills_demonstrated.required' => 'Please select at least one skill demonstrated in this project.',
+        ]);
+
+        $profile = auth()->user()->studentProfile;
+        
+        // Ensure student has a portfolio record
+        $portfolio = $profile->portfolio;
+        if (!$portfolio) {
+            $portfolio = \App\Models\Portfolio::create([
+                'student_profile_id' => $profile->id,
+                'custom_slug' => 'student-' . strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', auth()->user()->name))) . '-' . rand(1000, 9999),
+                'is_public' => true,
+            ]);
+        }
+
+        // Fetch skill names from database
+        $skills = \App\Models\Skill::whereIn('id', $validated['skills_demonstrated'])->pluck('name')->toArray();
+
+        // Create the PortfolioItem
+        \App\Models\PortfolioItem::create([
+            'portfolio_id' => $portfolio->id,
+            'project_title' => $validated['project_title'],
+            'auto_summary' => $validated['description'] ?? 'Personal project demonstrating skills.',
+            'skills_demonstrated' => $skills,
+            'github_url' => $validated['github_url'] ?? null,
+            'demo_url' => $validated['demo_url'] ?? null,
+            'verification_badge' => null, // null means self-submitted, not task completion verified
+            'completed_at' => now(),
+            'startup_name' => 'Self-submitted',
+        ]);
+
+        return redirect()->route('student.profile')->with('success', 'Portfolio project added successfully! This has registered proof of work for the selected skills.');
+    }
+
+    public function deletePortfolioItem($id)
+    {
+        $profile = auth()->user()->studentProfile;
+        $item = \App\Models\PortfolioItem::whereHas('portfolio', function($q) use ($profile) {
+            $q->where('student_profile_id', $profile->id);
+        })->findOrFail($id);
+
+        // Prevent deleting platform task completions (they have a task_id)
+        if ($item->task_id) {
+            return back()->with('error', 'You cannot delete verified platform task projects.');
+        }
+
+        $item->delete();
+
+        return redirect()->route('student.profile')->with('success', 'Portfolio project removed successfully.');
     }
 }
 

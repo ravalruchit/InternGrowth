@@ -52,7 +52,7 @@
                     <!-- Top Candidate Header (AI-only) -->
                     <div class="top-candidate-header hidden mb-4 bg-gradient-to-r from-amber-500 to-yellow-600 text-white px-4 py-2 rounded-lg text-xs font-bold tracking-wider flex items-center justify-between shadow-sm">
                         <span class="flex items-center gap-1.5">🥇 AI RANK #1 MATCH (TOP RECOMMENDED CANDIDATE)</span>
-                        <span class="bg-white text-amber-700 px-2.5 py-0.5 rounded-full font-black text-[10px]">{{ $matchScore }}% Match</span>
+                        <span class="bg-white text-amber-700 px-2.5 py-0.5 rounded-full font-black text-[10px]">{{ $matchScore }}% {{ $rankingDetails['match_label'] ?? 'Perfect Match' }}</span>
                     </div>
 
                     <!-- Main Candidate Row -->
@@ -62,12 +62,18 @@
                                 <h3 class="font-bold text-lg text-gray-850 font-poppins">{{ $student->user->name }}</h3>
                                 
                                 <!-- Match Score Badge (AI-only) -->
-                                <span class="ai-info hidden bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] border border-[var(--ig-accent)]/20 px-2.5 py-0.5 rounded-full text-xs font-extrabold font-poppins shadow-sm">
-                                    Match Score: {{ $matchScore }}%
-                                </span>
+                                <div class="ai-info hidden flex flex-col gap-1.5 mt-1">
+                                    <span class="bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] border border-[var(--ig-accent)]/20 px-2.5 py-0.5 rounded-full text-xs font-extrabold font-poppins shadow-sm w-fit">
+                                        {{ $matchScore }}% {{ $rankingDetails['match_label'] ?? 'Low Match' }}
+                                    </span>
+                                    <div class="match-progress w-full max-w-[200px] bg-gray-100 rounded-full h-2 overflow-hidden border border-gray-200 shadow-inner">
+                                        <div class="bg-[var(--ig-accent)] h-full rounded-full transition-all duration-500" style="width: {{ $matchScore }}%"></div>
+                                    </div>
+                                    <span class="text-[10px] font-mono text-gray-500 font-bold block">{{ $rankingDetails['ascii_bar'] ?? '' }} {{ $matchScore }}%</span>
+                                </div>
                                 
                                 <!-- Recommended Candidate Badge (AI-only) -->
-                                @if($matchScore >= 85)
+                                @if($matchScore >= 80)
                                     <span class="ai-info hidden bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-0.5 rounded-full text-xs font-extrabold font-poppins flex items-center gap-1 shadow-sm">
                                         🥇 Recommended Candidate
                                     </span>
@@ -168,6 +174,207 @@
                                         <p class="text-[8px] text-amber-550 font-bold uppercase tracking-wider mt-0.5">Startup Rated</p>
                                     </div>
                                 @endif
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Match Breakdown Drawer (AI-only) -->
+                    @if(isset($rankingDetails['breakdown']))
+                        <div class="ai-info hidden mt-4 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                            <button type="button" 
+                                    class="w-full text-left px-4 py-3 bg-gray-55 hover:bg-gray-100 transition flex items-center justify-between text-xs font-bold text-gray-700 uppercase tracking-wider font-poppins" 
+                                    onclick="toggleInsightsDrawer('match-drawer-{{ $application->id }}')">
+                                <span class="flex items-center gap-1.5">
+                                    📊 View Match Details
+                                </span>
+                                <span class="arrow transition-transform duration-200 select-none">▼</span>
+                            </button>
+                            <div id="match-drawer-{{ $application->id }}" class="hidden p-5 bg-white border-t border-gray-200 space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- Left Column: Match Summary Checklist -->
+                                    <div class="space-y-3">
+                                        <h5 class="text-xs font-bold text-gray-500 uppercase tracking-wider font-poppins">Match Summary</h5>
+                                        <div class="text-lg font-black text-[var(--ig-accent)] font-poppins">
+                                            {{ $matchScore }}% {{ $rankingDetails['match_label'] ?? 'Low Match' }}
+                                        </div>
+                                        <div class="font-mono text-sm text-gray-600 mb-3">
+                                            {{ $rankingDetails['ascii_bar'] ?? '' }} {{ $matchScore }}%
+                                        </div>
+                                        
+                                        <ul class="space-y-2 text-xs text-gray-700 font-semibold">
+                                            @php
+                                                // Matched skills calculation
+                                                $studentSkills = $student->skills->pluck('name')->toArray();
+                                                $taskSkills = $task->skills->pluck('name')->toArray();
+                                                if (empty($taskSkills)) {
+                                                    $taskSkills = is_array($task->required_skills) 
+                                                        ? $task->required_skills 
+                                                        : json_decode($task->required_skills ?? '[]', true);
+                                                }
+                                                $matchedCount = 0;
+                                                foreach ($taskSkills as $reqSkill) {
+                                                    foreach ($studentSkills as $studSkill) {
+                                                        if (strtolower(trim($reqSkill)) === strtolower(trim($studSkill))) {
+                                                            $matchedCount++;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                $reqCount = count($taskSkills);
+                                                
+                                                // Domain match check
+                                                $isSameDomain = false;
+                                                $isRelatedDomain = false;
+                                                if (!empty($task->domain) && !empty($student->primary_domain)) {
+                                                    if (strtolower(trim($task->domain)) === strtolower(trim($student->primary_domain))) {
+                                                        $isSameDomain = true;
+                                                    } else {
+                                                        $related = [
+                                                            'software development' => ['data & ai', 'ui/ux design'],
+                                                            'data & ai' => ['software development'],
+                                                            'ui/ux design' => ['software development', 'content & business'],
+                                                            'digital marketing' => ['content & business'],
+                                                            'content & business' => ['digital marketing', 'ui/ux design'],
+                                                        ];
+                                                        $taskDomLower = strtolower(trim($task->domain));
+                                                        $studDomLower = strtolower(trim($student->primary_domain));
+                                                        if (isset($related[$taskDomLower]) && in_array($studDomLower, $related[$taskDomLower])) {
+                                                            $isRelatedDomain = true;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Role match check
+                                                $isRoleMatched = !empty($task->role) && !empty($student->preferred_role) && (strtolower(trim($task->role)) === strtolower(trim($student->preferred_role)));
+                                                
+                                                // Completed tasks/experience
+                                                $completedTasksCount = \App\Models\Application::where('student_profile_id', $student->id)
+                                                    ->whereHas('submission', function($q) {
+                                                        $q->where('status', 'accepted');
+                                                    })->count();
+                                                
+                                                // Verified projects
+                                                $verifiedProjectsCount = $student->portfolio 
+                                                    ? $student->portfolio->items->whereNotNull('verification_badge')->count() 
+                                                    : 0;
+                                            @endphp
+                                            
+                                            <li class="flex items-center gap-2">
+                                                <span class="text-green-600 font-bold">✓</span>
+                                                <span>{{ $matchedCount }}/{{ $reqCount }} Required Skills</span>
+                                            </li>
+                                            
+                                            <li class="flex items-center gap-2">
+                                                @if($isSameDomain)
+                                                    <span class="text-green-600 font-bold">✓</span>
+                                                    <span>Same Career Domain</span>
+                                                @elseif($isRelatedDomain)
+                                                    <span class="text-green-600 font-bold">✓</span>
+                                                    <span>Related Career Domain</span>
+                                                @else
+                                                    <span class="text-gray-400 font-bold">✗</span>
+                                                    <span class="text-gray-500">Different Career Domain</span>
+                                                @endif
+                                            </li>
+                                            
+                                            <li class="flex items-center gap-2">
+                                                @if($isRoleMatched)
+                                                    <span class="text-green-600 font-bold">✓</span>
+                                                    <span>Preferred Role Alignment</span>
+                                                @else
+                                                    <span class="text-gray-400 font-bold">✗</span>
+                                                    <span class="text-gray-500">Preferred Role Disaligned</span>
+                                                @endif
+                                            </li>
+                                            
+                                            <li class="flex items-center gap-2">
+                                                <span class="text-green-600 font-bold">✓</span>
+                                                <span>IPRS Score: {{ round($iprs) }}</span>
+                                            </li>
+                                            
+                                            <li class="flex items-center gap-2">
+                                                <span class="text-green-600 font-bold">✓</span>
+                                                <span>{{ $verifiedProjectsCount }} Verified Projects</span>
+                                            </li>
+                                            
+                                            <li class="flex items-center gap-2">
+                                                <span class="text-green-600 font-bold">✓</span>
+                                                <span>{{ $completedTasksCount }} Completed Tasks</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <!-- Right Column: Component Breakdown Metrics -->
+                                    <div class="space-y-3.5 border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-6">
+                                        <h5 class="text-xs font-bold text-gray-500 uppercase tracking-wider font-poppins">Weighted Breakdown</h5>
+                                        
+                                        <!-- Verified Work -->
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-xs font-bold text-gray-700 font-poppins">
+                                                <span>Verified Work (35%)</span>
+                                                <span>{{ $rankingDetails['breakdown']['verified_work'] ?? 0 }}/100</span>
+                                            </div>
+                                            <div class="w-full bg-gray-150 rounded-full h-1.5 overflow-hidden">
+                                                <div class="bg-[var(--ig-accent)] h-full rounded-full" style="width: {{ $rankingDetails['breakdown']['verified_work'] ?? 0 }}%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Skills Match -->
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-xs font-bold text-gray-700 font-poppins">
+                                                <span>Skills Match (25%)</span>
+                                                <span>{{ $rankingDetails['breakdown']['skills_match'] ?? 0 }}/100</span>
+                                            </div>
+                                            <div class="w-full bg-gray-150 rounded-full h-1.5 overflow-hidden">
+                                                <div class="bg-[var(--ig-accent)] h-full rounded-full" style="width: {{ $rankingDetails['breakdown']['skills_match'] ?? 0 }}%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Domain Alignment -->
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-xs font-bold text-gray-700 font-poppins">
+                                                <span>Domain Alignment (15%)</span>
+                                                <span>{{ $rankingDetails['breakdown']['domain_alignment'] ?? 0 }}/100</span>
+                                            </div>
+                                            <div class="w-full bg-gray-150 rounded-full h-1.5 overflow-hidden">
+                                                <div class="bg-[var(--ig-accent)] h-full rounded-full" style="width: {{ $rankingDetails['breakdown']['domain_alignment'] ?? 0 }}%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Role Alignment -->
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-xs font-bold text-gray-700 font-poppins">
+                                                <span>Role Alignment (15%)</span>
+                                                <span>{{ $rankingDetails['breakdown']['role_alignment'] ?? 0 }}/100</span>
+                                            </div>
+                                            <div class="w-full bg-gray-150 rounded-full h-1.5 overflow-hidden">
+                                                <div class="bg-[var(--ig-accent)] h-full rounded-full" style="width: {{ $rankingDetails['breakdown']['role_alignment'] ?? 0 }}%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- IPRS Score -->
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-xs font-bold text-gray-700 font-poppins">
+                                                <span>IPRS Score (5%)</span>
+                                                <span>{{ $rankingDetails['breakdown']['iprs'] ?? 0 }}/100</span>
+                                            </div>
+                                            <div class="w-full bg-gray-150 rounded-full h-1.5 overflow-hidden">
+                                                <div class="bg-[var(--ig-accent)] h-full rounded-full" style="width: {{ $rankingDetails['breakdown']['iprs'] ?? 0 }}%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Portfolio Quality -->
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-xs font-bold text-gray-700 font-poppins">
+                                                <span>Portfolio Quality (5%)</span>
+                                                <span>{{ $rankingDetails['breakdown']['portfolio'] ?? 0 }}/100</span>
+                                            </div>
+                                            <div class="w-full bg-gray-150 rounded-full h-1.5 overflow-hidden">
+                                                <div class="bg-[var(--ig-accent)] h-full rounded-full" style="width: {{ $rankingDetails['breakdown']['portfolio'] ?? 0 }}%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     @endif

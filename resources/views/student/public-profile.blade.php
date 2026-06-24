@@ -195,22 +195,33 @@
                         <span class="mr-1.5">⚡</span> Verified Skill Badges
                     </h2>
                     
-                    @php
-                        $verifiedSkills = $profile->skillVerifications->pluck('skill_id')->toArray();
-                        $skillScores = $profile->skillVerifications->pluck('score', 'skill_id')->toArray();
-                    @endphp
-
                     <div class="flex flex-wrap gap-2">
                         @foreach($profile->skills as $skill)
                             @if(in_array($skill->id, $verifiedSkills))
-                                @php $skillScore = $skillScores[$skill->id] ?? null; @endphp
-                                <span class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[var(--ig-lime)] border border-[var(--ig-lime-deep)] text-[var(--ig-ink)]">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[var(--ig-ink)] mr-2 animate-pulse"></span>
+                                @php 
+                                    $skillScore = $skillScores[$skill->id] ?? null; 
+                                    $startupCount = $startupVerificationCounts[$skill->id] ?? 0;
+                                    
+                                    $badgeText = 'Verified';
+                                    $badgeStyle = 'bg-[var(--ig-lime)] border-[var(--ig-lime-deep)] text-[var(--ig-ink)]';
+                                    $badgeEmoji = '✅';
+                                    
+                                    if ($startupCount >= 5) {
+                                        $badgeText = 'Expert';
+                                        $badgeStyle = 'bg-amber-100 border-amber-300 text-amber-800';
+                                        $badgeEmoji = '👑';
+                                    } elseif ($startupCount >= 3) {
+                                        $badgeText = 'Proficient';
+                                        $badgeStyle = 'bg-blue-100 border-blue-300 text-blue-800';
+                                        $badgeEmoji = '⭐';
+                                    }
+                                @endphp
+                                <span class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-bold {{ $badgeStyle }} border">
+                                    <span class="mr-1.5">{{ $badgeEmoji }}</span>
                                     {{ $skill->name }} 
+                                    <span class="ml-1.5 bg-black/5 px-1.5 py-0.5 rounded-md text-[9px] font-mono font-medium">{{ $badgeText }}</span>
                                     @if($skillScore)
-                                        <span class="ml-1.5 text-white bg-[var(--ig-surface-ink)] px-1.5 py-0.5 rounded-md text-[9px] font-mono">{{ $skillScore }}/100</span>
-                                    @else
-                                        <span class="ml-1.5 text-white bg-[var(--ig-surface-ink)] px-1.5 py-0.5 rounded-md text-[9px]">Verified</span>
+                                        <span class="ml-1 text-black/30 text-[9px] font-mono font-medium">· {{ $skillScore }}/100</span>
                                     @endif
                                 </span>
                             @else
@@ -236,6 +247,9 @@
                     @if($profile->portfolio && $profile->portfolio->items && $profile->portfolio->items->count() > 0)
                         <div class="space-y-6">
                             @foreach($profile->portfolio->items as $item)
+                                @php
+                                    $isPlacement = !empty($item->hiring_offer_id);
+                                @endphp
                                 <div class="ig-card p-6 hover:translate-y-[-2px] transition duration-350 shadow-sm border border-[var(--ig-line)] group relative overflow-hidden bg-white">
                                     <!-- Decorative Solid Side Bar -->
                                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-[var(--ig-ink)] group-hover:bg-[var(--ig-accent)] transition-colors"></div>
@@ -243,7 +257,9 @@
                                     <div class="flex justify-between items-start mb-4">
                                         <div>
                                             <h3 class="ig-display text-xl text-[var(--ig-ink)] group-hover:text-[var(--ig-accent)] transition-colors">{{ $item->startup_name }}</h3>
-                                            <p class="text-xs font-bold text-[var(--ig-muted)] uppercase tracking-wider mt-1">Verified Experience Record</p>
+                                            <p class="text-xs font-bold text-[var(--ig-muted)] uppercase tracking-wider mt-1">
+                                                {{ $isPlacement ? 'Verified Hiring Placement' : 'Verified Experience Record' }}
+                                            </p>
                                         </div>
                                         
                                         <!-- Rating -->
@@ -252,7 +268,9 @@
                                                 ⭐ {{ number_format($item->rating_received, 1) }} / 5.0
                                             </span>
                                         @else
-                                            <span class="ig-chip ig-chip-lime text-[10px] font-bold">Verified Task</span>
+                                            <span class="ig-chip ig-chip-lime text-[10px] font-bold">
+                                                {{ $isPlacement ? 'Placement Complete' : 'Verified Task' }}
+                                            </span>
                                         @endif
                                     </div>
 
@@ -266,12 +284,12 @@
                                             <span class="font-bold text-[var(--ig-ink)]">{{ $item->role ?? 'Developer' }}</span>
                                         </div>
                                         <div class="flex justify-between sm:justify-start items-center">
-                                            <span class="text-[var(--ig-muted)] font-medium sm:w-24">Project:</span>
+                                            <span class="text-[var(--ig-muted)] font-medium sm:w-24">{{ $isPlacement ? 'Offer Title:' : 'Project:' }}</span>
                                             <span class="font-bold text-[var(--ig-ink)]">{{ $item->project_title }}</span>
                                         </div>
                                         <div class="flex justify-between sm:justify-start items-center">
-                                            <span class="text-[var(--ig-muted)] font-medium sm:w-24">Date:</span>
-                                            <span class="font-bold text-[var(--ig-ink)]">{{ $item->created_at->format('M Y') }}</span>
+                                            <span class="text-[var(--ig-muted)] font-medium sm:w-24">Completed:</span>
+                                            <span class="font-bold text-[var(--ig-ink)]">{{ $item->completed_at ? $item->completed_at->format('F d, Y') : $item->created_at->format('F d, Y') }}</span>
                                         </div>
                                     </div>
 
@@ -284,6 +302,11 @@
                                             @endforeach
                                         </div>
 
+                                        @if($item->certificate_number)
+                                            <a href="{{ route('certificates.verify', $item->certificate_number) }}" target="_blank" class="text-xs font-bold text-[var(--ig-accent)] hover:underline inline-flex items-center gap-1">
+                                                🎖️ View Credentials
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Certificate extends Model
 {
-    protected $fillable = ['student_profile_id', 'task_id', 'certificate_number', 'qr_code', 'issued_at'];
+    protected $fillable = ['student_profile_id', 'task_id', 'hiring_offer_id', 'certificate_number', 'qr_code', 'issued_at'];
 
     protected $casts = ['issued_at' => 'datetime'];
 
@@ -19,5 +19,10 @@ class Certificate extends Model
     public function task(): BelongsTo
     {
         return $this->belongsTo(Task::class);
+    }
+
+    public function hiringOffer(): BelongsTo
+    {
+        return $this->belongsTo(HiringOffer::class, 'hiring_offer_id');
     }
 }

@@ -51,9 +51,15 @@ class TaskController extends Controller
             foreach ($task->applications as $application) {
                 if ($application->student) {
                     $ranking = $rankingService->calculateMatchScore($application->student, $task);
-                    $application->match_score = $ranking['match_score'];
-                    $application->portfolio_rating_label = $ranking['portfolio_rating_label'];
-                    $application->ranking_details = $ranking;
+                    if ($ranking) {
+                        $application->match_score = $ranking['match_score'];
+                        $application->portfolio_rating_label = $ranking['portfolio_rating_label'];
+                        $application->ranking_details = $ranking;
+                    } else {
+                        $application->match_score = 0;
+                        $application->portfolio_rating_label = 'No Portfolio';
+                        $application->ranking_details = null;
+                    }
                 } else {
                     $application->match_score = 0;
                     $application->portfolio_rating_label = 'Basic';
@@ -128,25 +134,27 @@ class TaskController extends Controller
         $validated['escrow_amount'] = $escrowAmount;
         $validated['escrow_locked'] = $escrowAmount > 0;
 
-        $task = $this->repository->create($validated);
-        $task->skills()->attach($skillIds);
+        \Illuminate\Support\Facades\DB::transaction(function() use ($validated, $skillIds, $escrowAmount, $startup) {
+            $task = $this->repository->create($validated);
+            $task->skills()->attach($skillIds);
 
-        if ($escrowAmount > 0) {
-            \App\Models\Escrow::create([
-                'task_id' => $task->id,
-                'amount'  => $escrowAmount,
-                'status'  => 'locked'
-            ]);
-            $startup->decrement('wallet_balance', $escrowAmount);
-            \App\Models\Transaction::create([
-                'user_type'   => 'startup',
-                'user_id'     => $startup->id,
-                'type'        => 'escrow_lock',
-                'amount'      => $escrowAmount,
-                'description' => "Escrow locked for task: {$task->title}",
-                'reference_id'=> "task_{$task->id}"
-            ]);
-        }
+            if ($escrowAmount > 0) {
+                \App\Models\Escrow::create([
+                    'task_id' => $task->id,
+                    'amount'  => $escrowAmount,
+                    'status'  => 'locked'
+                ]);
+                $startup->decrement('wallet_balance', $escrowAmount);
+                \App\Models\Transaction::create([
+                    'user_type'   => 'startup',
+                    'user_id'     => $startup->id,
+                    'type'        => 'escrow_lock',
+                    'amount'      => $escrowAmount,
+                    'description' => "Escrow locked for task: {$task->title}",
+                    'reference_id'=> "task_{$task->id}"
+                ]);
+            }
+        });
 
         return redirect()->route('startup.dashboard')->with('task_created', 'Task created successfully' . ($escrowAmount > 0 ? ' and ₹' . $escrowAmount . ' locked in escrow' : ''));
     }
@@ -199,8 +207,66 @@ class TaskController extends Controller
         $skillNames = Skill::whereIn('id', $skillIds)->pluck('name')->toArray();
         $validated['required_skills'] = $skillNames;
 
-        $this->repository->update($id, $validated);
-        $task->skills()->sync($skillIds);
+        $startup = auth()->user()->startupProfile;
+        $oldStipend = floatval($task->stipend);
+        $newStipend = floatval($validated['stipend'] ?? 0);
+        $diff = $newStipend - $oldStipend;
+
+        if ($diff > 0) {
+            if ($startup->wallet_balance < $diff) {
+                return back()->with('error', 'Insufficient wallet balance to cover the increased stipend. Additional required: ₹' . $diff);
+            }
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function() use ($task, $id, $validated, $skillIds, $diff, $newStipend, $oldStipend, $startup) {
+            $validated['escrow_amount'] = $newStipend;
+            $validated['escrow_locked'] = $newStipend > 0;
+
+            $this->repository->update($id, $validated);
+            $task->skills()->sync($skillIds);
+
+            if ($diff > 0) {
+                $startup->decrement('wallet_balance', $diff);
+
+                $escrow = \App\Models\Escrow::firstOrNew(['task_id' => $task->id]);
+                $escrow->amount = $newStipend;
+                $escrow->status = 'locked';
+                $escrow->save();
+
+                \App\Models\Transaction::create([
+                    'user_type'   => 'startup',
+                    'user_id'     => $startup->id,
+                    'type'        => 'escrow_lock',
+                    'amount'      => $diff,
+                    'description' => "Escrow increased for task: {$validated['title']} (Stipend updated from ₹{$oldStipend} to ₹{$newStipend})",
+                    'reference_id'=> "task_{$task->id}"
+                ]);
+            } elseif ($diff < 0) {
+                $refundAmount = abs($diff);
+                $startup->increment('wallet_balance', $refundAmount);
+
+                $escrow = \App\Models\Escrow::where('task_id', $task->id)->first();
+                if ($escrow) {
+                    if ($newStipend > 0) {
+                        $escrow->update([
+                            'amount' => $newStipend,
+                            'status' => 'locked'
+                        ]);
+                    } else {
+                        $escrow->delete();
+                    }
+                }
+
+                \App\Models\Transaction::create([
+                    'user_type'   => 'startup',
+                    'user_id'     => $startup->id,
+                    'type'        => 'credit',
+                    'amount'      => $refundAmount,
+                    'description' => "Escrow refunded for task: {$validated['title']} (Stipend reduced from ₹{$oldStipend} to ₹{$newStipend})",
+                    'reference_id'=> "task_{$task->id}"
+                ]);
+            }
+        });
 
         return redirect()->route('startup.dashboard')->with('success', 'Task updated successfully');
     }
@@ -222,7 +288,26 @@ class TaskController extends Controller
             return redirect()->route('startup.dashboard')->with('error', 'Cannot delete task with existing applications');
         }
 
-        $this->repository->delete($id);
+        \Illuminate\Support\Facades\DB::transaction(function() use ($task) {
+            $escrow = $task->escrow;
+            if ($escrow && $escrow->status === 'locked') {
+                $startup = $task->startup;
+                $startup->increment('wallet_balance', $escrow->amount);
+
+                \App\Models\Transaction::create([
+                    'user_type'   => 'startup',
+                    'user_id'     => $startup->id,
+                    'type'        => 'credit',
+                    'amount'      => $escrow->amount,
+                    'description' => "Escrow refunded on task deletion: {$task->title}",
+                    'reference_id'=> "task_{$task->id}"
+                ]);
+
+                $escrow->update(['status' => 'refunded']);
+            }
+
+            $this->repository->delete($task->id);
+        });
 
         return redirect()->route('startup.dashboard')->with('success', 'Task deleted successfully');
     }

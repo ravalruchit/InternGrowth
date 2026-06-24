@@ -17,91 +17,281 @@ class CandidateRankingService
      * @param Task $task
      * @return array
      */
-    public function calculateMatchScore(StudentProfile $student, Task $task): array
+    /**
+     * Compute ranking details for a student applying to a specific task.
+     * Note: This engine respects Hidden Bias Protection and ignores college, location, etc.
+     *
+     * @param StudentProfile $student
+     * @param Task $task
+     * @return array
+     */
+    /**
+     * Compute Skill Match Score (55% weight component)
+     */
+    public function calculateSkillMatchScore(StudentProfile $student, Task $task): array
+    {
+        $taskSkills = $task->skills;
+        $taskSkillNames = [];
+        if ($taskSkills && $taskSkills->isNotEmpty()) {
+            $taskSkillNames = $taskSkills->pluck('name')->toArray();
+        } elseif (!empty($task->required_skills)) {
+            $taskSkillNames = is_array($task->required_skills) 
+                ? $task->required_skills 
+                : json_decode($task->required_skills, true);
+        }
+
+        $verifiedSkillNames = [];
+        if ($student->skillVerifications) {
+            $verifiedSkillNames = $student->skillVerifications->map(function($v) {
+                return $v->skill ? strtolower(trim($v->skill->name)) : null;
+            })->filter()->unique()->toArray();
+        }
+
+        $portfolioSkillNames = [];
+        if ($student->portfolio && $student->portfolio->items) {
+            foreach ($student->portfolio->items as $item) {
+                if ($item->hasEvidence() || !empty($item->verification_badge)) {
+                    $skills = is_array($item->skills_demonstrated) 
+                        ? $item->skills_demonstrated 
+                        : json_decode($item->skills_demonstrated ?? '[]', true);
+                    if (is_array($skills)) {
+                        foreach ($skills as $skill) {
+                            $portfolioSkillNames[] = strtolower(trim($skill));
+                        }
+                    }
+                }
+            }
+        }
+        $proofOfWorkSkills = array_unique(array_merge($verifiedSkillNames, $portfolioSkillNames));
+
+        $matchedSkillsCount = 0;
+        if (!empty($taskSkillNames)) {
+            foreach ($taskSkillNames as $reqSkill) {
+                $reqSkillLower = strtolower(trim($reqSkill));
+                if (in_array($reqSkillLower, $proofOfWorkSkills)) {
+                    $matchedSkillsCount++;
+                }
+            }
+            $percentage = ($matchedSkillsCount / count($taskSkillNames)) * 100;
+        } else {
+            // Task has no defined skills — we can't verify alignment,
+            // so give a neutral baseline instead of a free 100%.
+            $percentage = 30;
+        }
+
+        $hasProofOfWork = !empty($proofOfWorkSkills);
+
+        return [
+            'percentage' => $percentage,
+            'matched_count' => $matchedSkillsCount,
+            'required_count' => count($taskSkillNames),
+            'has_proof_of_work' => $hasProofOfWork,
+        ];
+    }
+
+    /**
+     * Compute Domain Match Score (15% weight component)
+     */
+    public function calculateDomainMatchScore(StudentProfile $student, Task $task): float
+    {
+        $domainScore = 30;
+        if (!empty($task->domain) && !empty($student->primary_domain)) {
+            $taskDom = trim($task->domain);
+            $studDom = trim($student->primary_domain);
+            if (strtolower($taskDom) === strtolower($studDom)) {
+                $domainScore = 100;
+            } else {
+                $related = [
+                    'software development' => ['data & ai', 'ui/ux design'],
+                    'data & ai' => ['software development'],
+                    'ui/ux design' => ['software development', 'content & business'],
+                    'digital marketing' => ['content & business'],
+                    'content & business' => ['digital marketing', 'ui/ux design'],
+                ];
+                $taskDomLower = strtolower($taskDom);
+                $studDomLower = strtolower($studDom);
+                if (isset($related[$taskDomLower]) && in_array($studDomLower, $related[$taskDomLower])) {
+                    $domainScore = 70;
+                } else {
+                    $domainScore = 30;
+                }
+            }
+        }
+        return $domainScore;
+    }
+
+    /**
+     * Compute Verified Work Score (10% weight component)
+     */
+    public function calculateVerifiedWorkScore(StudentProfile $student): array
+    {
+        $completedTasksCount = $student->applications->filter(fn($app) => $app->submission && $app->submission->status === 'accepted')->count();
+        $internshipCount = $student->hiringOffers->where('offer_type', 'internship')->where('status', 'accepted')->count();
+        $jobCount = $student->hiringOffers->where('offer_type', 'job')->where('status', 'accepted')->count();
+        $verifiedPortfolioCount = $student->portfolio ? $student->portfolio->items->whereNotNull('verification_badge')->count() : 0;
+        
+        $totalCompleted = $completedTasksCount + $internshipCount + $jobCount + $verifiedPortfolioCount;
+        if ($totalCompleted === 0) {
+            $verifiedWorkScore = 0;
+        } elseif ($totalCompleted >= 1 && $totalCompleted <= 3) {
+            $verifiedWorkScore = 40;
+        } elseif ($totalCompleted >= 4 && $totalCompleted <= 7) {
+            $verifiedWorkScore = 70;
+        } elseif ($totalCompleted >= 8 && $totalCompleted <= 15) {
+            $verifiedWorkScore = 90;
+        } else {
+            $verifiedWorkScore = 100;
+        }
+        return [
+            'score' => $verifiedWorkScore,
+            'completed_tasks_count' => $completedTasksCount,
+            'total_completed_items' => $totalCompleted
+        ];
+    }
+
+    /**
+     * Compute Role Match Score (10% weight component)
+     */
+    public function calculateRoleMatchScore(StudentProfile $student, Task $task): float
+    {
+        $roleScore = 0;
+        if (!empty($task->role) && !empty($student->preferred_role)) {
+            if (strtolower(trim($task->role)) === strtolower(trim($student->preferred_role))) {
+                $roleScore = 100;
+            }
+        }
+        return $roleScore;
+    }
+
+    /**
+     * Compute Portfolio Quality Score (5% weight component)
+     */
+    public function calculatePortfolioQualityScore(StudentProfile $student): float
+    {
+        return $this->calculatePortfolioStrength($student);
+    }
+
+    /**
+     * Skill Gate Eligibility Check (Exclusions)
+     */
+    public function passesSkillGate(int $matchedSkillsCount, float $skillScore, int $requiredSkillsCount): bool
+    {
+        // Rule 1: Exclude if skillMatch < 20%
+        if ($skillScore < 20) {
+            return false;
+        }
+        // Rule 2: Exclude if matchedSkills < 2 (when task requires at least 2 skills)
+        if ($requiredSkillsCount >= 2 && $matchedSkillsCount < 2) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Compute ranking details for a student applying to a specific task.
+     * Note: This engine respects Hidden Bias Protection and ignores college, location, etc.
+     *
+     * @param StudentProfile $student
+     * @param Task $task
+     * @return array|null
+     */
+    public function calculateMatchScore(StudentProfile $student, Task $task, bool $ignoreSkillGate = false): ?array
     {
         // 1. Load relationships if not already loaded (optimized to avoid query duplication)
-        $student->loadMissing(['skills', 'reputationScore', 'portfolio.items', 'skillVerifications.skill']);
+        $student->loadMissing(['skills', 'reputationScore', 'portfolio.items', 'skillVerifications.skill', 'hiringOffers', 'applications.submission']);
 
-        // 2. Compute Verified Skills Match (25%)
-        $verifiedSkillsMatch = $this->calculateVerifiedSkillsMatch($student, $task, $taskSkills);
+        // 2. Compute Skills Match Score (55%)
+        $skillDetails = $this->calculateSkillMatchScore($student, $task);
+        $skillScore = $skillDetails['percentage'];
+        $matchedCount = $skillDetails['matched_count'];
+        $requiredCount = $skillDetails['required_count'];
+        $hasProofOfWork = $skillDetails['has_proof_of_work'] ?? false;
 
-        // 2.5 Compute Domain Alignment Score (15%)
-        $domainAlignmentScore = 0.00;
-        if (!empty($task->domain) && !empty($student->primary_domain)) {
-            if ($task->domain === $student->primary_domain) {
-                $domainAlignmentScore += 60.00;
-            }
-        }
-        if (!empty($task->role) && !empty($student->preferred_role)) {
-            if ($task->role === $student->preferred_role) {
-                $domainAlignmentScore += 40.00;
-            }
+        // Enforce Skill Gate Exclusions (Rules 1 & 2)
+        $passesGate = $this->passesSkillGate($matchedCount, $skillScore, $requiredCount);
+        if (!$ignoreSkillGate && !$passesGate) {
+            return null; // Signals complete exclusion
         }
 
-        // 3. Compute IPRS Score (15%)
-        $iprsScore = floatval($student->reputationScore?->overall_score ?? 50.00);
+        // 3. Compute Domain Match Score (15%)
+        $domainScore = $this->calculateDomainMatchScore($student, $task);
 
-        // 4. Compute Task Completion (15%)
-        $taskCompletion = floatval($student->reputationScore?->completion_rate ?? 100.00);
+        // 4. Compute Verified Work Score (10%)
+        $verifiedWorkDetails = $this->calculateVerifiedWorkScore($student);
+        $verifiedWorkScore = $verifiedWorkDetails['score'];
 
-        // 5. Compute Portfolio Strength (15%)
-        $portfolioStrength = $this->calculatePortfolioStrength($student);
+        // 5. Compute Role Match Score (10%)
+        $roleScore = $this->calculateRoleMatchScore($student, $task);
 
-        // 6. Compute Interview Performance (5%)
-        $interviewPerformance = floatval($student->reputationScore?->interview_performance_score ?? 100.00);
+        // 6. Compute IPRS Score (5%)
+        $iprsValue = $student->iprs_score ?? $student->reputationScore?->overall_score ?? 50.00;
+        $iprsScore = min(100.00, floatval($iprsValue));
 
-        // 7. Compute Communication (5%)
-        $commRating = floatval($student->reputationScore?->communication_rating ?? 4.80);
-        if ($commRating <= 0.0) {
-            $commRating = 4.80;
-        }
-        $communicationScore = $commRating * 20.0;
+        // 7. Compute Portfolio Quality Score (5%)
+        $portfolioScore = $this->calculatePortfolioQualityScore($student);
 
-        // 8. Compute Potential Score (5%)
-        $potentialScore = $this->calculatePotentialScore($student);
-
-        // 9. Calculate Overall Match Score (Total 100%)
-        $overallScore = ($verifiedSkillsMatch * 0.25) +
-                        ($domainAlignmentScore * 0.15) +
-                        ($iprsScore * 0.15) +
-                        ($taskCompletion * 0.15) +
-                        ($portfolioStrength * 0.15) +
-                        ($interviewPerformance * 0.05) +
-                        ($communicationScore * 0.05) +
-                        ($potentialScore * 0.05);
+        // 8. Calculate Overall Match Score (Total 100%)
+        // Skills Match = 55%
+        // Domain Match = 15%
+        // Verified Work = 10%
+        // Role Match = 10%
+        // IPRS Score = 5%
+        // Portfolio Quality = 5%
+        $overallScore = ($skillScore * 0.55) +
+                        ($domainScore * 0.15) +
+                        ($verifiedWorkScore * 0.10) +
+                        ($roleScore * 0.10) +
+                        ($iprsScore * 0.05) +
+                        ($portfolioScore * 0.05);
 
         $overallScore = round(max(0, min(100, $overallScore)));
 
-        // 10. Generate "Why Recommended" Explanations
-        $explanations = $this->generateWhyRecommended($student, $task, $taskSkills, $verifiedSkillsMatch, $taskCompletion, $portfolioStrength, $interviewPerformance);
-        
-        // Add domain explanation if it aligns
-        if ($domainAlignmentScore > 0) {
-            if ($domainAlignmentScore === 100) {
-                array_unshift($explanations, "Perfect fit: Both Domain and Role align with this candidate's career track");
-            } elseif ($domainAlignmentScore === 60) {
-                array_unshift($explanations, "Domain Match: Aligns with candidate's primary career domain");
-            }
+        // Match classification labels (including Rule 3 override)
+        $matchLabel = $this->getMatchLabel(intval($overallScore));
+        if ($skillScore >= 20 && $skillScore < 30) {
+            $matchLabel = 'Low Match'; // Rule 3 Override
+        }
+        if (!$passesGate) {
+            $matchLabel = 'Not Qualified';
         }
 
-        // 11. Generate Candidate Insights (Strengths, Potential Risks, Suggested Interview Questions)
-        $insights = $this->generateInsights($student, $taskSkills, $verifiedSkillsMatch, $iprsScore, $taskCompletion, $portfolioStrength, $interviewPerformance, $communicationScore);
+        // 9. Generate explanations & insights using helper parameters
+        //    Use NEUTRAL defaults for students with no reputation history.
+        //    Previously defaulted to 100% which inflated scores for new students.
+        $taskSkills = $task->skills;
+        $taskCompletion = floatval($student->reputationScore?->completion_rate ?? 70.00);
+        $interviewPerformance = floatval($student->reputationScore?->interview_performance_score ?? 60.00);
+        $commRating = floatval($student->reputationScore?->communication_rating ?? 3.50);
+        $communicationScore = ($commRating <= 0.0 ? 3.50 : $commRating) * 20.0;
 
-        // 12. Find Best Evidence Project
+        $explanations = $this->generateWhyRecommended($student, $task, $taskSkills, $skillScore, $taskCompletion, $portfolioScore, $interviewPerformance);
+        
+        // Add domain explanation if it aligns
+        if ($domainScore === 100) {
+            array_unshift($explanations, "Domain Match: Aligns perfectly with candidate's primary career track");
+        }
+
+        $insights = $this->generateInsights($student, $taskSkills, $skillScore, $iprsScore, $taskCompletion, $portfolioScore, $interviewPerformance, $communicationScore);
+
+        // 10. Find Best Evidence Project
         $bestEvidence = $this->findBestEvidence($student);
 
         return [
             'match_score' => intval($overallScore),
-            'portfolio_rating_label' => $this->getPortfolioLabel($portfolioStrength),
+            'match_label' => $matchLabel,
+            'passes_gate' => $passesGate,
+            'has_proof_of_work' => $hasProofOfWork,
+            'ascii_bar' => str_repeat('█', round((intval($overallScore) / 100) * 10)) . str_repeat('░', 10 - round((intval($overallScore) / 100) * 10)),
+            'completed_tasks_count' => $verifiedWorkDetails['completed_tasks_count'],
+            'top_strength' => $this->determineTopStrength($student),
+            'portfolio_rating_label' => $this->getPortfolioLabel($portfolioScore),
             'breakdown' => [
-                'skills_match' => round($verifiedSkillsMatch),
-                'domain_alignment' => round($domainAlignmentScore),
+                'skills_match' => round($skillScore),
+                'domain_alignment' => round($domainScore),
+                'verified_work' => round($verifiedWorkScore),
+                'role_alignment' => round($roleScore),
                 'iprs' => round($iprsScore),
-                'reliability' => round($taskCompletion),
-                'portfolio' => round($portfolioStrength),
-                'interview' => round($interviewPerformance),
-                'communication' => round($communicationScore),
-                'potential' => round($potentialScore),
+                'portfolio' => round($portfolioScore),
             ],
             'explanations' => $explanations,
             'insights' => $insights,
@@ -152,7 +342,7 @@ class CandidateRankingService
     /**
      * Compute Portfolio Strength score (0-100)
      */
-    private function calculatePortfolioStrength(StudentProfile $student): float
+    public function calculatePortfolioStrength(StudentProfile $student): float
     {
         $portfolio = $student->portfolio;
         if (!$portfolio || $portfolio->items->isEmpty()) {
@@ -160,35 +350,22 @@ class CandidateRankingService
         }
 
         $items = $portfolio->items;
-        $itemScores = [];
 
-        foreach ($items as $item) {
-            $itemScore = 50.00; // Base points for having a project
+        $hasVerificationBadge = $items->contains(fn($item) => !empty($item->verification_badge));
+        $hasTaskId = $items->contains(fn($item) => !empty($item->task_id));
 
-            // Rating points (max 50)
-            if ($item->rating_received !== null) {
-                $itemScore += floatval($item->rating_received) * 10.0;
-            } else {
-                $itemScore += 40.00; // Default 4 stars if not rated
-            }
-
-            // Evidence bonus (+10)
-            if ($item->hasEvidence()) {
-                $itemScore += 10.00;
-            }
-
-            // Badge bonus (+10)
-            if (!empty($item->verification_badge)) {
-                $itemScore += 10.00;
-            }
-
-            $itemScores[] = min(100.00, $itemScore);
+        if ($hasVerificationBadge || $hasTaskId) {
+            return 100.00;
         }
 
-        $avgItemScore = count($itemScores) > 0 ? (array_sum($itemScores) / count($itemScores)) : 0.00;
-        $quantityFactor = min(1.0, count($items) / 3.0);
+        $hasRating = $items->contains(fn($item) => !empty($item->rating_received));
+        $hasEvidence = $items->contains(fn($item) => $item->hasEvidence());
 
-        return $avgItemScore * (0.7 + 0.3 * $quantityFactor);
+        if ($hasRating || $hasEvidence) {
+            return 70.00;
+        }
+
+        return 40.00;
     }
 
     /**
@@ -416,14 +593,61 @@ class CandidateRankingService
     /**
      * Qualitative portfolio strength mapping
      */
-    private function getPortfolioLabel(float $score): string
+    public function getPortfolioLabel(float $score): string
     {
-        if ($score >= 75.0) {
+        if ($score >= 100.0) {
+            return 'Verified';
+        } elseif ($score >= 70.0) {
             return 'Strong';
-        } elseif ($score >= 45.0) {
-            return 'Moderate';
-        } else {
+        } elseif ($score >= 40.0) {
             return 'Basic';
+        } else {
+            return 'No Portfolio';
         }
+    }
+
+    /**
+     * Dynamic match categories mapping
+     */
+    public function getMatchLabel(int $score): string
+    {
+        if ($score >= 90) {
+            return 'Perfect Match';
+        } elseif ($score >= 80) {
+            return 'Excellent Match';
+        } elseif ($score >= 70) {
+            return 'Strong Match';
+        } elseif ($score >= 60) {
+            return 'Good Match';
+        } elseif ($score >= 40) {
+            return 'Partial Match';
+        } else {
+            return 'Low Match';
+        }
+    }
+
+    /**
+     * Determine Top Strength skill
+     */
+    private function determineTopStrength(StudentProfile $student): string
+    {
+        $student->loadMissing(['skills', 'skillVerifications.skill']);
+        $verifications = $student->skillVerifications;
+
+        if ($verifications->isNotEmpty()) {
+            $bestVerification = $verifications->sortByDesc(function($v) {
+                return $v->rating ?? ($v->score / 20.0);
+            })->first();
+
+            if ($bestVerification && $bestVerification->skill) {
+                return $bestVerification->skill->name;
+            }
+        }
+
+        if ($student->skills->isNotEmpty()) {
+            return $student->skills->first()->name;
+        }
+
+        return 'General Aptitude';
     }
 }

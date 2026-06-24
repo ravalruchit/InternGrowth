@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>InternGrowth — Verified Work for Students</title>
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}?v=1.2">
 </head>
@@ -14,12 +14,8 @@
     <nav class="ig-nav">
         <div class="ig-container">
             <div class="flex items-center justify-between h-[68px]">
-                <a href="/" class="flex items-center gap-3 group">
-                    <div class="w-9 h-9 rounded-xl bg-[var(--ig-ink)] flex items-center justify-center text-[var(--ig-bg)] ig-display text-lg">IG</div>
-                    <div class="leading-tight">
-                        <div class="ig-display text-[19px]">InternGrowth</div>
-                        <div class="ig-eyebrow text-[9.5px] -mt-0.5">Verified Work · Real Reputation</div>
-                    </div>
+                <a href="/" class="flex items-center gap-3">
+                    <x-application-logo class="h-9 w-auto text-[var(--ig-ink)]" />
                 </a>
                 <div class="hidden md:flex items-center gap-7">
                     <a href="#how" class="ig-nav-link">How it works</a>
@@ -431,9 +427,8 @@
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
                 <div class="md:col-span-2">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-[var(--ig-ink)] ig-display text-lg">IG</div>
-                        <span class="ig-display text-xl text-white">InternGrowth</span>
+                    <div class="mb-4">
+                        <x-application-logo class="h-9 w-auto text-white" />
                     </div>
                     <p class="text-sm max-w-md leading-relaxed">A marketplace where students build a verifiable portfolio of real startup work — and earn reputation that gets them hired.</p>
                 </div>

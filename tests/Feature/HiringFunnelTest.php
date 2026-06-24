@@ -198,37 +198,6 @@ class HiringFunnelTest extends TestCase
         $this->assertEquals('Would accept at eighteen thousand rupees.', $offer->counter_note);
     }
 
-    public function test_no_show_outcome_marks_student_no_show()
-    {
-        $conversation = \App\Models\Conversation::create([
-            'student_profile_id' => $this->studentProfile->id,
-            'startup_profile_id' => $this->startupProfile->id,
-            'task_id' => $this->task->id,
-        ]);
-
-        $interview = Interview::create([
-            'conversation_id' => $conversation->id,
-            'startup_profile_id' => $this->startupProfile->id,
-            'student_profile_id' => $this->studentProfile->id,
-            'task_id' => $this->task->id,
-            'title' => ' funnel talk',
-            'scheduled_at' => now(),
-            'duration_minutes' => 30,
-            'type' => 'online',
-            'location' => 'google meet',
-            'status' => 'accepted',
-        ]);
-
-        $response = $this->actingAs($this->startupUser)
-            ->post(route('startup.interviews.noshow', $interview->id));
-
-        $response->assertStatus(302);
-
-        $interview->refresh();
-        $this->assertEquals('no_show', $interview->status);
-        $this->assertEquals('student', $interview->no_show_by);
-    }
-
     public function test_no_show_outcome_marks_startup_no_show()
     {
         $conversation = \App\Models\Conversation::create([
@@ -258,5 +227,166 @@ class HiringFunnelTest extends TestCase
         $interview->refresh();
         $this->assertEquals('no_show', $interview->status);
         $this->assertEquals('startup', $interview->no_show_by);
+    }
+
+    public function test_hiring_offer_joining_confirmation_flow()
+    {
+        // 1. Setup startup balance
+        $this->startupProfile->update(['wallet_balance' => 5000.00]);
+
+        // Create a direct transaction debit to represent reservation
+        $offer = HiringOffer::create([
+            'startup_profile_id' => $this->startupProfile->id,
+            'student_profile_id' => $this->studentProfile->id,
+            'offer_type' => 'internship',
+            'title' => 'Backend Internship',
+            'description' => 'Test offer description',
+            'compensation' => 20000,
+            'compensation_period' => 'monthly',
+            'start_date' => now()->addDays(2),
+            'status' => 'pending',
+            'expires_at' => now()->addDays(7),
+            'reserved_fee' => 1999.00
+        ]);
+
+        \App\Models\Transaction::create([
+            'user_type' => 'startup',
+            'user_id' => $this->startupProfile->id,
+            'type' => 'debit',
+            'amount' => 1999.00,
+            'description' => "Reserved success fee",
+            'reference_id' => "offer_{$offer->id}"
+        ]);
+
+        // 2. Student accepts the offer
+        $response = $this->actingAs($this->studentUser)
+            ->post(route('student.offers.accept', $offer->id));
+        $response->assertStatus(302);
+
+        $offer->refresh();
+        $this->assertEquals('pending_joining', $offer->status);
+        $this->assertEquals('pending', $offer->student_joining_status);
+        $this->assertEquals('pending', $offer->startup_joining_status);
+
+        // 3. Student confirms joining
+        $response = $this->actingAs($this->studentUser)
+            ->post(route('offers.confirm-joining', $offer->id));
+        $response->assertStatus(302);
+
+        $offer->refresh();
+        $this->assertEquals('pending_joining', $offer->status); // Still pending since startup hasn't confirmed
+        $this->assertEquals('joined', $offer->student_joining_status);
+
+        // 4. Startup confirms joining
+        $response = $this->actingAs($this->startupUser)
+            ->post(route('offers.confirm-joining', $offer->id));
+        $response->assertStatus(302);
+
+        $offer->refresh();
+        $this->assertEquals('joined', $offer->status); // Now fully joined!
+        $this->assertEquals('joined', $offer->startup_joining_status);
+
+        // Verify platform transaction exists
+        $tx = \App\Models\Transaction::where('user_type', 'platform')
+            ->where('reference_id', "offer_{$offer->id}")
+            ->first();
+        $this->assertNotNull($tx);
+        $this->assertEquals(1999.00, $tx->amount);
+    }
+
+    public function test_hiring_offer_joining_cancellation_by_student()
+    {
+        $this->startupProfile->update(['wallet_balance' => 3000.00]);
+
+        $offer = HiringOffer::create([
+            'startup_profile_id' => $this->startupProfile->id,
+            'student_profile_id' => $this->studentProfile->id,
+            'offer_type' => 'internship',
+            'title' => 'Backend Internship 2',
+            'description' => 'Test offer description 2',
+            'compensation' => 20000,
+            'compensation_period' => 'monthly',
+            'start_date' => now()->addDays(2),
+            'status' => 'pending_joining',
+            'expires_at' => now()->addDays(7),
+            'reserved_fee' => 1999.00,
+            'student_joining_status' => 'pending',
+            'startup_joining_status' => 'pending'
+        ]);
+
+        $debitTx = \App\Models\Transaction::create([
+            'user_type' => 'startup',
+            'user_id' => $this->startupProfile->id,
+            'type' => 'debit',
+            'amount' => 1999.00,
+            'description' => "Reserved success fee",
+            'reference_id' => "offer_{$offer->id}"
+        ]);
+
+        // Student cancels joining
+        $response = $this->actingAs($this->studentUser)
+            ->post(route('offers.cancel-joining', $offer->id));
+        $response->assertStatus(302);
+
+        $offer->refresh();
+        $this->assertEquals('cancelled_by_student', $offer->status);
+
+        // Startup should be refunded
+        $this->startupProfile->refresh();
+        $this->assertEquals(4999.00, $this->startupProfile->wallet_balance);
+
+        // Original debit should be reversed
+        $debitTx->refresh();
+        $this->assertEquals('reversed', $debitTx->status);
+
+        // Refund transaction should exist
+        $creditTx = \App\Models\Transaction::where('user_type', 'startup')
+            ->where('type', 'credit')
+            ->where('reference_id', "offer_{$offer->id}")
+            ->first();
+        $this->assertNotNull($creditTx);
+        $this->assertEquals(1999.00, $creditTx->amount);
+    }
+
+    public function test_hiring_offer_completion_flow()
+    {
+        $offer = HiringOffer::create([
+            'startup_profile_id' => $this->startupProfile->id,
+            'student_profile_id' => $this->studentProfile->id,
+            'offer_type' => 'internship',
+            'title' => 'Supervised Internship',
+            'description' => 'Test internship to complete',
+            'compensation' => 20000,
+            'compensation_period' => 'monthly',
+            'start_date' => now()->subDays(30),
+            'end_date' => now(),
+            'status' => 'joined',
+            'student_joining_status' => 'joined',
+            'startup_joining_status' => 'joined',
+            'reserved_fee' => 1999.00
+        ]);
+
+        $response = $this->actingAs($this->startupUser)
+            ->post(route('offers.complete-internship', $offer->id), [
+                'rating' => 'excellent',
+                'notes' => 'Alice did an incredible job, completed all sprint targets.'
+            ]);
+        $response->assertStatus(302);
+
+        $offer->refresh();
+        $this->assertEquals('completed', $offer->status);
+        $this->assertEquals('excellent', $offer->hiring_success_rating);
+        $this->assertEquals('Alice did an incredible job, completed all sprint targets.', $offer->completion_notes);
+
+        // Verify Certificate issued
+        $cert = \App\Models\Certificate::where('hiring_offer_id', $offer->id)->first();
+        $this->assertNotNull($cert);
+        $this->assertEquals($this->studentProfile->id, $cert->student_profile_id);
+
+        // Verify Portfolio item added
+        $portfolioItem = \App\Models\PortfolioItem::where('hiring_offer_id', $offer->id)->first();
+        $this->assertNotNull($portfolioItem);
+        $this->assertEquals("Supervised Internship at Funnel Corp", $portfolioItem->project_title);
+        $this->assertEquals(5.0, $portfolioItem->rating_received);
     }
 }

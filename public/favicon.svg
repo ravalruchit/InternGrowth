@@ -1,0 +1,9 @@
+<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Bar 1 (Short - Old Slate Grey) -->
+    <rect x="3" y="19" width="6" height="10" rx="3" fill="#5C6470" />
+    <!-- Bar 2 (Medium - White) -->
+    <rect x="13" y="11" width="6" height="18" rx="3" fill="#FFFFFF" />
+    <!-- Bar 3 (Tall - Tangerine) -->
+    <rect x="23" y="3" width="6" height="26" rx="3" fill="#FF4F19" />
+</svg>
+

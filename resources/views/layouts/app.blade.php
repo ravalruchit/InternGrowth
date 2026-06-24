@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'InternGrowth') }}</title>
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
@@ -17,16 +17,8 @@
         <div class="ig-container">
             <div class="flex items-center justify-between h-[68px]">
                 <!-- Brand -->
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
-                    <div class="relative w-9 h-9 rounded-xl bg-[var(--ig-ink)] flex items-center justify-center text-[var(--ig-bg)] overflow-hidden">
-                        <span class="ig-display text-lg leading-none">IG</span>
-                        <span class="absolute inset-0 bg-[var(--ig-accent)] origin-bottom scale-y-0 group-hover:scale-y-100 transition-transform duration-500"></span>
-                        <span class="ig-display text-lg leading-none relative z-10">IG</span>
-                    </div>
-                    <div class="leading-tight">
-                        <div class="ig-display text-[19px] tracking-tight">InternGrowth</div>
-                        <div class="ig-eyebrow text-[9.5px] -mt-0.5">Verified Work · Real Reputation</div>
-                    </div>
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
+                    <x-application-logo class="h-9 w-auto text-[var(--ig-ink)]" />
                 </a>
 
                 <!-- Links -->
@@ -125,7 +117,7 @@
     <footer class="ig-footer relative overflow-hidden mt-24">
         <div class="ig-container py-10 flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-[var(--ig-ink)] ig-display text-sm font-semibold">IG</div>
+                <x-application-logo class="h-6 w-auto text-white" />
                 <span class="ig-mono text-[11px] opacity-60">© {{ date('Y') }} InternGrowth · Built for students who ship.</span>
             </div>
             <div class="flex gap-6 text-[12px]">

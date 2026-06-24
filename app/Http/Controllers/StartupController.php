@@ -69,7 +69,7 @@ class StartupController extends Controller
         }
 
         foreach ($allOffersForAnalytics as $offer) {
-            if ($offer->status === 'accepted' && $offer->domain && isset($hiringSuccessByDomain[$offer->domain])) {
+            if (in_array($offer->status, ['accepted', 'joined', 'completed']) && $offer->domain && isset($hiringSuccessByDomain[$offer->domain])) {
                 $hiringSuccessByDomain[$offer->domain] += 1;
             }
         }
@@ -91,6 +91,43 @@ class StartupController extends Controller
 
         $topPerformingDomains = array_keys($domainStats);
 
+        // 1. Average Candidate Match Score
+        $rankingService = app(\App\Services\CandidateRankingService::class);
+        $matchScores = [];
+        foreach ($tasks as $task) {
+            foreach ($task->applications as $application) {
+                if ($application->student) {
+                    $ranking = $rankingService->calculateMatchScore($application->student, $task);
+                    if ($ranking !== null) {
+                        $matchScores[] = $ranking['match_score'];
+                    }
+                }
+            }
+        }
+        $averageMatchScore = count($matchScores) > 0 ? round(array_sum($matchScores) / count($matchScores)) : 0;
+
+        // 2. Top Performing Domain
+        $topPerformingDomain = count($topPerformingDomains) > 0 ? $topPerformingDomains[0] : 'N/A';
+
+        // 3. Most Successful Hiring Category
+        $categoryHires = [];
+        $allTasksForAnalytics = \App\Models\Task::where('startup_profile_id', $profile->id)->with(['applications.submission'])->get();
+        $allOffersForAnalytics = \App\Models\HiringOffer::where('startup_profile_id', $profile->id)->get();
+
+        foreach ($allTasksForAnalytics as $task) {
+            $hiresCount = $task->applications->filter(fn($app) => $app->submission && $app->submission->status === 'accepted')->count();
+            if ($task->role) {
+                $categoryHires[$task->role] = ($categoryHires[$task->role] ?? 0) + $hiresCount;
+            }
+        }
+        foreach ($allOffersForAnalytics as $offer) {
+            if (in_array($offer->status, ['accepted', 'joined', 'completed']) && $offer->title) {
+                $categoryHires[$offer->title] = ($categoryHires[$offer->title] ?? 0) + 1;
+            }
+        }
+        arsort($categoryHires);
+        $mostSuccessfulHiringCategory = count($categoryHires) > 0 ? array_key_first($categoryHires) : 'N/A';
+
         return view('startup.dashboard', compact(
             'profile', 
             'tasks', 
@@ -98,7 +135,10 @@ class StartupController extends Controller
             'hiringOffers',
             'applicationsByDomain',
             'hiringSuccessByDomain',
-            'topPerformingDomains'
+            'topPerformingDomains',
+            'averageMatchScore',
+            'topPerformingDomain',
+            'mostSuccessfulHiringCategory'
         ));
     }
 
@@ -345,66 +385,90 @@ class StartupController extends Controller
         return redirect()->route('startup.dashboard')->with('success', 'Verification documents uploaded and scanned successfully. Awaiting admin approval.');
     }
 
-    private function transformStudentForDiscovery($student, $targetSkills, $profile)
+    private function transformStudentForDiscovery($student, $targetSkills, $profile, $positionMatchKey = 'laravel_intern')
     {
         // Check if student has been saved by this startup
         $student->is_saved = $student->savedByStartups->contains($profile->id);
 
-        // Compute AI Match Score
-        // 1. Skill Match (50%): fraction of target skills found in student's skills
+        $task = null;
+        if (!empty($positionMatchKey) && str_starts_with($positionMatchKey, 'task_')) {
+            $taskId = (int) str_replace('task_', '', $positionMatchKey);
+            $task = $profile->tasks()->find($taskId);
+        }
+
+        if (!$task) {
+            $task = new \App\Models\Task();
+            $task->domain = null;
+            $task->role = null;
+            
+            if ($positionMatchKey === 'laravel_intern') {
+                $task->domain = 'Software Development';
+                $task->role = 'Backend Developer';
+            } elseif ($positionMatchKey === 'react_intern') {
+                $task->domain = 'Software Development';
+                $task->role = 'Frontend Developer';
+            } elseif ($positionMatchKey === 'python_backend') {
+                $task->domain = 'Software Development';
+                $task->role = 'Backend Developer';
+            } elseif ($positionMatchKey === 'ui_ux') {
+                $task->domain = 'UI/UX Design';
+                $task->role = 'UI Designer';
+            } elseif ($positionMatchKey === 'content_writer') {
+                $task->domain = 'Content & Business';
+                $task->role = 'Content Writer';
+            }
+            
+            $skillsCollection = collect($targetSkills)->map(function($skillName) {
+                $skill = new \App\Models\Skill();
+                $skill->name = $skillName;
+                return $skill;
+            });
+            $task->setRelation('skills', $skillsCollection);
+            $task->required_skills = $targetSkills;
+        }
+
+        $rankingService = app(\App\Services\CandidateRankingService::class);
+        $ranking = $rankingService->calculateMatchScore($student, $task);
+
+        if ($ranking === null) {
+            return null;
+        }
+
+        // Calculate specific skill breakdown for card UI
         $studentSkillNames = $student->skills->pluck('name')->map(fn($n) => strtolower(trim($n)))->toArray();
         $targetSkillNamesLower = array_map(fn($n) => strtolower(trim($n)), $targetSkills);
         
-        $matchingSkillsCount = 0;
         $skillBreakdown = [];
-
         foreach ($targetSkillNamesLower as $targetSkill) {
             $origSkillName = collect($targetSkills)->first(fn($s) => strtolower(trim($s)) === $targetSkill) ?? $targetSkill;
             
             if (in_array($targetSkill, $studentSkillNames)) {
-                $matchingSkillsCount++;
-                // Check if this skill is verified
                 $isVerified = $student->skillVerifications->contains(function($v) use ($targetSkill) {
                     return strtolower(trim($v->skill->name ?? '')) === $targetSkill;
                 });
-                
-                // Score verified higher (90-95%) than unverified (78-85%)
-                $skillBreakdown[$origSkillName] = $isVerified ? rand(91, 96) : rand(78, 85);
+                $skillBreakdown[$origSkillName] = $isVerified ? 100 : 70;
             } else {
                 $skillBreakdown[$origSkillName] = 0;
             }
         }
 
-        $skillMatchScore = 0;
-        if (count($targetSkills) > 0) {
-            $skillMatchScore = ($matchingSkillsCount / count($targetSkills)) * 100;
-        } else {
-            $skillMatchScore = 100;
-        }
-
-        // 2. Reputation Match (35%): Based on overall reputation score
-        $reputationScoreValue = $student->reputationScore->overall_score ?? 50.00;
-
-        // 3. Communication Score: from reputation score or default
-        $commScore = ($student->reputationScore->communication_rating ?? 4.8) * 20;
-
-        $totalMatchScore = ($skillMatchScore * 0.50) + ($reputationScoreValue * 0.35) + ($commScore * 0.15);
-        $totalMatchScore = round(max(50, min(99, $totalMatchScore)));
-
         $student->ai_match = [
-            'percentage' => $totalMatchScore,
+            'percentage' => $ranking['match_score'],
+            'label' => $ranking['match_label'],
             'breakdown' => $skillBreakdown,
-            'communication' => round($commScore)
+            'ranking_details' => $ranking,
+            'communication' => round($student->reputationScore->overall_score ?? 50),
         ];
 
         // Load additional counts for cards
         $student->projects_count = $student->portfolio ? $student->portfolio->items->count() : 0;
         $student->internships_count = $student->hiringOffers
             ->where('offer_type', 'internship')
-            ->where('status', 'accepted')
+            ->whereIn('status', ['accepted', 'joined', 'completed'])
             ->count();
         $student->offers_count = $student->hiringOffers
             ->where('offer_type', 'job')
+            ->whereIn('status', ['accepted', 'joined', 'completed'])
             ->count();
 
         return $student;
@@ -508,7 +572,8 @@ class StartupController extends Controller
                 ->select('student_profiles.*')
                 ->take(4)
                 ->get()
-                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile));
+                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile, $positionMatchKey))
+                ->filter();
 
             // 2. Fastest Growing
             $fastestGrowing = (clone $baseDiscoverQuery)
@@ -517,7 +582,8 @@ class StartupController extends Controller
                 ->select('student_profiles.*')
                 ->take(4)
                 ->get()
-                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile));
+                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile, $positionMatchKey))
+                ->filter();
 
             // 3. Most Reliable
             $mostReliable = (clone $baseDiscoverQuery)
@@ -527,7 +593,8 @@ class StartupController extends Controller
                 ->select('student_profiles.*')
                 ->take(4)
                 ->get()
-                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile));
+                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile, $positionMatchKey))
+                ->filter();
 
             // 4. Recommended For You (based on startup task skills)
             $startupSkills = $profile->tasks()->with('skills')->get()->flatMap(fn($t) => $t->skills->pluck('id'))->unique()->toArray();
@@ -536,7 +603,8 @@ class StartupController extends Controller
                     ->whereHas('skills', fn($q) => $q->whereIn('skills.id', $startupSkills))
                     ->take(4)
                     ->get()
-                    ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile));
+                    ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile, $positionMatchKey))
+                    ->filter();
             } else {
                 $recommended = $topTalent;
             }
@@ -549,7 +617,8 @@ class StartupController extends Controller
                 ->select('student_profiles.*')
                 ->take(4)
                 ->get()
-                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile));
+                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile, $positionMatchKey))
+                ->filter();
 
             // 6. Top UI/UX Designers
             $topDesigners = (clone $baseDiscoverQuery)
@@ -559,7 +628,8 @@ class StartupController extends Controller
                 ->select('student_profiles.*')
                 ->take(4)
                 ->get()
-                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile));
+                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile, $positionMatchKey))
+                ->filter();
 
             // 7. Top Digital Marketers
             $topMarketers = (clone $baseDiscoverQuery)
@@ -569,7 +639,8 @@ class StartupController extends Controller
                 ->select('student_profiles.*')
                 ->take(4)
                 ->get()
-                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile));
+                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile, $positionMatchKey))
+                ->filter();
 
             // 8. Top Data & AI
             $topDataAi = (clone $baseDiscoverQuery)
@@ -579,7 +650,8 @@ class StartupController extends Controller
                 ->select('student_profiles.*')
                 ->take(4)
                 ->get()
-                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile));
+                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile, $positionMatchKey))
+                ->filter();
 
             // 9. Top Content & Business
             $topBusiness = (clone $baseDiscoverQuery)
@@ -589,7 +661,8 @@ class StartupController extends Controller
                 ->select('student_profiles.*')
                 ->take(4)
                 ->get()
-                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile));
+                ->map(fn($student) => $this->transformStudentForDiscovery($student, $targetSkills, $profile, $positionMatchKey))
+                ->filter();
 
             // Set empty paginate object for views
             $students = \App\Models\StudentProfile::whereRaw('0 = 1')->paginate(10);
@@ -670,10 +743,12 @@ class StartupController extends Controller
             // Paginate results
             $students = $query->paginate(10)->withQueryString();
 
-            // Calculate Match Scores & Stats for each student
-            $students->getCollection()->transform(function($student) use ($targetSkills, $profile) {
-                return $this->transformStudentForDiscovery($student, $targetSkills, $profile);
-            });
+            // Calculate Match Scores & Stats for each student and filter out any excluded candidates
+            $transformed = $students->getCollection()->map(function($student) use ($targetSkills, $profile, $positionMatchKey) {
+                return $this->transformStudentForDiscovery($student, $targetSkills, $profile, $positionMatchKey);
+            })->filter();
+
+            $students->setCollection($transformed);
         }
 
         return view('startup.candidates', compact(
@@ -719,7 +794,7 @@ class StartupController extends Controller
         })->whereIn('status', ['approved', 'completed'])->count();
         
         $directHires = \App\Models\HiringOffer::where('startup_profile_id', $id)
-            ->where('status', 'accepted')
+            ->whereIn('status', ['accepted', 'joined', 'completed'])
             ->count();
             
         $studentsHired = $taskHires + $directHires;

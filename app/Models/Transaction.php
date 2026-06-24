@@ -12,7 +12,8 @@ class Transaction extends Model
         'type',
         'amount',
         'description',
-        'reference_id'
+        'reference_id',
+        'status'
     ];
 
     protected $casts = [

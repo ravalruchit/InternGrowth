@@ -18,8 +18,8 @@ return new class extends Migration {
         Schema::create('portfolio_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('portfolio_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('task_id')->constrained()->restrictOnDelete();
-            $table->foreignId('submission_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('task_id')->nullable()->constrained()->restrictOnDelete();
+            $table->foreignId('submission_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('project_title');
             $table->text('auto_summary')->nullable();
             $table->json('skills_demonstrated')->nullable();

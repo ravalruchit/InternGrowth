@@ -84,36 +84,38 @@ class WalletTopupController extends Controller
             'admin_notes' => 'nullable|string|max:500',
         ]);
 
-        // Credit the startup wallet
-        $startup = $topup->startup;
-        $startup->increment('wallet_balance', $topup->amount);
+        \Illuminate\Support\Facades\DB::transaction(function() use ($topup, $validated) {
+            // Credit the startup wallet
+            $startup = $topup->startup;
+            $startup->increment('wallet_balance', $topup->amount);
 
-        // Record transaction
-        Transaction::create([
-            'user_type'    => 'startup',
-            'user_id'      => $startup->id,
-            'type'         => 'credit',
-            'amount'       => $topup->amount,
-            'description'  => 'Wallet top-up approved by admin',
-            'reference_id' => 'topup_' . $topup->id,
-        ]);
+            // Record transaction
+            Transaction::create([
+                'user_type'    => 'startup',
+                'user_id'      => $startup->id,
+                'type'         => 'credit',
+                'amount'       => $topup->amount,
+                'description'  => 'Wallet top-up approved by admin',
+                'reference_id' => 'topup_' . $topup->id,
+            ]);
 
-        // Update request status
-        $topup->update([
-            'status'      => 'approved',
-            'admin_notes' => $validated['admin_notes'] ?? null,
-            'reviewed_at' => now(),
-        ]);
+            // Update request status
+            $topup->update([
+                'status'      => 'approved',
+                'admin_notes' => $validated['admin_notes'] ?? null,
+                'reviewed_at' => now(),
+            ]);
 
-        // Notify startup
-        Notification::create([
-            'user_id' => $startup->user_id,
-            'title'   => 'Wallet Top-up Approved',
-            'message' => '₹' . number_format($topup->amount, 2) . ' has been added to your wallet.',
-            'type'    => 'success',
-        ]);
+            // Notify startup
+            Notification::create([
+                'user_id' => $startup->user_id,
+                'title'   => 'Wallet Top-up Approved',
+                'message' => '₹' . number_format($topup->amount, 2) . ' has been added to your wallet.',
+                'type'    => 'success',
+            ]);
+        });
 
-        return back()->with('success', '₹' . number_format($topup->amount, 2) . ' added to ' . $startup->company_name . '\'s wallet.');
+        return back()->with('success', '₹' . number_format($topup->amount, 2) . ' added to ' . $topup->startup->company_name . '\'s wallet.');
     }
 
     // ─── Admin: reject a request ─────────────────────────────────────────────
@@ -130,19 +132,21 @@ class WalletTopupController extends Controller
             'admin_notes' => 'required|string|max:500',
         ]);
 
-        $topup->update([
-            'status'      => 'rejected',
-            'admin_notes' => $validated['admin_notes'],
-            'reviewed_at' => now(),
-        ]);
+        \Illuminate\Support\Facades\DB::transaction(function() use ($topup, $validated) {
+            $topup->update([
+                'status'      => 'rejected',
+                'admin_notes' => $validated['admin_notes'],
+                'reviewed_at' => now(),
+            ]);
 
-        // Notify startup
-        Notification::create([
-            'user_id' => $topup->startup->user_id,
-            'title'   => 'Wallet Top-up Rejected',
-            'message' => 'Your top-up request of ₹' . number_format($topup->amount, 2) . ' was rejected. Reason: ' . $validated['admin_notes'],
-            'type'    => 'warning',
-        ]);
+            // Notify startup
+            Notification::create([
+                'user_id' => $topup->startup->user_id,
+                'title'   => 'Wallet Top-up Rejected',
+                'message' => 'Your top-up request of ₹' . number_format($topup->amount, 2) . ' was rejected. Reason: ' . $validated['admin_notes'],
+                'type'    => 'warning',
+            ]);
+        });
 
         return back()->with('success', 'Top-up request rejected.');
     }

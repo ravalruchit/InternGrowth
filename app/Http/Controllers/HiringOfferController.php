@@ -144,8 +144,12 @@ class HiringOfferController extends Controller
         $startup = $offer->startup;
         $student = $offer->student;
 
-        \Illuminate\Support\Facades\DB::transaction(function() use ($offer, $startup) {
-            $offer->update(['status' => 'accepted']);
+        \Illuminate\Support\Facades\DB::transaction(function() use ($offer) {
+            $offer->update([
+                'status' => 'pending_joining',
+                'student_joining_status' => 'pending',
+                'startup_joining_status' => 'pending'
+            ]);
 
             // Sync with application status and outcomes
             if ($offer->source_task_id) {
@@ -153,44 +157,22 @@ class HiringOfferController extends Controller
                     ->where('student_profile_id', $offer->student_profile_id)
                     ->first();
                 if ($application) {
-                    $hasInterview = \App\Models\Interview::where('task_id', $offer->source_task_id)
-                        ->where('student_profile_id', $offer->student_profile_id)
-                        ->exists();
-                    $hiredVia = $hasInterview ? 'interview' : 'task';
-                    $targetStatus = $offer->offer_type === 'internship' ? 'internship_accepted' : 'hired';
-                    $targetOutcome = $offer->offer_type === 'internship' ? 'hired_intern' : 'hired_job';
-                    
                     $application->update([
-                        'status' => $targetStatus,
-                        'startup_hiring_outcome' => $targetOutcome,
-                        'hired_via' => $hiredVia
+                        'status' => $offer->offer_type === 'internship' ? 'internship_offered' : 'hired'
                     ]);
                 }
-            }
-
-            // Record credit transaction for platform if a fee was reserved
-            if ($offer->reserved_fee > 0) {
-                Transaction::create([
-                    'user_type' => 'platform',
-                    'user_id' => 0,
-                    'type' => 'credit',
-                    'amount' => $offer->reserved_fee,
-                    'description' => "Recruitment success fee from {$startup->company_name} for offer ID: {$offer->id}",
-                    'reference_id' => "offer_{$offer->id}"
-                ]);
             }
         });
 
         // Notify startup
-        $feeText = $offer->reserved_fee > 0 ? "A placement success fee of ₹{$offer->reserved_fee} has been charged." : "This is your first promotional placement hire (₹0 fee charged).";
         Notification::create([
             'user_id' => $startup->user_id,
             'title' => 'Hiring Offer Accepted!',
-            'message' => "{$student->user->name} has accepted your {$offer->offer_type} offer for '{$offer->title}'. {$feeText}",
+            'message' => "{$student->user->name} has accepted your {$offer->offer_type} offer for '{$offer->title}'. Please confirm when they join the position.",
             'type' => 'success'
         ]);
 
-        return back()->with('success', 'Offer accepted successfully! Startup has been notified.');
+        return back()->with('success', 'Offer accepted! The hiring confirmation window is now active.');
     }
 
     public function reject($id)
@@ -335,5 +317,245 @@ class HiringOfferController extends Controller
         $reputationService->updateReputation($offer->student_profile_id);
 
         return back()->with('success', 'Counter-offer sent successfully.');
+    }
+
+    public function confirmJoining(Request $request, $id)
+    {
+        $offer = HiringOffer::with(['student.user', 'startup'])->findOrFail($id);
+        $user = auth()->user();
+
+        \Illuminate\Support\Facades\DB::transaction(function() use ($offer, $user) {
+            $offer = HiringOffer::lockForUpdate()->find($offer->id);
+
+            if ($offer->status !== 'pending_joining') {
+                abort(400, 'Joining can only be confirmed for offers pending joining.');
+            }
+
+            if ($user->isStudent() && $offer->student_profile_id === $user->studentProfile->id) {
+                $offer->update(['student_joining_status' => 'joined']);
+            } elseif ($user->isStartup() && $offer->startup_profile_id === $user->startupProfile->id) {
+                $offer->update(['startup_joining_status' => 'joined']);
+            } else {
+                abort(403);
+            }
+
+            // Check if BOTH confirmed
+            if ($offer->student_joining_status === 'joined' && $offer->startup_joining_status === 'joined') {
+                $offer->update([
+                    'status' => 'joined',
+                    'joining_confirmed_at' => now()
+                ]);
+
+                // Record credit transaction for platform if a fee was reserved
+                if ($offer->reserved_fee > 0) {
+                    Transaction::create([
+                        'user_type' => 'platform',
+                        'user_id' => 0,
+                        'type' => 'credit',
+                        'amount' => $offer->reserved_fee,
+                        'description' => "Recruitment success fee from {$offer->startup->company_name} for verified offer ID: {$offer->id}",
+                        'reference_id' => "offer_{$offer->id}"
+                    ]);
+                }
+
+                // Sync with application status and outcomes
+                if ($offer->source_task_id) {
+                    $application = \App\Models\Application::where('task_id', $offer->source_task_id)
+                        ->where('student_profile_id', $offer->student_profile_id)
+                        ->first();
+                    if ($application) {
+                        $hasInterview = \App\Models\Interview::where('task_id', $offer->source_task_id)
+                            ->where('student_profile_id', $offer->student_profile_id)
+                            ->exists();
+                        $hiredVia = $hasInterview ? 'interview' : 'task';
+                        $targetStatus = $offer->offer_type === 'internship' ? 'internship_accepted' : 'hired';
+                        $targetOutcome = $offer->offer_type === 'internship' ? 'hired_intern' : 'hired_job';
+                        
+                        $application->update([
+                            'status' => $targetStatus,
+                            'startup_hiring_outcome' => $targetOutcome,
+                            'hired_via' => $hiredVia
+                        ]);
+                    }
+                }
+
+                // Notify both
+                Notification::create([
+                    'user_id' => $offer->student->user_id,
+                    'title' => 'Placement Verified!',
+                    'message' => "Your placement for '{$offer->title}' has been verified. Welcome aboard!",
+                    'type' => 'success'
+                ]);
+
+                Notification::create([
+                    'user_id' => $offer->startup->user_id,
+                    'title' => 'Placement Verified!',
+                    'message' => "The placement for {$offer->student->user->name} has been verified. Platform fee completed.",
+                    'type' => 'success'
+                ]);
+            }
+        });
+
+        return back()->with('success', 'Joining confirmation status updated.');
+    }
+
+    public function cancelJoining(Request $request, $id)
+    {
+        $offer = HiringOffer::with(['student.user', 'startup'])->findOrFail($id);
+        $user = auth()->user();
+
+        \Illuminate\Support\Facades\DB::transaction(function() use ($offer, $user) {
+            $offer = HiringOffer::lockForUpdate()->find($offer->id);
+
+            if ($offer->status !== 'pending_joining') {
+                abort(400, 'Hiring can only be cancelled for offers pending joining.');
+            }
+
+            $refundStartup = false;
+            $newStatus = 'cancelled';
+
+            if ($user->isStudent() && $offer->student_profile_id === $user->studentProfile->id) {
+                $offer->update(['student_joining_status' => 'cancelled']);
+                $newStatus = 'cancelled_by_student';
+                $refundStartup = true;
+            } elseif ($user->isStartup() && $offer->startup_profile_id === $user->startupProfile->id) {
+                $offer->update(['startup_joining_status' => 'withdrawn']);
+                $newStatus = 'withdrawn_by_startup';
+                $refundStartup = true;
+            } else {
+                abort(403);
+            }
+
+            if ($refundStartup) {
+                $offer->update(['status' => $newStatus]);
+
+                // Refund reserved fee to startup wallet
+                if ($offer->reserved_fee > 0) {
+                    $startup = $offer->startup;
+                    $startup->increment('wallet_balance', $offer->reserved_fee);
+
+                    Transaction::create([
+                        'user_type' => 'startup',
+                        'user_id' => $startup->id,
+                        'type' => 'credit',
+                        'amount' => $offer->reserved_fee,
+                        'description' => "Refunded reserved fee for failed hiring confirmation on offer ID: {$offer->id}",
+                        'reference_id' => "offer_{$offer->id}"
+                    ]);
+
+                    // Mark original reservation as reversed
+                    $originalTx = Transaction::where('user_type', 'startup')
+                        ->where('user_id', $startup->id)
+                        ->where('type', 'debit')
+                        ->where('reference_id', "offer_{$offer->id}")
+                        ->first();
+                    if ($originalTx) {
+                        $originalTx->update(['status' => 'reversed']);
+                    }
+                }
+
+                // Notify startup
+                Notification::create([
+                    'user_id' => $offer->startup->user_id,
+                    'title' => 'Placement Cancelled',
+                    'message' => "The placement for '{$offer->title}' has been cancelled. Reserved fee refunded.",
+                    'type' => 'warning'
+                ]);
+
+                // Notify student
+                Notification::create([
+                    'user_id' => $offer->student->user_id,
+                    'title' => 'Placement Cancelled',
+                    'message' => "The placement for '{$offer->title}' has been cancelled.",
+                    'type' => 'info'
+                ]);
+            }
+        });
+
+        return back()->with('success', 'Hiring placement cancelled and fee refunded.');
+    }
+
+    public function completeInternship(Request $request, $id)
+    {
+        $offer = HiringOffer::with(['student.user', 'startup'])->findOrFail($id);
+        $user = auth()->user();
+
+        if (!$user->isStartup() || $offer->startup_profile_id !== $user->startupProfile->id) {
+            abort(403);
+        }
+
+        if ($offer->status !== 'joined') {
+            return back()->with('error', 'Only verified joined internships/jobs can be marked as completed.');
+        }
+
+        $validated = $request->validate([
+            'notes' => 'nullable|string|max:1000',
+            'rating' => 'required|in:excellent,good,average,poor,terminated'
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function() use ($offer, $validated) {
+            $offer = HiringOffer::lockForUpdate()->find($offer->id);
+
+            $offer->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+                'completion_notes' => $validated['notes'] ?? null,
+                'hiring_success_rating' => $validated['rating'],
+                'hiring_success_rated_at' => now()
+            ]);
+
+            // 1. Issue experience certificate
+            $certificateNumber = 'EXP-' . strtoupper(uniqid());
+            \App\Models\Certificate::create([
+                'student_profile_id' => $offer->student_profile_id,
+                'hiring_offer_id' => $offer->id,
+                'certificate_number' => $certificateNumber,
+                'issued_at' => now()
+            ]);
+
+            // 2. Add to student experience ledger (portfolio_items)
+            $portfolio = \App\Models\Portfolio::firstOrCreate(
+                ['student_profile_id' => $offer->student_profile_id],
+                [
+                    'custom_slug' => 'student-' . strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $offer->student->user->name))) . '-' . rand(1000, 9999),
+                    'is_public' => true
+                ]
+            );
+
+            $ratingVal = match($validated['rating']) {
+                'excellent' => 5.0,
+                'good' => 4.0,
+                'average' => 3.0,
+                default => 2.0,
+            };
+
+            \App\Models\PortfolioItem::create([
+                'portfolio_id' => $portfolio->id,
+                'hiring_offer_id' => $offer->id,
+                'project_title' => "{$offer->title} at {$offer->startup->company_name}",
+                'auto_summary' => $offer->description . ($validated['notes'] ? "\n\nCompletion Review: " . $validated['notes'] : ''),
+                'skills_demonstrated' => [$offer->domain ?? 'Software Development'],
+                'startup_name' => $offer->startup->company_name,
+                'certificate_number' => $certificateNumber,
+                'completed_at' => now(),
+                'domain' => $offer->domain ?? 'Software Development',
+                'role' => $offer->role ?? 'Developer',
+                'rating_received' => $ratingVal
+            ]);
+
+            // 3. Recalculate reputation score
+            $reputationService = new \App\Services\ReputationEngineService();
+            $reputationService->updateReputation($offer->student_profile_id);
+
+            // Notify student
+            Notification::create([
+                'user_id' => $offer->student->user_id,
+                'title' => 'Internship Completed & Certified!',
+                'message' => "Congratulations! Your internship at {$offer->startup->company_name} is marked as completed and verified in your Experience Ledger.",
+                'type' => 'success'
+            ]);
+        });
+
+        return back()->with('success', 'Internship marked as completed! Experience Certificate issued.');
     }
 }

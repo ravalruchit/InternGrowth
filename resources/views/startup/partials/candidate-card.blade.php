@@ -52,32 +52,138 @@
             @endif
         </div>
 
-        <!-- AI Match Percentage & Skill Metrics (Premium Redesign) -->
+        @php
+            $rankingDetails = $student->ai_match['ranking_details'] ?? [];
+            $matchScore = $student->ai_match['percentage'] ?? 50;
+            $matchLabel = $student->ai_match['label'] ?? 'Low Match';
+            $topStrength = $rankingDetails['top_strength'] ?? 'General Aptitude';
+            $verifiedTasksCount = $rankingDetails['completed_tasks_count'] ?? 0;
+            $portfolioRatingLabel = $rankingDetails['portfolio_rating_label'] ?? 'No Portfolio';
+        @endphp
+
+        <!-- AI Match Percentage & Premium Metrics -->
         <div class="bg-[var(--ig-bg-2)] rounded-2xl p-4 mb-4 border border-[var(--ig-line)]">
-            <div class="flex justify-between items-center mb-3">
-                <span class="ig-eyebrow text-[10px]">AI Score Match</span>
-                <span class="ig-chip ig-chip-lime font-mono font-bold">
-                    {{ $student->ai_match['percentage'] ?? 50 }}% Match
+            <div class="flex justify-between items-center mb-2">
+                <span class="ig-eyebrow text-[10px] font-bold uppercase tracking-wider text-[var(--ig-muted)]">AI Matching Insights</span>
+                <span class="ig-chip ig-chip-lime font-mono font-bold text-xs">
+                    {{ $matchScore }}% {{ $matchLabel }}
                 </span>
             </div>
+
+            <!-- Progress Bar under match percentage -->
+            <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden mb-3 border border-gray-250/50 shadow-inner">
+                <div class="bg-[var(--ig-accent)] h-full rounded-full transition-all duration-500" style="width: {{ $matchScore }}%"></div>
+            </div>
             
-            <!-- Matching skills breakdown -->
-            <div class="space-y-1.5">
-                @if(isset($student->ai_match['breakdown']))
-                    @foreach($student->ai_match['breakdown'] as $skillName => $score)
-                        <div class="flex justify-between items-center text-xs">
-                            <span class="text-[var(--ig-muted)] font-medium">{{ $skillName }}</span>
-                            <span class="font-bold {{ $score > 0 ? 'text-[var(--ig-ink)]' : 'text-[var(--ig-faint)]' }}">
-                                {{ $score > 0 ? $score.'%' : 'Not Matched' }}
-                            </span>
-                        </div>
-                    @endforeach
-                @endif
-                <div class="flex justify-between items-center text-xs pt-1 border-t border-dashed border-[var(--ig-line-2)]">
-                    <span class="text-[var(--ig-muted)] font-medium">Communication</span>
-                    <span class="font-bold text-[var(--ig-ink)]">{{ $student->ai_match['communication'] ?? 90 }}%</span>
+            <!-- AI Sourcing Details checklist -->
+            <div class="space-y-2 text-xs border-b border-dashed border-[var(--ig-line-2)] pb-3">
+                <div class="flex items-center justify-between text-xs pt-1">
+                    <span class="text-[var(--ig-muted)] font-medium">🔥 Top Strength</span>
+                    <span class="font-bold text-[var(--ig-ink)]">{{ $topStrength }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs pt-1">
+                    <span class="text-[var(--ig-muted)] font-medium">✔️ Verified Work</span>
+                    <span class="font-bold text-[var(--ig-ink)]">{{ $verifiedTasksCount }} Tasks Completed</span>
+                </div>
+                <div class="flex items-center justify-between text-xs pt-1">
+                    <span class="text-[var(--ig-muted)] font-medium">📁 Portfolio Status</span>
+                    <span class="font-bold text-[var(--ig-ink)]">{{ $portfolioRatingLabel }}</span>
                 </div>
             </div>
+
+            <!-- View Match Details Drawer -->
+            @if(isset($rankingDetails['breakdown']))
+                <div class="mt-3">
+                    <button type="button" 
+                            class="w-full text-left py-2 px-3 bg-white/70 hover:bg-gray-100 transition flex items-center justify-between text-[9px] font-bold text-gray-700 uppercase tracking-wider font-poppins rounded-xl border border-[var(--ig-line-2)]" 
+                            onclick="toggleInsightsDrawer('match-drawer-candidate-{{ $student->id }}')">
+                        <span class="flex items-center gap-1">
+                            📊 View Match Details
+                        </span>
+                        <span class="arrow transition-transform duration-200 select-none">▼</span>
+                    </button>
+                    
+                    <div id="match-drawer-candidate-{{ $student->id }}" class="hidden pt-3 mt-3 border-t border-dashed border-gray-200 space-y-2.5 text-[11px]">
+                        <!-- Match Reasons / Explanations -->
+                        @if(!empty($rankingDetails['explanations']))
+                            <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-2.5 mb-2.5">
+                                <span class="text-[9px] font-bold text-emerald-800 uppercase tracking-wider block mb-1">Match Insights</span>
+                                <ul class="list-disc list-inside space-y-1 text-emerald-950 font-medium text-[10.5px]">
+                                    @foreach($rankingDetails['explanations'] as $expl)
+                                        <li>{{ $expl }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <!-- Skills Match (55%) -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-[9px] font-bold text-gray-700">
+                                <span>Skills Match (55%)</span>
+                                <span>{{ $rankingDetails['breakdown']['skills_match'] ?? 0 }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-150 rounded-full h-1">
+                                <div class="bg-[var(--ig-accent)] h-1 rounded-full" style="width: {{ $rankingDetails['breakdown']['skills_match'] ?? 0 }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Domain Match (15%) -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-[9px] font-bold text-gray-700">
+                                <span>Domain Match (15%)</span>
+                                <span>{{ $rankingDetails['breakdown']['domain_alignment'] ?? 0 }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-150 rounded-full h-1">
+                                <div class="bg-[var(--ig-accent)] h-1 rounded-full" style="width: {{ $rankingDetails['breakdown']['domain_alignment'] ?? 0 }}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Role Match (10%) -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-[9px] font-bold text-gray-700">
+                                <span>Role Match (10%)</span>
+                                <span>{{ $rankingDetails['breakdown']['role_alignment'] ?? 0 }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-150 rounded-full h-1">
+                                <div class="bg-[var(--ig-accent)] h-1 rounded-full" style="width: {{ $rankingDetails['breakdown']['role_alignment'] ?? 0 }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Verified Work (10%) -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-[9px] font-bold text-gray-700">
+                                <span>Verified Work (10%)</span>
+                                <span>{{ $rankingDetails['breakdown']['verified_work'] ?? 0 }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-150 rounded-full h-1">
+                                <div class="bg-[var(--ig-accent)] h-1 rounded-full" style="width: {{ $rankingDetails['breakdown']['verified_work'] ?? 0 }}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- IPRS Score (5%) -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-[9px] font-bold text-gray-700">
+                                <span>IPRS Score (5%)</span>
+                                <span>{{ $rankingDetails['breakdown']['iprs'] ?? 0 }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-150 rounded-full h-1">
+                                <div class="bg-[var(--ig-accent)] h-1 rounded-full" style="width: {{ $rankingDetails['breakdown']['iprs'] ?? 0 }}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Portfolio Quality (5%) -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-[9px] font-bold text-gray-700">
+                                <span>Portfolio Quality (5%)</span>
+                                <span>{{ $rankingDetails['breakdown']['portfolio'] ?? 0 }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-150 rounded-full h-1">
+                                <div class="bg-[var(--ig-accent)] h-1 rounded-full" style="width: {{ $rankingDetails['breakdown']['portfolio'] ?? 0 }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- Success Metrics Stats -->

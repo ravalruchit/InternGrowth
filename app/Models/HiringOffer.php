@@ -25,7 +25,14 @@ class HiringOffer extends Model
         'domain',
         'role',
         'counter_compensation',
-        'counter_note'
+        'counter_note',
+        'student_joining_status',
+        'startup_joining_status',
+        'joining_confirmed_at',
+        'completed_at',
+        'completion_notes',
+        'hiring_success_rating',
+        'hiring_success_rated_at'
     ];
 
     /**
@@ -34,7 +41,6 @@ class HiringOffer extends Model
     public function getStatusAttribute($value)
     {
         if ($value === 'pending' && $this->expires_at && $this->expires_at->isPast()) {
-            // Automatically update database state or just return 'expired'
             return 'expired';
         }
         return $value;
@@ -46,6 +52,9 @@ class HiringOffer extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'expires_at' => 'datetime',
+        'joining_confirmed_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'hiring_success_rated_at' => 'datetime',
         'contract_terms' => 'array'
     ];
 

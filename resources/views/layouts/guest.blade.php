@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'InternGrowth') }}</title>
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
 </head>
@@ -19,12 +19,8 @@
             <div class="absolute -bottom-32 -right-20 w-[400px] h-[400px] rounded-full blur-[100px] opacity-25" style="background: radial-gradient(circle, var(--ig-lime) 0%, transparent 65%);"></div>
 
             <div class="relative">
-                <a href="/" class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-white text-[var(--ig-ink)] flex items-center justify-center ig-display text-lg">IG</div>
-                    <div>
-                        <p class="ig-display text-xl">InternGrowth</p>
-                        <p class="ig-eyebrow text-[9.5px]" style="color:#9C9580">Verified Work · Real Reputation</p>
-                    </div>
+                <a href="/">
+                    <x-application-logo class="h-9 w-auto text-white" />
                 </a>
             </div>
 
@@ -61,9 +57,8 @@
         <main class="flex items-center justify-center p-6 lg:p-12 relative">
             <div class="w-full max-w-md">
                 <!-- Mobile brand -->
-                <a href="/" class="flex lg:hidden items-center gap-3 mb-10">
-                    <div class="w-10 h-10 rounded-xl bg-[var(--ig-ink)] text-[var(--ig-bg)] flex items-center justify-center ig-display text-lg">IG</div>
-                    <span class="ig-display text-xl">InternGrowth</span>
+                <a href="/" class="flex lg:hidden mb-10">
+                    <x-application-logo class="h-9 w-auto text-[var(--ig-ink)]" />
                 </a>
 
                 <div class="ig-anim-fade-up">

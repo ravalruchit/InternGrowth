@@ -109,6 +109,8 @@ Route::middleware('auth')->group(function () {
         // ─────────────────────────────────────────────────────────────────────
         Route::post('/tasks/{taskId}/review', [StartupReviewController::class, 'store'])->name('tasks.review');
         Route::post('/portfolio/{itemId}/evidence', [TalentProfileController::class, 'updateEvidence'])->name('portfolio.evidence');
+        Route::post('/portfolio/project', [StudentController::class, 'storePortfolioItem'])->name('portfolio.project.store');
+        Route::delete('/portfolio/project/{id}', [StudentController::class, 'deletePortfolioItem'])->name('portfolio.project.destroy');
     });
 
     // Startup Routes
@@ -185,6 +187,11 @@ Route::middleware('auth')->group(function () {
         // AI Debug Interface
         Route::get('/ai-debug', [\App\Http\Controllers\AIDebugController::class, 'index'])->name('ai-debug');
         Route::post('/ai-debug/test', [\App\Http\Controllers\AIDebugController::class, 'test'])->name('ai-debug.test');
+
+        // Export Routes
+        Route::get('/analytics/export/revenue', [AdminController::class, 'exportRevenue'])->name('analytics.export.revenue');
+        Route::get('/analytics/export/hiring', [AdminController::class, 'exportHiring'])->name('analytics.export.hiring');
+        Route::get('/analytics/export/users', [AdminController::class, 'exportUsers'])->name('analytics.export.users');
     });
 
     // Shared Routes
@@ -231,6 +238,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/student/offers/{id}/accept', [App\Http\Controllers\HiringOfferController::class, 'accept'])->name('student.offers.accept')->middleware('role:student');
     Route::post('/student/offers/{id}/reject', [App\Http\Controllers\HiringOfferController::class, 'reject'])->name('student.offers.reject')->middleware('role:student');
     Route::post('/student/offers/{id}/counter', [App\Http\Controllers\HiringOfferController::class, 'counterOffer'])->name('student.offers.counter')->middleware('role:student');
+    Route::post('/offers/{id}/confirm-joining', [App\Http\Controllers\HiringOfferController::class, 'confirmJoining'])->name('offers.confirm-joining');
+    Route::post('/offers/{id}/cancel-joining', [App\Http\Controllers\HiringOfferController::class, 'cancelJoining'])->name('offers.cancel-joining');
+    Route::post('/offers/{id}/complete-internship', [App\Http\Controllers\HiringOfferController::class, 'completeInternship'])->name('offers.complete-internship')->middleware('role:startup');
 
     // Interview Routes
     Route::post('/startup/interviews/schedule/{conversationId}', [App\Http\Controllers\InterviewController::class, 'store'])->name('startup.interviews.store')->middleware('role:startup');

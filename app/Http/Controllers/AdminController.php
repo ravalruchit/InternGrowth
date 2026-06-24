@@ -10,16 +10,10 @@ use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
-    public function dashboard()
+    public function dashboard(\App\Services\AdminAnalyticsService $analyticsService)
     {
-        $pendingStartups = User::where('role', 'startup')
-            ->whereHas('startupProfile', function($query) {
-                $query->where('verification_status', 'pending');
-            })->count();
-        $flaggedTasks = Task::where('is_flagged', true)->count();
-        $plagiarizedSubmissions = Submission::where('is_plagiarized', true)->count();
-        
-        return view('admin.dashboard', compact('pendingStartups', 'flaggedTasks', 'plagiarizedSubmissions'));
+        $data = $analyticsService->getAnalyticsData();
+        return view('admin.dashboard', compact('data'));
     }
 
     public function startups()
@@ -483,5 +477,110 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', 'Student ID rejected. They will be asked to re-upload.');
+    }
+
+    public function exportRevenue()
+    {
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=revenue_analytics_" . date('Ymd_His') . ".csv",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Month', 'Task Commissions (INR)', 'Hiring Success Fees (INR)', 'Total Revenue (INR)']);
+            
+            $analyticsService = app(\App\Services\AdminAnalyticsService::class);
+            $data = $analyticsService->getAnalyticsData();
+            
+            foreach ($data['revenue']['chart_12m'] as $row) {
+                fputcsv($file, [$row['month'], $row['tasks'], $row['hiring'], $row['total']]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportHiring()
+    {
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=hiring_analytics_" . date('Ymd_His') . ".csv",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Offer ID', 'Startup', 'Student', 'Type', 'Title', 'Compensation (INR)', 'Period', 'Status', 'Reserved Fee (INR)', 'Created At', 'Confirmed At']);
+            
+            $offers = \App\Models\HiringOffer::with(['startup.user', 'student.user'])->latest()->get();
+            foreach ($offers as $o) {
+                fputcsv($file, [
+                    $o->id,
+                    $o->startup->company_name ?? $o->startup->user->name ?? 'Startup #' . $o->startup_profile_id,
+                    $o->student->user->name ?? 'Student #' . $o->student_profile_id,
+                    ucfirst($o->offer_type),
+                    $o->title,
+                    $o->compensation,
+                    $o->compensation_period,
+                    ucfirst($o->status),
+                    $o->reserved_fee,
+                    $o->created_at->toDateTimeString(),
+                    $o->joining_confirmed_at ? \Carbon\Carbon::parse($o->joining_confirmed_at)->toDateTimeString() : 'N/A'
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportUsers()
+    {
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=user_analytics_" . date('Ymd_His') . ".csv",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['User ID', 'Name', 'Email', 'Role', 'Verified', 'Wallet Balance (INR)', 'Created At']);
+            
+            $users = \App\Models\User::with(['studentProfile', 'startupProfile'])->get();
+            foreach ($users as $u) {
+                $verified = 'No';
+                $balance = 0.00;
+                
+                if ($u->role === 'student' && $u->studentProfile) {
+                    $verified = $u->studentProfile->is_verified ? 'Yes' : 'No';
+                    $balance = $u->studentProfile->wallet_balance;
+                } elseif ($u->role === 'startup' && $u->startupProfile) {
+                    $verified = $u->startupProfile->is_verified ? 'Yes' : 'No';
+                    $balance = $u->startupProfile->wallet_balance;
+                }
+                
+                fputcsv($file, [
+                    $u->id,
+                    $u->name,
+                    $u->email,
+                    ucfirst($u->role),
+                    $verified,
+                    $balance,
+                    $u->created_at->toDateTimeString()
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

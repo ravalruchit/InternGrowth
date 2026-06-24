@@ -335,23 +335,36 @@
         <div class="certificate-content">
             <div class="logo">InternGrowth</div>
             
-            <h1 class="certificate-title">Certificate of Completion</h1>
+            @if($certificate->hiringOffer)
+                <h1 class="certificate-title">Certificate of Experience</h1>
+            @else
+                <h1 class="certificate-title">Certificate of Completion</h1>
+            @endif
             
             <p class="certificate-subtitle">THIS IS TO CERTIFY THAT</p>
             
             <h2 class="student-name">{{ $certificate->student->user->name }}</h2>
             
-            <p class="completion-text">
-                has successfully completed the internship task and demonstrated<br>
-                exceptional skills, dedication, and professionalism in
-            </p>
-            
-            <h3 class="task-title">"{{ $certificate->task->title }}"</h3>
-            
-            <p class="completion-text">
-                This achievement reflects a commitment to excellence and<br>
-                a strong foundation for future professional endeavors.
-            </p>
+            @if($certificate->hiringOffer)
+                <p class="completion-text">
+                    has successfully completed a placement as a <strong>{{ $certificate->hiringOffer->role }}</strong><br>
+                    and demonstrated exceptional skills, dedication, and professionalism in
+                </p>
+                <h3 class="task-title">"{{ $certificate->hiringOffer->title }}"</h3>
+                <p class="completion-text">
+                    from {{ $certificate->hiringOffer->start_date->format('F d, Y') }} to {{ $certificate->hiringOffer->completed_at ? $certificate->hiringOffer->completed_at->format('F d, Y') : ($certificate->hiringOffer->end_date ? $certificate->hiringOffer->end_date->format('F d, Y') : 'N/A') }}.
+                </p>
+            @else
+                <p class="completion-text">
+                    has successfully completed the internship task and demonstrated<br>
+                    exceptional skills, dedication, and professionalism in
+                </p>
+                <h3 class="task-title">"{{ $certificate->task->title }}"</h3>
+                <p class="completion-text">
+                    This achievement reflects a commitment to excellence and<br>
+                    a strong foundation for future professional endeavors.
+                </p>
+            @endif
             
             <div class="certificate-details">
                 <div class="detail-item">
@@ -364,14 +377,18 @@
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Domain</div>
-                    <div class="detail-value">{{ $certificate->task->domain }}</div>
+                    <div class="detail-value">
+                        {{ $certificate->hiringOffer ? ($certificate->hiringOffer->domain ?? 'Software Development') : $certificate->task->domain }}
+                    </div>
                 </div>
             </div>
             
             <div class="signature-section">
                 <div class="signature">
                     <div class="signature-line"></div>
-                    <div class="signature-name">{{ $certificate->task->startup->company_name }}</div>
+                    <div class="signature-name">
+                        {{ $certificate->hiringOffer ? $certificate->hiringOffer->startup->company_name : $certificate->task->startup->company_name }}
+                    </div>
                     <div class="signature-title">Startup Representative</div>
                 </div>
                 <div class="signature">

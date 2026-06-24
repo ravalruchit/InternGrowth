@@ -104,70 +104,81 @@ class SubmissionController extends Controller
 
     public function accept(Request $request, $id)
     {
-        $submission = Submission::with(['application.task.skills', 'application.student'])->findOrFail($id);
-        $submission->update(['status' => 'accepted']);
+        $moneyMessage = \Illuminate\Support\Facades\DB::transaction(function() use ($id) {
+            $submission = Submission::with(['application.task.skills', 'application.student'])
+                ->lockForUpdate()
+                ->findOrFail($id);
 
-        // Update task status to completed
-        $task = $submission->application->task;
-        $task->update(['status' => 'completed']);
-        // Release escrow money
-        $escrow = $task->escrow;
-        $moneyMessage = '';
-        if ($escrow && $escrow->status === 'locked') {
-            $platformFee = $escrow->amount * (env('PLATFORM_FEE_PERCENTAGE', 10) / 100);
-            $studentAmount = $escrow->amount - $platformFee;
+            if ($submission->status === 'accepted') {
+                abort(400, 'Submission already accepted.');
+            }
+
+            $submission->update(['status' => 'accepted']);
+
+            // Update task status to completed
+            $task = $submission->application->task;
+            $task->update(['status' => 'completed']);
             
-            // Add to student wallet
-            $studentProfile = $submission->application->student;
-            $studentProfile->increment('wallet_balance', $studentAmount);
-            
-            // Update escrow status
-            $escrow->update(['status' => 'released']);
-            
-            // Record transactions
-            \App\Models\Transaction::create([
-                'user_type' => 'student',
-                'user_id' => $studentProfile->id,
-                'type' => 'credit',
-                'amount' => $studentAmount,
-                'description' => "Payment received for task: {$task->title}",
-                'reference_id' => "task_{$task->id}"
+            // Release escrow money
+            $escrow = $task->escrow;
+            $moneyMsg = '';
+            if ($escrow && $escrow->status === 'locked') {
+                $platformFee = round($escrow->amount * (env('PLATFORM_FEE_PERCENTAGE', 10) / 100), 2);
+                $studentAmount = round($escrow->amount - $platformFee, 2);
+                
+                // Add to student wallet
+                $studentProfile = $submission->application->student;
+                $studentProfile->increment('wallet_balance', $studentAmount);
+                
+                // Update escrow status
+                $escrow->update(['status' => 'released']);
+                
+                // Record transactions
+                \App\Models\Transaction::create([
+                    'user_type' => 'student',
+                    'user_id' => $studentProfile->id,
+                    'type' => 'credit',
+                    'amount' => $studentAmount,
+                    'description' => "Payment received for task: {$task->title}",
+                    'reference_id' => "task_{$task->id}"
+                ]);
+                
+                \App\Models\Transaction::create([
+                    'user_type' => 'platform',
+                    'user_id' => 0,
+                    'type' => 'credit',
+                    'amount' => $platformFee,
+                    'description' => "Platform fee from task: {$task->title}",
+                    'reference_id' => "task_{$task->id}"
+                ]);
+                
+                $moneyMsg = " and ₹{$studentAmount}";
+            }
+
+            // Auto-generate verified portfolio item
+            $portfolioService = new \App\Services\PortfolioAutomationService();
+            $portfolioService->addVerifiedTaskToPortfolio($submission->id);
+
+            // Verify skills associated with the completed task (track which startup verified)
+            $skillsService = new \App\Services\SkillVerificationService();
+            $startupProfileId = $task->startup_profile_id;
+            foreach ($task->skills as $skill) {
+                $skillsService->verifySkillByTaskCompletion($submission->application->student_profile_id, $skill->id, null, $startupProfileId, $task->id);
+            }
+
+            Notification::create([
+                'user_id' => $submission->application->student->user_id,
+                'title' => 'Submission Accepted',
+                'message' => "Your submission was accepted. Your IPRS reputation score has been updated{$moneyMsg}!",
+                'type' => 'success'
             ]);
-            
-            \App\Models\Transaction::create([
-                'user_type' => 'platform',
-                'user_id' => 0,
-                'type' => 'credit',
-                'amount' => $platformFee,
-                'description' => "Platform fee from task: {$task->title}",
-                'reference_id' => "task_{$task->id}"
-            ]);
-            
-            $moneyMessage = " and ₹{$studentAmount}";
-        }
 
-        // Auto-generate verified portfolio item
-        $portfolioService = new \App\Services\PortfolioAutomationService();
-        $portfolioService->addVerifiedTaskToPortfolio($submission->id);
+            // Recalculate reputation scores
+            $reputationService = new \App\Services\ReputationEngineService();
+            $reputationService->updateReputation($submission->application->student_profile_id);
 
-        // Verify skills associated with the completed task (track which startup verified)
-        $skillsService = new \App\Services\SkillVerificationService();
-        $task = $submission->application->task;
-        $startupProfileId = $task->startup_profile_id;
-        foreach ($task->skills as $skill) {
-            $skillsService->verifySkillByTaskCompletion($submission->application->student_profile_id, $skill->id, null, $startupProfileId, $task->id);
-        }
-
-        Notification::create([
-            'user_id' => $submission->application->student->user_id,
-            'title' => 'Submission Accepted',
-            'message' => "Your submission was accepted. Your IPRS reputation score has been updated{$moneyMessage}!",
-            'type' => 'success'
-        ]);
-
-        // Recalculate reputation scores
-        $reputationService = new \App\Services\ReputationEngineService();
-        $reputationService->updateReputation($submission->application->student_profile_id);
+            return $moneyMsg;
+        });
 
         return back()->with('success', 'Submission accepted and IPRS score updated' . $moneyMessage . '!');
     }
@@ -176,45 +187,55 @@ class SubmissionController extends Controller
     {
         $validated = $request->validate(['feedback' => 'required|string|min:20']);
         
-        $submission = Submission::with('application.student', 'application.task')->findOrFail($id);
-        
-        $submission->update(['status' => 'rejected', 'feedback' => $validated['feedback']]);
+        $moneyMessage = \Illuminate\Support\Facades\DB::transaction(function() use ($id, $validated) {
+            $submission = Submission::with('application.student', 'application.task')
+                ->lockForUpdate()
+                ->findOrFail($id);
 
-        // Refund escrow money to startup
-        $task = $submission->application->task;
-        $escrow = $task->escrow;
-        $moneyMessage = '';
-        
-        if ($escrow && $escrow->status === 'locked') {
-            $startupProfile = $task->startup;
-            $startupProfile->increment('wallet_balance', $escrow->amount);
+            if ($submission->status === 'accepted' || $submission->status === 'rejected') {
+                abort(400, 'Submission already reviewed.');
+            }
             
-            // Update escrow status
-            $escrow->update(['status' => 'refunded']);
+            $submission->update(['status' => 'rejected', 'feedback' => $validated['feedback']]);
+
+            // Refund escrow money to startup
+            $task = $submission->application->task;
+            $escrow = $task->escrow;
+            $moneyMsg = '';
             
-            // Record transaction
-            \App\Models\Transaction::create([
-                'user_type' => 'startup',
-                'user_id' => $startupProfile->id,
-                'type' => 'credit',
-                'amount' => $escrow->amount,
-                'description' => "Escrow refunded for rejected task: {$task->title}",
-                'reference_id' => "task_{$task->id}"
+            if ($escrow && $escrow->status === 'locked') {
+                $startupProfile = $task->startup;
+                $startupProfile->increment('wallet_balance', $escrow->amount);
+                
+                // Update escrow status
+                $escrow->update(['status' => 'refunded']);
+                
+                // Record transaction
+                \App\Models\Transaction::create([
+                    'user_type' => 'startup',
+                    'user_id' => $startupProfile->id,
+                    'type' => 'credit',
+                    'amount' => $escrow->amount,
+                    'description' => "Escrow refunded for rejected task: {$task->title}",
+                    'reference_id' => "task_{$task->id}"
+                ]);
+                
+                $moneyMsg = ' Escrow amount refunded to your wallet.';
+            }
+
+            Notification::create([
+                'user_id' => $submission->application->student->user_id,
+                'title' => 'Submission Rejected',
+                'message' => 'Your submission was rejected. Please check feedback.',
+                'type' => 'warning'
             ]);
-            
-            $moneyMessage = ' Escrow amount refunded to your wallet.';
-        }
 
-        Notification::create([
-            'user_id' => $submission->application->student->user_id,
-            'title' => 'Submission Rejected',
-            'message' => 'Your submission was rejected. Please check feedback.',
-            'type' => 'warning'
-        ]);
+            // Recalculate reputation scores
+            $reputationService = new \App\Services\ReputationEngineService();
+            $reputationService->updateReputation($submission->application->student_profile_id);
 
-        // Recalculate reputation scores
-        $reputationService = new \App\Services\ReputationEngineService();
-        $reputationService->updateReputation($submission->application->student_profile_id);
+            return $moneyMsg;
+        });
 
         return back()->with('success', 'Submission rejected with feedback provided.' . $moneyMessage);
     }

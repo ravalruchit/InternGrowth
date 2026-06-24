@@ -37,13 +37,13 @@
             </div>
         @endif
 
-        <!-- ─── Pending Offers ─── -->
+        <!-- ─── Offers & Placements ─── -->
         @if($hiringOffers && $hiringOffers->count() > 0)
             <section class="mb-12 ig-reveal">
                 <div class="ig-section-head">
                     <div>
-                        <p class="ig-eyebrow mb-2">— You've got mail</p>
-                        <h2 class="ig-display text-3xl">Pending offers <span class="text-[var(--ig-muted)]">· {{ $hiringOffers->count() }}</span></h2>
+                        <p class="ig-eyebrow mb-2">— Placements & Offers</p>
+                        <h2 class="ig-display text-3xl">Direct Offers & Hiring Status <span class="text-[var(--ig-muted)]">· {{ $hiringOffers->count() }}</span></h2>
                     </div>
                 </div>
                 <div class="space-y-4">
@@ -52,7 +52,13 @@
                             <div class="absolute -top-16 -right-16 w-48 h-48 rounded-full blur-3xl opacity-30" style="background:var(--ig-accent)"></div>
                             <div class="relative grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                                 <div class="md:col-span-2">
-                                    <span class="ig-chip ig-chip-lime">{{ strtoupper($offer->offer_type) }} OFFER</span>
+                                    @if($offer->status === 'pending')
+                                        <span class="ig-chip ig-chip-lime">{{ strtoupper($offer->offer_type) }} OFFER RECEIVED</span>
+                                    @elseif($offer->status === 'pending_joining')
+                                        <span class="ig-chip ig-chip-warn">PENDING JOINING VERIFICATION</span>
+                                    @elseif($offer->status === 'joined')
+                                        <span class="ig-chip ig-chip-success">✅ PLACEMENT VERIFIED & ACTIVE</span>
+                                    @endif
                                     <h3 class="ig-display text-3xl text-white mt-3">{{ $offer->title }}</h3>
                                     <p class="ig-mono text-[12px] mt-1" style="color:#9C9580">from <span class="text-white font-semibold">{{ $offer->startup->company_name }}</span></p>
                                     <p class="text-sm mt-4 leading-relaxed" style="color:#C9C1AE">{{ Str::limit($offer->description, 180) }}</p>
@@ -61,13 +67,37 @@
                                     <p class="ig-eyebrow mb-1" style="color:#9C9580">Compensation</p>
                                     <p class="ig-stat-num text-4xl text-[var(--ig-lime)]">₹{{ number_format($offer->compensation, 0) }}</p>
                                     <p class="ig-mono text-[11px] mt-1" style="color:#9C9580">per {{ $offer->compensation_period === 'annual' ? 'year' : 'month' }}</p>
-                                    <div class="flex md:justify-end gap-2 mt-5">
-                                        <form method="POST" action="{{ route('student.offers.reject', $offer->id) }}">@csrf
-                                            <button class="ig-btn" style="background:transparent;color:#C9C1AE;border:1px solid rgba(255,255,255,.15)">Decline</button>
-                                        </form>
-                                        <form method="POST" action="{{ route('student.offers.accept', $offer->id) }}">@csrf
-                                            <button class="ig-btn ig-btn-lime"><span>Accept</span><span class="arrow">→</span></button>
-                                        </form>
+                                    
+                                    <div class="flex flex-col md:items-end gap-2 mt-5">
+                                        @if($offer->status === 'pending')
+                                            <div class="flex gap-2 justify-end">
+                                                <form method="POST" action="{{ route('student.offers.reject', $offer->id) }}">@csrf
+                                                    <button class="ig-btn" style="background:transparent;color:#C9C1AE;border:1px solid rgba(255,255,255,.15)">Decline</button>
+                                                </form>
+                                                <form method="POST" action="{{ route('student.offers.accept', $offer->id) }}">@csrf
+                                                    <button class="ig-btn ig-btn-lime"><span>Accept Offer</span><span class="arrow">→</span></button>
+                                                </form>
+                                            </div>
+                                        @elseif($offer->status === 'pending_joining')
+                                            @if($offer->student_joining_status === 'pending')
+                                                <p class="text-xs text-[var(--ig-muted)] mb-1">Did you join this internship/position?</p>
+                                                <div class="flex gap-2 justify-end">
+                                                    <form method="POST" action="{{ route('offers.cancel-joining', $offer->id) }}" onsubmit="return confirm('Are you sure you want to cancel this placement? This will notify the startup and refund their reserved fee.')">@csrf
+                                                        <button class="ig-btn" style="background:transparent;color:#f87171;border:1px solid rgba(248,113,113,.3)">No, Cancel</button>
+                                                    </form>
+                                                    <form method="POST" action="{{ route('offers.confirm-joining', $offer->id) }}">@csrf
+                                                        <button class="ig-btn ig-btn-lime"><span>Yes, I Joined</span><span class="arrow">✓</span></button>
+                                                    </form>
+                                                </div>
+                                            @elseif($offer->student_joining_status === 'joined')
+                                                <p class="text-xs text-[var(--ig-warn)] mb-2 font-medium">Joined! Awaiting startup verification...</p>
+                                                <form method="POST" action="{{ route('offers.cancel-joining', $offer->id) }}" onsubmit="return confirm('Are you sure you want to cancel this placement? This will notify the startup and refund their reserved fee.')">@csrf
+                                                    <button class="ig-btn text-xs" style="background:transparent;color:#f87171;border:1px solid rgba(248,113,113,.3);padding:8px 12px">Cancel Placement</button>
+                                                </form>
+                                            @endif
+                                        @elseif($offer->status === 'joined')
+                                            <p class="text-xs text-[var(--ig-lime)] font-semibold mt-2">Verified placement. Work is currently in progress.</p>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -152,6 +182,7 @@
                 </div>
             </section>
         @endif
+
 
         <!-- ─── Main Grid: IPRS + Ledger ─── -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12">
@@ -268,25 +299,215 @@
                     </div>
                     <a href="{{ route('tasks.index') }}" class="hidden md:inline-flex text-sm font-semibold hover:text-[var(--ig-accent)]">View all →</a>
                 </div>
+
+                <!-- Callout to add proof of work -->
+                <div class="mb-6 p-4 bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-start gap-3">
+                        <span class="text-xl">⚡</span>
+                        <div>
+                            <h4 class="text-xs font-bold text-[var(--ig-ink)]">Verify Your Skills with Proof-of-Work</h4>
+                            <p class="text-[11px] text-[var(--ig-muted)] mt-0.5">
+                                InternGrowth requires all matched skills to be backed by verified work or a portfolio project with evidence links (GitHub or Demo URL) to satisfy the matching security gate.
+                            </p>
+                        </div>
+                    </div>
+                    <a href="{{ route('student.profile') }}" class="ig-btn py-1.5 px-4 text-xs bg-[var(--ig-accent)] text-white hover:bg-[#E03E0B] flex-shrink-0 self-start sm:self-center">
+                        Add Evidence Projects
+                    </a>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     @foreach($recommendedTasks as $task)
-                        <a href="{{ route('tasks.show', $task->id) }}" class="ig-card p-6">
-                            <div class="flex items-start justify-between mb-3">
-                                <h3 class="ig-display text-xl flex-1 leading-tight">{{ $task->title }}</h3>
-                                <div class="text-right ml-3">
-                                    <p class="ig-stat-num text-2xl text-[var(--ig-accent)]">{{ $task->match_score }}%</p>
-                                    <p class="ig-mono text-[10px] text-[var(--ig-muted)]">match</p>
+                        @php
+                            $details = $task->match_details ?? [];
+                            $breakdown = $details['breakdown'] ?? [];
+                            
+                            // Domain Status
+                            $domainScore = $breakdown['domain_alignment'] ?? 0;
+                            $domainStatus = $domainScore === 100 ? '✓ Same Domain' : ($domainScore === 70 ? '✓ Related Domain' : '✗ Different Domain');
+                            
+                            // Role Alignment
+                            $roleScore = $breakdown['role_alignment'] ?? 0;
+                            $roleStatus = $roleScore === 100 ? '✓ ' . ($task->role ?? 'Role') . ' Role' : '✗ Role Disaligned';
+                            
+                            // Compile Proof-of-Work skills for exact frontend display matching CandidateRankingService
+                            $verifiedSkillNames = [];
+                            if ($profile->skillVerifications) {
+                                $verifiedSkillNames = $profile->skillVerifications->map(function($v) {
+                                    return $v->skill ? strtolower(trim($v->skill->name)) : null;
+                                })->filter()->unique()->toArray();
+                            }
+
+                            $portfolioSkillNames = [];
+                            if ($profile->portfolio && $profile->portfolio->items) {
+                                foreach ($profile->portfolio->items as $item) {
+                                    if ($item->hasEvidence() || !empty($item->verification_badge)) {
+                                        $pSkills = is_array($item->skills_demonstrated) 
+                                            ? $item->skills_demonstrated 
+                                            : json_decode($item->skills_demonstrated ?? '[]', true);
+                                        if (is_array($pSkills)) {
+                                            foreach ($pSkills as $psk) {
+                                                $portfolioSkillNames[] = strtolower(trim($psk));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            $proofOfWorkSkills = array_unique(array_merge($verifiedSkillNames, $portfolioSkillNames));
+
+                            // Skills match count
+                            $studentSkills = $profile->skills->pluck('name')->toArray();
+                            $taskSkills = $task->skills->pluck('name')->toArray();
+                            if (empty($taskSkills)) {
+                                $taskSkills = is_array($task->required_skills) 
+                                    ? $task->required_skills 
+                                    : json_decode($task->required_skills ?? '[]', true);
+                            }
+                        @endphp
+                        @php
+                            $passesGate = $details['passes_gate'] ?? true;
+                        @endphp
+                        <div class="ig-card p-6 flex flex-col justify-between hover:shadow-lg transition-all duration-300 {{ !$passesGate ? 'opacity-90 border-dashed border-amber-200 bg-amber-50/5' : 'hover:border-[var(--ig-accent)]' }}">
+                            <div>
+                                <div class="flex items-start justify-between mb-3">
+                                    <h3 class="ig-display text-xl flex-1 leading-tight text-[var(--ig-ink)] flex items-center gap-1.5">
+                                        @if(!$passesGate)
+                                            <span class="text-base text-amber-600" title="Missing required skills to qualify">🔒</span>
+                                        @endif
+                                        <a href="{{ route('tasks.show', $task->id) }}" class="hover:underline">{{ $task->title }}</a>
+                                    </h3>
+                                    <div class="text-right ml-3 flex-shrink-0">
+                                        <p class="ig-stat-num text-2xl {{ !$passesGate ? 'text-amber-600' : 'text-[var(--ig-accent)]' }}">{{ $task->match_score }}%</p>
+                                        <p class="ig-mono text-[10px] text-[var(--ig-muted)]">match</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <p class="text-sm text-[var(--ig-ink-2)] line-clamp-2 mb-4">{{ $task->description }}</p>
-                            <div class="flex items-center justify-between pt-4 border-t border-dashed border-[var(--ig-line)]">
-                                @if($task->match_score >= 80)
-                                    <span class="ig-chip ig-chip-lime">Perfect match</span>
-                                @elseif($task->match_score >= 60)
-                                    <span class="ig-chip">Good match</span>
+                                <p class="text-sm text-[var(--ig-ink-2)] line-clamp-2 mb-4">{{ $task->description }}</p>
+                                
+                                @if(!$passesGate)
+                                    <!-- Missing Skills for Skill Gate -->
+                                    <div class="bg-amber-500/5 border border-amber-500/10 rounded-2xl p-4 mb-4">
+                                        <h4 class="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2 font-poppins flex items-center gap-1">
+                                            <span>⚠️</span> Improve Skills to Unlock
+                                        </h4>
+                                        <p class="text-[11px] text-[var(--ig-ink-2)] mb-3 leading-relaxed">
+                                            You don't meet the minimum match gate (requires at least 20% match and at least 2 matched skills when 2+ are required).
+                                        </p>
+                                        <div class="text-[10px] font-bold text-[var(--ig-muted)] uppercase tracking-wider mb-1.5 font-poppins">Required Skills Status:</div>
+                                        <div class="flex flex-wrap gap-1.5 mb-3.5">
+                                            @foreach($taskSkills as $reqSkill)
+                                                @php
+                                                    $reqSkillLower = strtolower(trim($reqSkill));
+                                                    $hasProofOfWork = in_array($reqSkillLower, $proofOfWorkSkills);
+                                                    $isVerifiedSkill = in_array($reqSkillLower, $verifiedSkillNames);
+                                                    $isPortfolioSkill = in_array($reqSkillLower, $portfolioSkillNames);
+                                                    $isSelfDeclared = false;
+                                                    foreach ($profile->skills as $studSkill) {
+                                                        if (strtolower(trim($studSkill->name)) === $reqSkillLower) {
+                                                            $isSelfDeclared = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                @endphp
+                                                @if($hasProofOfWork)
+                                                    @if($isVerifiedSkill)
+                                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold" title="Verified via completed platform task or assessment">
+                                                            ✓ {{ $reqSkill }} (Platform Task)
+                                                        </span>
+                                                    @elseif($isPortfolioSkill)
+                                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold" title="Verified via portfolio project with evidence">
+                                                            ✓ {{ $reqSkill }} (Portfolio)
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                                                            ✓ {{ $reqSkill }} (Verified)
+                                                        </span>
+                                                    @endif
+                                                @elseif($isSelfDeclared)
+                                                    <a href="{{ route('student.profile') }}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold hover:bg-amber-200 transition" title="Click to add a portfolio project with evidence for this skill">
+                                                        ⚠️ {{ $reqSkill }} (No Proof)
+                                                    </a>
+                                                @else
+                                                    <a href="{{ route('student.profile') }}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-[10px] font-bold hover:bg-red-200 transition" title="Click to add this skill and a project to your profile">
+                                                        ✗ {{ $reqSkill }} (Missing)
+                                                    </a>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                        <a href="{{ route('student.profile') }}" class="inline-flex items-center gap-1 text-[11px] text-[var(--ig-accent)] hover:underline font-bold mt-1">
+                                            ⚡ Go to Profile to update your skills →
+                                        </a>
+                                    </div>
+                                @else
+                                    <!-- Matching Skills Summary -->
+                                    <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4 mb-4">
+                                        <div class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider mb-2 font-poppins flex items-center gap-1">
+                                            <span>✓</span> Skills Match Status
+                                        </div>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            @foreach($taskSkills as $reqSkill)
+                                                @php
+                                                    $reqSkillLower = strtolower(trim($reqSkill));
+                                                    $hasProofOfWork = in_array($reqSkillLower, $proofOfWorkSkills);
+                                                    $isVerifiedSkill = in_array($reqSkillLower, $verifiedSkillNames);
+                                                    $isPortfolioSkill = in_array($reqSkillLower, $portfolioSkillNames);
+                                                    $isSelfDeclared = false;
+                                                    foreach ($profile->skills as $studSkill) {
+                                                        if (strtolower(trim($studSkill->name)) === $reqSkillLower) {
+                                                            $isSelfDeclared = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                @endphp
+                                                @if($hasProofOfWork)
+                                                    @if($isVerifiedSkill)
+                                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold" title="Verified via completed platform task or assessment">
+                                                            ✓ {{ $reqSkill }} (Platform Task)
+                                                        </span>
+                                                    @elseif($isPortfolioSkill)
+                                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold" title="Verified via portfolio project with evidence">
+                                                            ✓ {{ $reqSkill }} (Portfolio)
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                                                            ✓ {{ $reqSkill }} (Verified)
+                                                        </span>
+                                                    @endif
+                                                @elseif($isSelfDeclared)
+                                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold" title="Self-declared but lacks verification badge or evidence project">
+                                                        ⚠️ {{ $reqSkill }} (No Proof)
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-150 text-gray-600 text-[10px] font-bold" title="Skill not listed on your profile">
+                                                        ✗ {{ $reqSkill }}
+                                                    </span>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
                                 @endif
                             </div>
-                        </a>
+                            
+                            <div class="flex items-center justify-between pt-4 border-t border-dashed border-[var(--ig-line)] mt-auto">
+                                @if(!$passesGate)
+                                    @if(($details['match_label'] ?? '') === 'Explore')
+                                        <span class="ig-chip bg-sky-100 text-sky-700 border border-sky-200 text-xs font-bold px-3 py-1 rounded-full">
+                                            🔍 Explore
+                                        </span>
+                                    @else
+                                        <span class="ig-chip bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold px-3 py-1 rounded-full">
+                                            Not Qualified
+                                        </span>
+                                    @endif
+                                @else
+                                    <span class="ig-chip {{ $task->match_score >= 90 ? 'ig-chip-lime' : ($task->match_score >= 80 ? 'ig-chip-success' : ($task->match_score >= 60 ? 'ig-chip-accent' : 'bg-gray-100 text-gray-600 border border-gray-200')) }} text-xs font-bold px-3 py-1 rounded-full">
+                                        {{ $details['match_label'] ?? 'Low Match' }}
+                                    </span>
+                                @endif
+                                <a href="{{ route('tasks.show', $task->id) }}" class="text-xs text-[var(--ig-accent)] hover:text-[#E03E0B] underline font-bold flex items-center gap-0.5">
+                                    View Task →
+                                </a>
+                            </div>
+                        </div>
                     @endforeach
                 </div>
             </section>
@@ -300,7 +521,7 @@
                     <h2 class="ig-display text-2xl">My applications</h2>
                     <a href="{{ route('tasks.index') }}" class="text-sm font-semibold hover:text-[var(--ig-accent)]">Browse tasks →</a>
                 </div>
-                <div class="space-y-4">
+                <div class="space-y-4 max-h-[440px] overflow-y-auto pr-2">
                     @forelse($profile->applications as $application)
                         <div class="p-5 border border-[var(--ig-line)] rounded-2xl hover:border-[var(--ig-ink)] transition">
                             <div class="flex items-start justify-between gap-4 mb-3">
@@ -396,7 +617,7 @@
                 </div>
                 <span class="ig-mono text-[11px] text-[var(--ig-muted)]">{{ $completedTasks->count() }} completed</span>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4 max-h-[440px] overflow-y-auto pr-2">
                 @forelse($completedTasks as $app)
                     @php
                         $rating = $ratings->get($app->task_id);
@@ -447,7 +668,7 @@
                         </div>
                     </div>
                 @empty
-                    <div class="md:col-span-2 text-center py-12">
+                    <div class="text-center py-12">
                         <p class="text-sm text-[var(--ig-muted)]">No completed tasks yet. Ship tasks to establish your reputation.</p>
                         <a href="{{ route('tasks.index') }}" class="inline-block mt-3 text-xs font-semibold text-[var(--ig-accent)] hover:underline">Browse tasks →</a>
                     </div>

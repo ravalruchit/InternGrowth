@@ -152,21 +152,34 @@
                             @endphp
 
                             @if($isVerified)
+                                @php
+                                    $badgeText = 'Verified';
+                                    $badgeClass = 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] border-[var(--ig-accent-soft)]';
+                                    $badgeEmoji = '✅';
+                                    
+                                    if ($startupCount >= 5) {
+                                        $badgeText = 'Expert';
+                                        $badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                                        $badgeEmoji = '👑';
+                                    } elseif ($startupCount >= 3) {
+                                        $badgeText = 'Proficient';
+                                        $badgeClass = 'bg-blue-50 text-blue-700 border-blue-200';
+                                        $badgeEmoji = '⭐';
+                                    }
+                                @endphp
                                 <div class="flex items-center justify-between bg-[var(--ig-bg-2)] border border-[var(--ig-line-2)] rounded-xl px-3.5 py-3 hover:border-[var(--ig-accent)] transition">
                                     <div class="flex items-center gap-2">
                                         <div class="w-1.5 h-1.5 rounded-full bg-[var(--ig-accent)] animate-pulse"></div>
                                         <span class="text-xs font-bold text-[var(--ig-ink)]">{{ $skill->name }}</span>
                                     </div>
                                     <div class="flex items-center gap-1.5 flex-shrink-0">
-                                        @if($startupCount > 0)
-                                            <span class="text-[9px] font-bold text-[var(--ig-accent)] bg-[var(--ig-accent-soft)] px-2 py-0.5 rounded-md">
-                                                ✓ {{ $startupCount }} {{ Str::plural('Startup', $startupCount) }}
-                                            </span>
-                                        @else
-                                            <span class="text-[9px] font-bold text-[var(--ig-accent)] bg-[var(--ig-accent-soft)] px-2 py-0.5 rounded-md">
-                                                ✓ Verified
-                                            </span>
-                                        @endif
+                                        <span class="text-[9px] font-bold px-2 py-0.5 rounded-md border {{ $badgeClass }} flex items-center gap-1">
+                                            <span>{{ $badgeEmoji }}</span>
+                                            <span>{{ $badgeText }}</span>
+                                            @if($startupCount > 0)
+                                                <span class="opacity-60">({{ $startupCount }} {{ Str::plural('Startup', $startupCount) }})</span>
+                                            @endif
+                                        </span>
                                         @if($skillScore)
                                             <span class="text-[9px] font-bold text-[var(--ig-ink-2)] bg-white border border-[var(--ig-line)] px-1.5 py-0.5 rounded-md font-mono">
                                                 {{ $skillScore }}/100

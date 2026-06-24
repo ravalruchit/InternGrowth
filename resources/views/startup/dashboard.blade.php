@@ -107,6 +107,45 @@
             </div>
         </div>
 
+        <!-- ─── Sourcing Analytics & Performance Widgets ─── -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Avg Candidate Match Score -->
+            <div class="ig-card p-6 flex flex-col justify-between border-t-4 border-t-[var(--ig-accent)] shadow-sm bg-gradient-to-br from-white to-[var(--ig-accent-soft)]/20">
+                <div>
+                    <p class="ig-eyebrow text-[10px] text-[var(--ig-muted)] font-bold uppercase tracking-wider">Avg Candidate Match Score</p>
+                    <p class="ig-stat-num text-4xl text-[var(--ig-ink)] mt-3">{{ $averageMatchScore }}%</p>
+                </div>
+                <div class="mt-4">
+                    <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                        <div class="bg-[var(--ig-accent)] h-full rounded-full transition-all duration-500" style="width: {{ $averageMatchScore }}%"></div>
+                    </div>
+                    <p class="text-[10px] text-[var(--ig-muted)] mt-2 font-semibold">Average compatibility score across all applications in funnel</p>
+                </div>
+            </div>
+
+            <!-- Top Performing Domain -->
+            <div class="ig-card p-6 flex flex-col justify-between shadow-sm">
+                <div>
+                    <p class="ig-eyebrow text-[10px] text-[var(--ig-muted)] font-bold uppercase tracking-wider">Top Performing Domain</p>
+                    <p class="text-xl font-bold text-[var(--ig-ink)] mt-4 font-poppins leading-snug">{{ $topPerformingDomain }}</p>
+                </div>
+                <div class="mt-4 text-[10px] text-[var(--ig-muted)] font-semibold border-t border-[var(--ig-line-2)] pt-2.5 flex items-center gap-1.5">
+                    🏆 Category yielding highest placement and completion rate
+                </div>
+            </div>
+
+            <!-- Best Hiring Category -->
+            <div class="ig-card p-6 flex flex-col justify-between border-b-4 border-b-[var(--ig-lime-deep)] shadow-sm bg-gradient-to-tr from-white to-[var(--ig-lime)]/10">
+                <div>
+                    <p class="ig-eyebrow text-[10px] text-[var(--ig-muted)] font-bold uppercase tracking-wider">Best Hiring Category</p>
+                    <p class="text-xl font-bold text-[var(--ig-ink)] mt-4 font-poppins leading-snug">{{ $mostSuccessfulHiringCategory }}</p>
+                </div>
+                <div class="mt-4 text-[10px] text-[var(--ig-muted)] font-semibold border-t border-[var(--ig-line-2)] pt-2.5 flex items-center gap-1.5">
+                    🎯 Preferred role with most successfully approved hires
+                </div>
+            </div>
+        </div>
+
         <!-- Trust Breakdown & Reviews Section -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             
@@ -419,18 +458,118 @@
                                     {{ $offer->start_date->format('M d, Y') }}
                                 </td>
                                 <td class="py-4">
-                                    <span class="ig-chip text-[10px] font-bold {{ $offer->status === 'accepted' ? 'ig-chip-success' : ($offer->status === 'pending' ? 'ig-chip-warn' : 'ig-chip-danger') }}">
-                                        {{ $offer->status }}
-                                    </span>
+                                    @if($offer->status === 'pending')
+                                        <span class="ig-chip text-[10px] font-bold ig-chip-warn">
+                                            Pending
+                                        </span>
+                                    @elseif($offer->status === 'pending_joining')
+                                        <span class="ig-chip text-[10px] font-bold ig-chip-warn">
+                                            Pending Joining
+                                        </span>
+                                    @elseif($offer->status === 'joined')
+                                        <span class="ig-chip text-[10px] font-bold ig-chip-success">
+                                            Joined / Active
+                                        </span>
+                                    @elseif($offer->status === 'completed')
+                                        <span class="ig-chip text-[10px] font-bold ig-chip-lime">
+                                            Completed
+                                        </span>
+                                    @elseif($offer->status === 'rejected')
+                                        <span class="ig-chip text-[10px] font-bold ig-chip-danger">
+                                            Declined
+                                        </span>
+                                    @elseif($offer->status === 'withdrawn')
+                                        <span class="ig-chip text-[10px] font-bold ig-chip-ink">
+                                            Withdrawn
+                                        </span>
+                                    @elseif($offer->status === 'cancelled_by_student')
+                                        <span class="ig-chip text-[10px] font-bold ig-chip-danger">
+                                            Cancelled by Student
+                                        </span>
+                                    @elseif($offer->status === 'withdrawn_by_startup')
+                                        <span class="ig-chip text-[10px] font-bold ig-chip-danger">
+                                            Cancelled by Startup
+                                        </span>
+                                    @else
+                                        <span class="ig-chip text-[10px] font-bold">
+                                            {{ str_replace('_', ' ', $offer->status) }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="py-4">
                                     @if($offer->status === 'pending')
                                         <form method="POST" action="{{ route('startup.offers.withdraw', $offer->id) }}" onsubmit="return confirm('Are you sure you want to withdraw this offer?');" class="inline">
                                             @csrf
-                                            <button type="submit" class="text-[var(--ig-rose)] font-bold hover:underline bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-1 rounded-lg transition text-[10px]">
+                                            <button type="submit" class="text-[var(--ig-rose)] font-bold hover:underline bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg transition text-[10px]">
                                                 Withdraw
                                             </button>
                                         </form>
+                                    @elseif($offer->status === 'pending_joining')
+                                        @if($offer->startup_joining_status === 'pending')
+                                            <div class="flex gap-2">
+                                                <form method="POST" action="{{ route('offers.cancel-joining', $offer->id) }}" onsubmit="return confirm('Are you sure the candidate did not join? This will refund your reserved success fee of ₹{{ number_format($offer->reserved_fee, 2) }}.');" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="text-[var(--ig-rose)] font-bold hover:underline bg-red-50 hover:bg-red-100 border border-red-250 px-2.5 py-1.5 rounded-lg transition text-[10px]">
+                                                        Did Not Join
+                                                    </button>
+                                                </form>
+                                                <form method="POST" action="{{ route('offers.confirm-joining', $offer->id) }}" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="text-[var(--ig-lime-deep)] font-bold hover:underline bg-emerald-50 hover:bg-emerald-100 border border-emerald-250 px-2.5 py-1.5 rounded-lg transition text-[10px]">
+                                                        Joined
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        @elseif($offer->startup_joining_status === 'joined')
+                                            <div class="flex flex-col gap-1.5 items-start">
+                                                <span class="text-[10px] text-[var(--ig-muted)] italic">Awaiting Student Confirm...</span>
+                                                <form method="POST" action="{{ route('offers.cancel-joining', $offer->id) }}" onsubmit="return confirm('Are you sure you want to cancel this placement?');" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="text-[var(--ig-rose)] font-bold hover:underline bg-red-50 hover:bg-red-100 border border-red-250 px-2.5 py-1.5 rounded-lg transition text-[10px]">
+                                                        Withdraw Placement
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        @endif
+                                    @elseif($offer->status === 'joined')
+                                        <button onclick="document.getElementById('complete-modal-{{ $offer->id }}').showModal()" class="ig-btn ig-btn-lime text-[10px] py-1.5 px-3">
+                                            Mark Completed
+                                        </button>
+                                        
+                                        <dialog id="complete-modal-{{ $offer->id }}" class="rounded-2xl p-6 bg-white border border-[var(--ig-line)] max-w-md w-full shadow-2xl backdrop:bg-black/50 text-left">
+                                            <div class="space-y-4">
+                                                <h3 class="ig-display text-xl text-[var(--ig-ink)]">Complete Internship</h3>
+                                                <p class="text-xs text-[var(--ig-muted)] font-poppins">Mark the placement for <strong>{{ $offer->student->user->name }}</strong> as completed. This will generate an Experience Certificate and update their profile.</p>
+                                                
+                                                <form method="POST" action="{{ route('offers.complete-internship', $offer->id) }}" class="space-y-4">
+                                                    @csrf
+                                                    <div>
+                                                        <label class="block text-xs font-bold text-[var(--ig-muted)] mb-1 uppercase">Hiring Success Rating</label>
+                                                        <select name="rating" required class="w-full rounded-xl border-[var(--ig-line)] text-xs p-2.5 bg-white text-[var(--ig-ink)]">
+                                                            <option value="excellent">Excellent (5.0 / 5.0)</option>
+                                                            <option value="good" selected>Good (4.0 / 5.0)</option>
+                                                            <option value="average">Average (3.0 / 5.0)</option>
+                                                            <option value="poor">Poor (2.0 / 5.0)</option>
+                                                            <option value="terminated">Terminated (2.0 / 5.0)</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <label class="block text-xs font-bold text-[var(--ig-muted)] mb-1 uppercase">Completion Notes / Review</label>
+                                                        <textarea name="notes" placeholder="Describe the student's performance, achievements, and responsibilities..." class="w-full rounded-xl border-[var(--ig-line)] text-xs p-2.5 h-24 text-[var(--ig-ink)]" max="1000"></textarea>
+                                                    </div>
+                                                    
+                                                    <div class="flex justify-end gap-2 pt-2">
+                                                        <button type="button" onclick="document.getElementById('complete-modal-{{ $offer->id }}').close()" class="ig-btn text-xs" style="background:transparent;border:1px solid var(--ig-line-2);color:var(--ig-ink)">Cancel</button>
+                                                        <button type="submit" class="ig-btn ig-btn-lime text-xs">Complete & Certify</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </dialog>
+                                    @elseif($offer->status === 'completed')
+                                        <span class="text-xs text-[var(--ig-lime)] font-semibold flex items-center gap-1">
+                                            <span>✓ Certified</span>
+                                        </span>
                                     @else
                                         <span class="text-gray-400 font-medium">-</span>
                                     @endif

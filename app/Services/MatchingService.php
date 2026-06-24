@@ -10,19 +10,9 @@ class MatchingService
 {
     public function getRecommendedTasksForStudent($studentProfile, $limit = 10, $studentProfileId = null)
     {
-        // Get student skills - handle relationship or JSON
-        if ($studentProfile->skills instanceof \Illuminate\Database\Eloquent\Collection) {
-            // Skills from relationship - get skill names
-            $studentSkills = $studentProfile->skills->pluck('name')->toArray();
-        } elseif (is_array($studentProfile->skills)) {
-            $studentSkills = $studentProfile->skills;
-        } else {
-            $studentSkills = json_decode($studentProfile->skills ?? '[]', true);
-        }
-        
         // Get all posted tasks (not closed, moderated, or completed)
         $tasksQuery = Task::where('status', 'posted')
-            ->with('startup.user');
+            ->with(['startup.user', 'skills']);
         
         // Exclude tasks the student has already applied to
         if ($studentProfileId) {
@@ -46,30 +36,66 @@ class MatchingService
             return collect([]);
         }
         
-        // Calculate match scores
-        $tasks = $tasks->map(function ($task) use ($studentProfile) {
-            $task->match_score = $this->calculateTaskMatchScore($task, $studentProfile);
-            return $task;
-        })
-        ->sortByDesc('match_score')
-        ->take($limit);
-        
-        return $tasks;
+        // Calculate match scores with honest skill gate enforcement
+        $rankingService = app(\App\Services\CandidateRankingService::class);
+
+        // First pass: get tasks that PASS the skill gate (honest matches)
+        $qualifiedTasks = collect();
+        $exploreTasks = collect();
+
+        foreach ($tasks as $task) {
+            // Try with skill gate ON (honest matching)
+            $ranking = $rankingService->calculateMatchScore($studentProfile, $task, false);
+            if ($ranking !== null) {
+                $task->match_score = $ranking['match_score'];
+                $task->match_details = $ranking;
+                $qualifiedTasks->push($task);
+            } else {
+                // Task failed the skill gate — save for backfill
+                $ranking = $rankingService->calculateMatchScore($studentProfile, $task, true);
+                if ($ranking !== null) {
+                    // Cap the score and label for gate-failed tasks
+                    $ranking['match_label'] = 'Explore';
+                    $ranking['passes_gate'] = false;
+                    $task->match_score = $ranking['match_score'];
+                    $task->match_details = $ranking;
+                    $exploreTasks->push($task);
+                }
+            }
+        }
+
+        // Sort qualified tasks by score (best first)
+        $qualifiedTasks = $qualifiedTasks->sortByDesc('match_score');
+
+        // If we have enough qualified tasks, return them
+        if ($qualifiedTasks->count() >= $limit) {
+            return $qualifiedTasks->take($limit);
+        }
+
+        // Backfill with "Explore" tasks if dashboard would be too empty
+        $exploreTasks = $exploreTasks->sortByDesc('match_score');
+        $merged = $qualifiedTasks->merge($exploreTasks)->take($limit);
+
+        return $merged;
     }
+
 
     public function getRecommendedStudentsForTask($task, $limit = 10)
     {
-        // Handle both JSON string and array
-        $taskSkills = is_array($task->required_skills) 
-            ? $task->required_skills 
-            : json_decode($task->required_skills ?? '[]', true);
+        $rankingService = app(\App\Services\CandidateRankingService::class);
         
-        $students = StudentProfile::with('user')
+        $students = StudentProfile::with(['user', 'skills', 'reputationScore', 'portfolio.items', 'skillVerifications.skill', 'hiringOffers', 'applications.submission'])
             ->get()
-            ->map(function ($student) use ($taskSkills, $task) {
-                $student->match_score = $this->calculateStudentMatchScore($student, $taskSkills, $task);
+            ->map(function ($student) use ($task, $rankingService) {
+                $ranking = $rankingService->calculateMatchScore($student, $task);
+                if ($ranking === null) {
+                    return null;
+                }
+                $student->match_score = $ranking['match_score'];
+                $student->match_details = $ranking;
                 return $student;
             })
+            ->filter()
             ->sortByDesc('match_score')
             ->take($limit);
         

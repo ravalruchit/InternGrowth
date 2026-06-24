@@ -11,6 +11,7 @@ class PortfolioItem extends Model
         'portfolio_id',
         'task_id',
         'submission_id',
+        'hiring_offer_id',
         'project_title',
         'auto_summary',
         'skills_demonstrated',
@@ -71,5 +72,10 @@ class PortfolioItem extends Model
     public function submission(): BelongsTo
     {
         return $this->belongsTo(Submission::class);
+    }
+
+    public function hiringOffer(): BelongsTo
+    {
+        return $this->belongsTo(HiringOffer::class, 'hiring_offer_id');
     }
 }
