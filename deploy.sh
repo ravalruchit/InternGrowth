@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+set -e
+
+# Ensure all required Laravel storage directories exist
+echo "Creating required storage directories..."
+mkdir -p storage/framework/views
+mkdir -p storage/framework/cache/data
+mkdir -p storage/framework/sessions
+mkdir -p storage/framework/testing
+mkdir -p storage/logs
+mkdir -p bootstrap/cache
+
+# Set correct permissions
+chmod -R 775 storage bootstrap/cache
 
 # Cache configuration, routes, and views for production performance
 echo "Caching Laravel bootstrap files..."
