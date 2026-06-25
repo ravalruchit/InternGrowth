@@ -51,7 +51,12 @@ class GoogleAuthController extends Controller
             return redirect()->route('auth.google.role');
             
         } catch (\Exception $e) {
-            return redirect()->route('login')->with('error', 'Failed to authenticate with Google. Please try again.');
+            \Log::error('Google OAuth Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'redirect_uri' => config('services.google.redirect'),
+                'client_id_exists' => !empty(config('services.google.client_id')),
+            ]);
+            return redirect()->route('login')->with('error', 'Google authentication failed: ' . $e->getMessage());
         }
     }
     
