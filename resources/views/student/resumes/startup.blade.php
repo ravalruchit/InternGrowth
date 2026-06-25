@@ -21,7 +21,43 @@
             line-height: 1.5;
             font-size: 10pt;
             background: #ffffff;
-            padding: 5px;
+        }
+        body.direct-view {
+            background: #F4F1EA;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .resume-container {
+            width: 100%;
+            background: #ffffff;
+            padding: 15px;
+        }
+        body.direct-view .resume-container {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            box-shadow: 0 15px 35px rgba(11, 15, 20, 0.1);
+            border: 1px solid #D6CFBE;
+            border-radius: 12px;
+        }
+        @media print {
+            body.direct-view {
+                background: #ffffff;
+                padding: 0;
+            }
+            body.direct-view .resume-container {
+                width: 100%;
+                min-height: auto;
+                padding: 0;
+                box-shadow: none;
+                border: none;
+                border-radius: 0;
+            }
+            .resume-container {
+                padding: 0 !important;
+            }
         }
         .header {
             margin-bottom: 25px;
@@ -250,6 +286,7 @@
 </head>
 <body>
     <button class="print-btn" onclick="window.print()">📥 Save / Print PDF</button>
+    <div class="resume-container">
 
     <!-- Header -->
     <div class="header">
@@ -403,10 +440,14 @@
         </div>
     @endif
 
+    </div>
+
     <script>
         if (window.self !== window.top) {
             const btn = document.querySelector('.print-btn');
             if (btn) btn.style.display = 'none';
+        } else {
+            document.body.classList.add('direct-view');
         }
     </script>
 </body>
