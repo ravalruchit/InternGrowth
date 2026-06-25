@@ -10,10 +10,9 @@
                 </h1>
             </div>
             <div class="md:col-span-4 md:text-right">
-                <a href="{{ route('student.cv.download') }}" class="ig-btn ig-btn-primary">
-                    <svg class="w-4.5 h-4.5" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    <span>Download CV</span>
-                    <span class="arrow">→</span>
+                <a href="#resume-studio" class="ig-btn ig-btn-primary">
+                    <span>Resume Studio</span>
+                    <span class="arrow">↓</span>
                 </a>
             </div>
         </div>
@@ -39,6 +38,117 @@
                     <span class="text-xs text-[var(--ig-muted)] font-normal">/ 5.0</span>
                 </p>
                 <p class="ig-mono text-[10px] text-[var(--ig-muted)] mt-2">Based on founder reviews</p>
+            </div>
+        </div>
+
+        <!-- Resume Studio Section -->
+        <div id="resume-studio" class="ig-card p-8 mb-12 ig-reveal scroll-mt-24">
+            <div class="border-b border-[var(--ig-line)] pb-5 mb-8">
+                <p class="ig-eyebrow mb-1">Resume Studio 2.0</p>
+                <h3 class="ig-display text-3xl text-[var(--ig-ink)]">Verified Experience Resume Engine</h3>
+                <p class="text-xs text-[var(--ig-muted)] mt-1">Configure your styling preferences, select templates, and download verified resumes.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left: Controls -->
+                <div class="lg:col-span-5 space-y-6">
+                    <form id="resume-settings-form" onchange="saveResumeSettings()">
+                        @csrf
+                        
+                        <!-- Theme selection -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-[var(--ig-muted)] mb-3">1. Select Template Theme</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="cursor-pointer border-2 border-[var(--ig-line)] rounded-xl p-3 flex flex-col justify-between hover:border-[var(--ig-accent)]/50 transition-all select-none group has-[:checked]:border-[var(--ig-accent)] has-[:checked]:bg-[var(--ig-accent-soft)]/10">
+                                    <input type="radio" name="resume_theme" value="ats" class="sr-only" {{ $profile->resume_theme === 'ats' ? 'checked' : '' }}>
+                                    <span class="font-bold text-xs text-[var(--ig-ink)]">ATS Professional</span>
+                                    <span class="text-[9px] text-[var(--ig-muted)] mt-1">B&W, Single column, Corporate optimized</span>
+                                </label>
+
+                                <label class="cursor-pointer border-2 border-[var(--ig-line)] rounded-xl p-3 flex flex-col justify-between hover:border-[var(--ig-accent)]/50 transition-all select-none group has-[:checked]:border-[var(--ig-accent)] has-[:checked]:bg-[var(--ig-accent-soft)]/10">
+                                    <input type="radio" name="resume_theme" value="startup" class="sr-only" {{ $profile->resume_theme === 'startup' ? 'checked' : '' }}>
+                                    <span class="font-bold text-xs text-[var(--ig-ink)]">Startup Modern</span>
+                                    <span class="text-[9px] text-[var(--ig-muted)] mt-1">Colored badges, Project-focused</span>
+                                </label>
+
+                                <label class="cursor-pointer border-2 border-[var(--ig-line)] rounded-xl p-3 flex flex-col justify-between hover:border-[var(--ig-accent)]/50 transition-all select-none group has-[:checked]:border-[var(--ig-accent)] has-[:checked]:bg-[var(--ig-accent-soft)]/10">
+                                    <input type="radio" name="resume_theme" value="verified" class="sr-only" {{ $profile->resume_theme === 'verified' ? 'checked' : '' }}>
+                                    <span class="font-bold text-xs text-[var(--ig-ink)]">InternGrowth Verified</span>
+                                    <span class="text-[9px] text-[var(--ig-muted)] mt-1">IPRS scores, Earnings, Trust badges</span>
+                                </label>
+
+                                <label class="cursor-pointer border-2 border-[var(--ig-line)] rounded-xl p-3 flex flex-col justify-between hover:border-[var(--ig-accent)]/50 transition-all select-none group has-[:checked]:border-[var(--ig-accent)] has-[:checked]:bg-[var(--ig-accent-soft)]/10">
+                                    <input type="radio" name="resume_theme" value="developer" class="sr-only" {{ $profile->resume_theme === 'developer' ? 'checked' : '' }}>
+                                    <span class="font-bold text-xs text-[var(--ig-ink)]">Developer Portfolio</span>
+                                    <span class="text-[9px] text-[var(--ig-muted)] mt-1">Two-column, GitHub, LeetCode focus</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Customization Toggles -->
+                        <div class="pt-4 border-t border-[var(--ig-line)]">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-[var(--ig-muted)] mb-3">2. Toggle Customizations</label>
+                            <div class="space-y-3">
+                                <label class="flex items-center justify-between cursor-pointer select-none">
+                                    <span class="text-xs text-[var(--ig-ink-2)] font-semibold">Include IPRS Reputation Score</span>
+                                    <input type="checkbox" name="show_iprs" value="1" {{ $profile->show_iprs ? 'checked' : '' }} class="rounded text-[var(--ig-accent)] focus:ring-[var(--ig-accent)]">
+                                </label>
+
+                                <label class="flex items-center justify-between cursor-pointer select-none">
+                                    <span class="text-xs text-[var(--ig-ink-2)] font-semibold">Include Stipend Earnings</span>
+                                    <input type="checkbox" name="show_stipends" value="1" {{ $profile->show_stipends ? 'checked' : '' }} class="rounded text-[var(--ig-accent)] focus:ring-[var(--ig-accent)]">
+                                </label>
+
+                                <label class="flex items-center justify-between cursor-pointer select-none">
+                                    <span class="text-xs text-[var(--ig-ink-2)] font-semibold">Include Startup Ratings</span>
+                                    <input type="checkbox" name="show_ratings" value="1" {{ $profile->show_ratings ? 'checked' : '' }} class="rounded text-[var(--ig-accent)] focus:ring-[var(--ig-accent)]">
+                                </label>
+
+                                <label class="flex items-center justify-between cursor-pointer select-none">
+                                    <span class="text-xs text-[var(--ig-ink-2)] font-semibold">Include Certificates</span>
+                                    <input type="checkbox" name="show_certificates" value="1" {{ $profile->show_certificates ? 'checked' : '' }} class="rounded text-[var(--ig-accent)] focus:ring-[var(--ig-accent)]">
+                                </label>
+
+                                <label class="flex items-center justify-between cursor-pointer select-none">
+                                    <span class="text-xs text-[var(--ig-ink-2)] font-semibold">Include Social & Professional Links</span>
+                                    <input type="checkbox" name="show_social_links" value="1" {{ $profile->show_social_links ? 'checked' : '' }} class="rounded text-[var(--ig-accent)] focus:ring-[var(--ig-accent)]">
+                                </label>
+
+                                <label class="flex items-center justify-between cursor-pointer select-none">
+                                    <span class="text-xs text-[var(--ig-ink-2)] font-semibold">Include Profile Photo (if supported by theme)</span>
+                                    <input type="checkbox" name="show_profile_photo" value="1" {{ $profile->show_profile_photo ? 'checked' : '' }} class="rounded text-[var(--ig-accent)] focus:ring-[var(--ig-accent)]">
+                                </label>
+
+                                <label class="flex items-center justify-between cursor-pointer select-none pt-2 border-t border-[var(--ig-line)]/50">
+                                    <span class="text-xs text-[var(--ig-ink-2)] font-semibold text-[var(--ig-rose)]">Hide Low-Rated Projects (under 4.0 stars)</span>
+                                    <input type="checkbox" id="hide_low_rated" value="1" class="rounded text-[var(--ig-rose)] focus:ring-[var(--ig-rose)]">
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="pt-4 border-t border-[var(--ig-line)] flex items-center gap-3">
+                        <button onclick="triggerPrint()" class="ig-btn ig-btn-primary flex-1 justify-center py-3">
+                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                            <span>Print / Export PDF</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Preview -->
+                <div class="lg:col-span-7 flex flex-col">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[var(--ig-muted)] mb-3">Live Resume Preview</label>
+                    <div class="flex-1 bg-neutral-900 border border-[var(--ig-line)] rounded-2xl overflow-hidden min-h-[480px] flex flex-col relative">
+                        <!-- Top browser bar representation -->
+                        <div class="h-8 bg-neutral-800 border-b border-neutral-700 flex items-center px-4 gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            <span class="text-[10px] text-neutral-400 font-mono ml-4 select-all flex-1 truncate">interngrowth.com/resume/preview</span>
+                        </div>
+                        <iframe id="resume-preview-iframe" src="{{ route('student.cv.download', ['theme' => $profile->resume_theme]) }}" class="w-full flex-1 border-0 bg-white"></iframe>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -171,7 +281,50 @@
                 @endforelse
             </div>
         </div>
-
-
     </div>
+
+    <script>
+        function saveResumeSettings() {
+            const form = document.getElementById('resume-settings-form');
+            const formData = new FormData(form);
+            
+            // Add unchecked checkboxes manually as false/0
+            const checkboxes = ['show_iprs', 'show_stipends', 'show_ratings', 'show_certificates', 'show_social_links', 'show_profile_photo'];
+            checkboxes.forEach(cb => {
+                if (!formData.has(cb)) {
+                    formData.append(cb, 0);
+                }
+            });
+
+            fetch("{{ route('student.cv.settings') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const theme = document.querySelector('input[name="resume_theme"]:checked').value;
+                    const hideLow = document.getElementById('hide_low_rated').checked ? 1 : 0;
+                    let previewUrl = "{{ route('student.cv.download') }}?theme=" + theme + "&hide_low_rated=" + hideLow;
+                    document.getElementById('resume-preview-iframe').src = previewUrl;
+                }
+            })
+            .catch(error => console.error('Error saving settings:', error));
+        }
+
+        function triggerPrint() {
+            const iframe = document.getElementById('resume-preview-iframe');
+            if (iframe) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }
+        }
+
+        // Initialize auto-refresh on hide_low_rated click
+        document.getElementById('hide_low_rated').addEventListener('change', saveResumeSettings);
+    </script>
 </x-app-layout>

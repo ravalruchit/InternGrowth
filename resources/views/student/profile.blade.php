@@ -37,6 +37,127 @@
                             </p>
                         </div>
                     </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">Professional Headline</label>
+                            <input type="text" name="professional_title" value="{{ old('professional_title', $profile->professional_title) }}" placeholder="e.g. Full Stack Developer" class="ig-input">
+                            @error('professional_title')
+                                <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">Phone Number</label>
+                            <input type="text" name="phone_number" value="{{ old('phone_number', $profile->phone_number) }}" placeholder="e.g. +91 98765 43210" class="ig-input">
+                            @error('phone_number')
+                                <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">City</label>
+                            <input type="text" name="city" value="{{ old('city', $profile->city) }}" placeholder="e.g. Ahmedabad" class="ig-input">
+                            @error('city')
+                                <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">State / Province</label>
+                            <input type="text" name="state" value="{{ old('state', $profile->state) }}" placeholder="e.g. Gujarat" class="ig-input">
+                            @error('state')
+                                <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">Country</label>
+                            <input type="text" name="country" value="{{ old('country', $profile->country) }}" placeholder="e.g. India" class="ig-input">
+                            @error('country')
+                                <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    {{-- Education Section --}}
+                    <div class="mt-8 border-t border-[var(--ig-line)] pt-6">
+                        <h3 class="text-sm font-black uppercase tracking-wider text-[var(--ig-muted)] mb-5 flex items-center gap-2">
+                            <span class="w-5 h-[2px] bg-[var(--ig-accent)] rounded-full"></span>
+                            Education Details
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">College / University Name</label>
+                                <input type="text" name="college_name" value="{{ old('college_name', $profile->college_name) }}" placeholder="e.g. LJ University" class="ig-input">
+                                @error('college_name')
+                                    <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">Degree & Course</label>
+                                <input type="text" name="degree_name" value="{{ old('degree_name', $profile->degree_name) }}" placeholder="e.g. Integrated B.Sc + M.Sc (IT)" class="ig-input">
+                                @error('degree_name')
+                                    <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+                            <div>
+                                <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">Expected/Actual Graduation Year</label>
+                                <input type="number" name="graduation_year" value="{{ old('graduation_year', $profile->graduation_year) }}" placeholder="e.g. 2029" class="ig-input">
+                                @error('graduation_year')
+                                    <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">CGPA / Score (Optional)</label>
+                                <input type="number" step="0.01" name="cgpa" value="{{ old('cgpa', $profile->cgpa) }}" placeholder="e.g. 8.7" class="ig-input">
+                                @error('cgpa')
+                                    <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Social Profile Links Section --}}
+                    <div class="mt-8 border-t border-[var(--ig-line)] pt-6">
+                        <h3 class="text-sm font-black uppercase tracking-wider text-[var(--ig-muted)] mb-5 flex items-center gap-2">
+                            <span class="w-5 h-[2px] bg-[var(--ig-accent)] rounded-full"></span>
+                            Social & Professional Profiles
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">GitHub URL</label>
+                                <input type="url" name="github_url" value="{{ old('github_url', $profile->github_url) }}" placeholder="https://github.com/username" class="ig-input font-mono text-sm">
+                                @error('github_url')
+                                    <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">LinkedIn URL</label>
+                                <input type="url" name="linkedin_url" value="{{ old('linkedin_url', $profile->linkedin_url) }}" placeholder="https://linkedin.com/in/username" class="ig-input font-mono text-sm">
+                                @error('linkedin_url')
+                                    <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+                            <div>
+                                <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">Personal Portfolio URL</label>
+                                <input type="url" name="portfolio_url" value="{{ old('portfolio_url', $profile->portfolio_url) }}" placeholder="https://username.dev" class="ig-input font-mono text-sm">
+                                @error('portfolio_url')
+                                    <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">LeetCode URL</label>
+                                <input type="url" name="leetcode_url" value="{{ old('leetcode_url', $profile->leetcode_url) }}" placeholder="https://leetcode.com/username" class="ig-input font-mono text-sm">
+                                @error('leetcode_url')
+                                    <p class="text-[var(--ig-rose)] text-xs mt-2">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Bio --}}

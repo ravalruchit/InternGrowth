@@ -98,6 +98,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/profile', [StudentController::class, 'updateProfile'])->name('profile.update');
         Route::get('/analytics', [StudentController::class, 'analytics'])->name('analytics');
         Route::get('/cv/download', [StudentController::class, 'downloadCV'])->name('cv.download');
+        Route::post('/cv/settings', [StudentController::class, 'updateResumeSettings'])->name('cv.settings');
         Route::get('/verification', [StudentController::class, 'verification'])->name('verification');
         Route::post('/verification/send', [StudentController::class, 'sendVerification'])->name('verification.send');
         Route::get('/verification/code', [StudentController::class, 'showVerificationCode'])->name('verification.code');

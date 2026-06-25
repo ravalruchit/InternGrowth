@@ -1,3 +1,32 @@
+@php
+    $topStudent = \App\Models\StudentProfile::with(['user', 'reputationScore'])
+        ->leftJoin('reputation_scores', 'student_profiles.id', '=', 'reputation_scores.student_profile_id')
+        ->orderByRaw('COALESCE(reputation_scores.overall_score, 50.00) desc')
+        ->select('student_profiles.*')
+        ->first();
+
+    if ($topStudent && $topStudent->user) {
+        $tsUser  = $topStudent->user;
+        $tsRep   = $topStudent->reputationScore;
+        $tsScore = $tsRep ? round($tsRep->overall_score) : 50;
+        $tsInitial = strtoupper(substr($tsUser->name, 0, 1));
+        
+        $tsNameParts = explode(' ', $tsUser->name);
+        $tsShortName = $tsNameParts[0] . (isset($tsNameParts[1]) ? ' ' . substr($tsNameParts[1], 0, 1) . '.' : '');
+        $tsCollegeName = $topStudent->college_name ?? 'Student';
+        $tsBio = $topStudent->bio ?: 'Closed 2 internship offers in 3 weeks. Founders saw my IPRS, not my CGPA.';
+        if (strlen($tsBio) > 120) {
+            $tsBio = substr($tsBio, 0, 117) . '...';
+        }
+    } else {
+        // Fallback to static dummy if no students in DB yet
+        $tsInitial = 'N';
+        $tsShortName = 'Nikhil S.';
+        $tsScore = 91;
+        $tsCollegeName = 'NIT Trichy';
+        $tsBio = 'Closed 2 internship offers in 3 weeks. Founders saw my IPRS, not my CGPA.';
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -35,12 +64,12 @@
 
                 <!-- Mini testimonial -->
                 <div class="mt-12 p-6 rounded-2xl border border-white/10 bg-white/[.03] max-w-md">
-                    <p class="ig-serif text-xl text-white leading-relaxed">"Closed 2 internship offers in 3 weeks. Founders saw my IPRS, not my CGPA."</p>
+                    <p class="ig-serif text-xl text-white leading-relaxed">"{{ $tsBio }}"</p>
                     <div class="flex items-center gap-3 mt-4">
-                        <div class="w-9 h-9 rounded-full bg-[var(--ig-accent)] flex items-center justify-center ig-display text-sm text-white">N</div>
+                        <div class="w-9 h-9 rounded-full bg-[var(--ig-accent)] flex items-center justify-center ig-display text-sm text-white">{{ $tsInitial }}</div>
                         <div>
-                            <p class="text-sm font-semibold text-white">Nikhil S.</p>
-                            <p class="ig-mono text-[10px]" style="color:#9C9580">IPRS 91 · NIT Trichy</p>
+                            <p class="text-sm font-semibold text-white">{{ $tsShortName }}</p>
+                            <p class="ig-mono text-[10px]" style="color:#9C9580">IPRS {{ $tsScore }} · {{ $tsCollegeName }}</p>
                         </div>
                     </div>
                 </div>

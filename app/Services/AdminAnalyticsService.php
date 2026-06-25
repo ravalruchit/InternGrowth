@@ -350,7 +350,7 @@ class AdminAnalyticsService
             ->leftJoin('reputation_scores', 'student_profiles.id', '=', 'reputation_scores.student_profile_id')
             ->select('college_name', 
                 DB::raw('COUNT(student_profiles.id) as student_count'), 
-                DB::raw('SUM(CASE WHEN is_verified = 1 THEN 1 ELSE 0 END) as verified_count'),
+                DB::raw('SUM(CASE WHEN is_verified THEN 1 ELSE 0 END) as verified_count'),
                 DB::raw('COALESCE(AVG(reputation_scores.overall_score), 50.00) as avg_iprs')
             )
             ->groupBy('college_name')

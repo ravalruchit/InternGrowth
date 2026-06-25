@@ -144,6 +144,19 @@ class StudentController extends Controller
             'skills' => 'nullable|array',
             'primary_domain' => 'nullable|string',
             'preferred_role' => 'nullable|string',
+            'phone_number' => 'nullable|string|max:20',
+            'github_url' => 'nullable|url',
+            'linkedin_url' => 'nullable|url',
+            'portfolio_url' => 'nullable|url',
+            'leetcode_url' => 'nullable|url',
+            'degree_name' => 'nullable|string|max:255',
+            'cgpa' => 'nullable|numeric|between:0,10',
+            'professional_title' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
+            'college_name' => 'nullable|string|max:255',
+            'graduation_year' => 'nullable|integer',
         ]);
 
         // Update user name
@@ -155,6 +168,19 @@ class StudentController extends Controller
             'bio' => $validated['bio'],
             'primary_domain' => $validated['primary_domain'] ?? null,
             'preferred_role' => $validated['preferred_role'] ?? null,
+            'phone_number' => $validated['phone_number'] ?? null,
+            'github_url' => $validated['github_url'] ?? null,
+            'linkedin_url' => $validated['linkedin_url'] ?? null,
+            'portfolio_url' => $validated['portfolio_url'] ?? null,
+            'leetcode_url' => $validated['leetcode_url'] ?? null,
+            'degree_name' => $validated['degree_name'] ?? null,
+            'cgpa' => $validated['cgpa'] ?? null,
+            'professional_title' => $validated['professional_title'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'state' => $validated['state'] ?? null,
+            'country' => $validated['country'] ?? null,
+            'college_name' => $validated['college_name'] ?? null,
+            'graduation_year' => $validated['graduation_year'] ?? null,
         ]);
         
         if (isset($validated['skills'])) {
@@ -393,33 +419,61 @@ class StudentController extends Controller
         return view('student.analytics', compact('profile', 'analytics'));
     }
 
-    public function downloadCV()
+    public function downloadCV(Request $request)
     {
         $profile = auth()->user()->studentProfile->load([
             'skills',
-            'ratings'
+            'ratings',
+            'reputationScore',
+            'portfolio.items'
         ]);
 
-        // Get completed tasks
-        $completedTasks = \App\Models\Application::where('student_profile_id', $profile->id)
-            ->with(['task.startup', 'submission'])
-            ->whereHas('submission', function($q) {
-                $q->where('status', 'accepted');
-            })
-            ->get();
+        $resumeService = app(\App\Services\ResumeBuilderService::class);
 
-        // Load ratings for each task
-        foreach($completedTasks as $task) {
-            $task->rating = \App\Models\Rating::where('task_id', $task->task_id)
-                ->where('student_profile_id', $profile->id)
-                ->first();
+        // Generate data structures dynamically
+        $experiences = $resumeService->groupExperiencesByStartup($profile, $request->has('hide_low_rated'));
+        $summary = $resumeService->generateProfessionalSummary($profile);
+        $achievements = $resumeService->calculateAchievements($profile);
+        $skillsCategorized = $resumeService->buildSkillSections($profile);
+
+        return view('student.cv-download', compact(
+            'profile',
+            'experiences',
+            'summary',
+            'achievements',
+            'skillsCategorized'
+        ));
+    }
+
+    public function updateResumeSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'resume_theme' => 'required|string|in:ats,startup,verified,developer',
+            'show_iprs' => 'boolean',
+            'show_stipends' => 'boolean',
+            'show_ratings' => 'boolean',
+            'show_certificates' => 'boolean',
+            'show_social_links' => 'boolean',
+            'show_profile_photo' => 'boolean',
+        ]);
+
+        $profile = auth()->user()->studentProfile;
+        
+        $profile->update([
+            'resume_theme' => $validated['resume_theme'],
+            'show_iprs' => $request->has('show_iprs'),
+            'show_stipends' => $request->has('show_stipends'),
+            'show_ratings' => $request->has('show_ratings'),
+            'show_certificates' => $request->has('show_certificates'),
+            'show_social_links' => $request->has('show_social_links'),
+            'show_profile_photo' => $request->has('show_profile_photo'),
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Resume settings updated successfully']);
         }
 
-        $totalStipend = $completedTasks->sum(function($app) {
-            return $app->task->stipend ?? 0;
-        });
-
-        return view('student.cv-download', compact('profile', 'completedTasks', 'totalStipend'));
+        return back()->with('success', 'Resume settings updated successfully');
     }
 
     // ─────────────────────────────────────────────────────────────────────────

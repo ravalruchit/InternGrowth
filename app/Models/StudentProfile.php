@@ -70,6 +70,25 @@ class StudentProfile extends Model
         'verification_method',
         'primary_domain',
         'preferred_role',
+        // Social, location, education and customizations
+        'phone_number',
+        'github_url',
+        'linkedin_url',
+        'portfolio_url',
+        'leetcode_url',
+        'degree_name',
+        'cgpa',
+        'professional_title',
+        'city',
+        'state',
+        'country',
+        'resume_theme',
+        'show_iprs',
+        'show_stipends',
+        'show_ratings',
+        'show_certificates',
+        'show_social_links',
+        'show_profile_photo',
     ];
 
     protected $casts = [
@@ -80,6 +99,13 @@ class StudentProfile extends Model
         'id_card_ai_result'        => 'array',
         'id_card_submitted_at'     => 'datetime',
         'id_card_verified_at'      => 'datetime',
+        'cgpa'                     => 'decimal:2',
+        'show_iprs'                => 'boolean',
+        'show_stipends'            => 'boolean',
+        'show_ratings'             => 'boolean',
+        'show_certificates'        => 'boolean',
+        'show_social_links'        => 'boolean',
+        'show_profile_photo'       => 'boolean',
     ];
 
     public function user(): BelongsTo
