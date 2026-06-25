@@ -78,12 +78,25 @@
                                   class="ig-input" placeholder="Brief elevator pitch or summary of startup activities...">{{ old('description') }}</textarea>
                     </div>
 
-                    <!-- Industry -->
-                    <div>
-                        <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Industry</label>
-                        <input type="text" name="industry" value="{{ old('industry') }}" 
-                               class="ig-input"
-                               placeholder="e.g., Technology, Healthcare, Finance">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Industry -->
+                        <div>
+                            <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Industry</label>
+                            <input type="text" name="industry" value="{{ old('industry') }}" 
+                                   class="ig-input"
+                                   placeholder="e.g. Technology, Healthcare, Finance">
+                        </div>
+
+                        <!-- Website -->
+                        <div>
+                            <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Website</label>
+                            <input type="text" name="website" value="{{ old('website') }}" 
+                                   class="ig-input"
+                                   placeholder="e.g. https://stripe.com">
+                            @error('website')
+                                <p class="text-red-600 text-xs mt-1.5 font-mono">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
                     <!-- Verification Status -->

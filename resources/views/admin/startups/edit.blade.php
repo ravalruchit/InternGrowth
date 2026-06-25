@@ -45,28 +45,40 @@
                     <!-- Company Name -->
                     <div>
                         <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Company Name</label>
-                        <input type="text" name="company_name" value="{{ old('company_name', $startup->startupProfile->company_name ?? '') }}" 
+                        <input type="text" name="company_name" value="{{ old('company_name', $startup->startupProfile?->company_name ?? '') }}" 
                                class="ig-input">
                     </div>
-
+ 
                     <!-- Description -->
                     <div>
                         <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Description</label>
                         <textarea name="description" rows="4" 
-                                  class="ig-input">{{ old('description', $startup->startupProfile->description ?? '') }}</textarea>
+                                  class="ig-input">{{ old('description', $startup->startupProfile?->description ?? '') }}</textarea>
                     </div>
+ 
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Industry -->
+                        <div>
+                            <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Industry</label>
+                            <input type="text" name="industry" value="{{ old('industry', $startup->startupProfile?->industry ?? '') }}" 
+                                   class="ig-input">
+                        </div>
 
-                    <!-- Industry -->
-                    <div>
-                        <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Industry</label>
-                        <input type="text" name="industry" value="{{ old('industry', $startup->startupProfile->industry ?? '') }}" 
-                               class="ig-input">
+                        <!-- Website -->
+                        <div>
+                            <label class="block text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider mb-2 font-mono">Website</label>
+                            <input type="text" name="website" value="{{ old('website', $startup->startupProfile?->website ?? '') }}" 
+                                   class="ig-input">
+                            @error('website')
+                                <p class="text-red-600 text-xs mt-1.5 font-mono">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
-
+ 
                     <!-- Verification Status -->
                     <div class="flex items-center space-x-3 p-4 bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-xl">
                         <input type="checkbox" name="is_verified" id="is_verified" 
-                               {{ old('is_verified', $startup->startupProfile->is_verified ?? false) ? 'checked' : '' }}
+                               {{ old('is_verified', $startup->startupProfile?->is_verified ?? false) ? 'checked' : '' }}
                                class="w-5 h-5 text-[var(--ig-accent)] border-[var(--ig-line-2)] rounded focus:ring-[var(--ig-accent)]">
                         <label for="is_verified" class="text-sm font-semibold text-[var(--ig-ink)] cursor-pointer select-none">Verified Startup</label>
                     </div>

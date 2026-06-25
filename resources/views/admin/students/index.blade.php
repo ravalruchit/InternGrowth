@@ -32,9 +32,9 @@
                     <thead class="bg-[var(--ig-bg-2)]/60">
                         <tr>
                             <th class="px-6 py-4 text-left text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider font-mono">ID</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider font-mono">Name</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider font-mono">Student Details</th>
                             <th class="px-6 py-4 text-left text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider font-mono">Email</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider font-mono">Education</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider font-mono">Academics & Domain</th>
                             <th class="px-6 py-4 text-left text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider font-mono">Joined</th>
                             <th class="px-6 py-4 text-left text-xs font-semibold text-[var(--ig-muted)] uppercase tracking-wider font-mono">Actions</th>
                         </tr>
@@ -45,10 +45,22 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-[var(--ig-muted)]">#{{ $student->id }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-semibold text-[var(--ig-ink)]">{{ $student->name }}</div>
+                                    @if($student->studentProfile?->professional_title)
+                                        <div class="text-xs text-[var(--ig-muted)] font-mono">{{ $student->studentProfile->professional_title }}</div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--ig-muted)] font-mono">{{ $student->email }}</td>
                                 <td class="px-6 py-4 text-sm text-[var(--ig-ink-2)]">
-                                    {{ $student->studentProfile->education ?? 'Not provided' }}
+                                    @if($student->studentProfile)
+                                        <div class="font-semibold text-[var(--ig-ink)]">{{ $student->studentProfile->primary_domain ?? 'N/A' }} — <span class="font-normal text-[var(--ig-muted)]">{{ $student->studentProfile->preferred_role ?? 'N/A' }}</span></div>
+                                        <div class="text-xs text-[var(--ig-muted)] mt-0.5">
+                                            {{ $student->studentProfile->college_name ?? 'No college' }} 
+                                            @if($student->studentProfile->graduation_year) (Class of {{ $student->studentProfile->graduation_year }}) @endif
+                                            @if($student->studentProfile->cgpa) • CGPA: {{ $student->studentProfile->cgpa }} @endif
+                                        </div>
+                                    @else
+                                        <span class="text-[var(--ig-muted)]">No Profile</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--ig-muted)] font-mono">
                                     {{ $student->created_at->format('M d, Y') }}

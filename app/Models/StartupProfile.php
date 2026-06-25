@@ -35,9 +35,10 @@ class StartupProfile extends Model
         'verification_expires_at',
         'startup_trust_score',
         'trust_score_breakdown',
-        'is_suspicious'
+        'is_suspicious',
+        'industry'
     ];
-
+ 
     protected $casts = [
         'wallet_balance' => 'decimal:2',
         'is_verified' => 'boolean',
@@ -51,7 +52,7 @@ class StartupProfile extends Model
         'trust_score_breakdown' => 'array',
         'is_suspicious' => 'boolean',
     ];
-
+ 
     /**
      * Determine if the startup is verified, not suspicious, and verification is active.
      */
@@ -60,77 +61,35 @@ class StartupProfile extends Model
         if (!$this->is_verified || $this->is_suspicious) {
             return false;
         }
-
+ 
         if ($this->verification_expires_at && now()->gt($this->verification_expires_at)) {
             return false;
         }
-
+ 
         return true;
     }
-
+ 
     /**
      * Recalculate and cache the startup's trust score and breakdown.
      */
     public function recalculateTrustScore(): int
     {
-        $verificationVal = $this->isVerifiedAndActive() ? 50 : 0;
-
-        // Completed tasks (tasks that have at least one accepted application)
-        $completedTasksCount = $this->tasks()
-            ->whereHas('applications.submission', function($q) {
-                $q->where('status', 'accepted');
-            })->count();
-        $completedTasksVal = $completedTasksCount * 5;
-
-        // Successful internships (accepted HiringOffers with type 'internship')
-        $successfulInternshipsCount = $this->hiringOffers()
-            ->where('offer_type', 'internship')
-            ->where('status', 'accepted')->count();
-        $successfulInternshipsVal = $successfulInternshipsCount * 10;
-
-        // Successful hires (accepted HiringOffers with type 'job')
-        $successfulHiresCount = $this->hiringOffers()
-            ->where('offer_type', 'job')
-            ->where('status', 'accepted')->count();
-        $successfulHiresVal = $successfulHiresCount * 15;
-
-        // Reviews & Payouts (student reviews, payment completions, and complaints)
-        $positiveReviewsCount = $this->reviews()->where('rating', '>=', 4)->count();
-        $negativeReviewsCount = $this->reviews()->where('rating', '<=', 2)->count();
-        
-        // We count 1-star reviews as complaints (-20)
-        $complaintsCount = $this->reviews()->where('rating', 1)->count();
-        
-        // Count verified payment completions: completed tasks that had stipend/escrow payout
-        $verifiedPaymentsCount = $this->tasks()
-            ->where('escrow_locked', false)
-            ->where('escrow_amount', '>', 0)
-            ->whereHas('applications.submission', function($q) {
-                $q->where('status', 'accepted');
-            })->count();
-
-        $studentReviewsVal = ($positiveReviewsCount * 2) 
-            + ($negativeReviewsCount * -5) 
-            + ($complaintsCount * -20) 
-            + ($verifiedPaymentsCount * 3);
-
-        $totalScore = $verificationVal + $completedTasksVal + $successfulInternshipsVal + $successfulHiresVal + $studentReviewsVal;
-        $totalScore = max(0, min(100, $totalScore));
+        $reputationService = new \App\Services\StartupReputationService();
+        $trustScoreObj = $reputationService->updateReputation($this->id);
 
         $breakdown = [
-            'verification'           => $verificationVal,
-            'completed_tasks'        => $completedTasksVal,
-            'successful_internships' => $successfulInternshipsVal,
-            'successful_hires'       => $successfulHiresVal,
-            'student_reviews'        => $studentReviewsVal,
+            'verification'   => (int) $trustScoreObj->verification_score,
+            'payment'        => (int) $trustScoreObj->payment_score,
+            'student_rating' => (int) $trustScoreObj->student_rating_score,
+            'hiring'         => (int) $trustScoreObj->hiring_score,
         ];
 
         $this->update([
-            'startup_trust_score'   => $totalScore,
+            'startup_trust_score'   => (int) $trustScoreObj->overall_score,
             'trust_score_breakdown' => $breakdown,
         ]);
 
-        return $totalScore;
+        return (int) $trustScoreObj->overall_score;
     }
 
     public function user(): BelongsTo

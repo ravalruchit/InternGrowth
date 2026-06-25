@@ -82,8 +82,13 @@ class AdminController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'bio' => 'nullable|string',
-            'education' => 'nullable|string',
-            'experience' => 'nullable|string',
+            'college_name' => 'nullable|string|max:255',
+            'degree_name' => 'nullable|string|max:255',
+            'graduation_year' => 'nullable|integer|min:2000|max:2100',
+            'cgpa' => 'nullable|numeric|between:0,10.00',
+            'primary_domain' => 'nullable|string|max:255',
+            'preferred_role' => 'nullable|string|max:255',
+            'professional_title' => 'nullable|string|max:255',
         ]);
 
         $user = User::create([
@@ -97,9 +102,13 @@ class AdminController extends Controller
         $profile = \App\Models\StudentProfile::create([
             'user_id' => $user->id,
             'bio' => $request->bio,
-            'education' => $request->education,
-            'experience' => $request->experience,
-            'skills' => json_encode([]),
+            'college_name' => $request->college_name,
+            'degree_name' => $request->degree_name,
+            'graduation_year' => $request->graduation_year,
+            'cgpa' => $request->cgpa,
+            'primary_domain' => $request->primary_domain,
+            'preferred_role' => $request->preferred_role,
+            'professional_title' => $request->professional_title,
             'portfolio_url' => '',
             'github_url' => '',
             'linkedin_url' => '',
@@ -123,8 +132,13 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
             'bio' => 'nullable|string',
-            'education' => 'nullable|string',
-            'experience' => 'nullable|string',
+            'college_name' => 'nullable|string|max:255',
+            'degree_name' => 'nullable|string|max:255',
+            'graduation_year' => 'nullable|integer|min:2000|max:2100',
+            'cgpa' => 'nullable|numeric|between:0,10.00',
+            'primary_domain' => 'nullable|string|max:255',
+            'preferred_role' => 'nullable|string|max:255',
+            'professional_title' => 'nullable|string|max:255',
         ]);
 
         $user = User::findOrFail($id);
@@ -136,8 +150,13 @@ class AdminController extends Controller
         if ($user->studentProfile) {
             $user->studentProfile->update([
                 'bio' => $request->bio,
-                'education' => $request->education,
-                'experience' => $request->experience,
+                'college_name' => $request->college_name,
+                'degree_name' => $request->degree_name,
+                'graduation_year' => $request->graduation_year,
+                'cgpa' => $request->cgpa,
+                'primary_domain' => $request->primary_domain,
+                'preferred_role' => $request->preferred_role,
+                'professional_title' => $request->professional_title,
             ]);
         }
 
@@ -206,6 +225,7 @@ class AdminController extends Controller
             'company_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'industry' => 'nullable|string',
+            'website' => 'nullable|string|max:255',
             'is_verified' => 'boolean',
         ]);
 
@@ -222,10 +242,7 @@ class AdminController extends Controller
             'company_name' => $request->company_name,
             'description' => $request->description,
             'industry' => $request->industry,
-            'website' => '',
-            'location' => '',
-            'team_size' => '',
-            'founded_year' => null,
+            'website' => $request->website,
             'credibility_score' => 1.0,
             'is_verified' => $request->has('is_verified'),
         ]);
@@ -249,6 +266,7 @@ class AdminController extends Controller
             'company_name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'industry' => 'nullable|string',
+            'website' => 'nullable|string|max:255',
             'is_verified' => 'boolean',
         ]);
 
@@ -263,6 +281,7 @@ class AdminController extends Controller
                 'company_name' => $request->company_name,
                 'description' => $request->description,
                 'industry' => $request->industry,
+                'website' => $request->website,
                 'is_verified' => $request->has('is_verified'),
             ]);
         }
@@ -474,6 +493,7 @@ class AdminController extends Controller
             'id_card_verification_status' => 'ai_rejected',
             'id_card_ai_result'           => $aiResult,
             'is_verified'                 => false,
+            'id_card_verified_at'         => now(),
         ]);
 
         return back()->with('success', 'Student ID rejected. They will be asked to re-upload.');

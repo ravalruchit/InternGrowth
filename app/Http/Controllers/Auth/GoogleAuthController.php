@@ -105,9 +105,6 @@ class GoogleAuthController extends Controller
             $profile = StudentProfile::create([
                 'user_id' => $user->id,
                 'bio' => '',
-                'skills' => json_encode([]),
-                'education' => '',
-                'experience' => '',
                 'portfolio_url' => '',
                 'github_url' => '',
                 'linkedin_url' => '',

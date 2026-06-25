@@ -39,14 +39,19 @@
                     <tbody class="divide-y divide-[var(--ig-line)] bg-white">
                         @forelse($startups as $startup)
                             <tr class="hover:bg-[var(--ig-bg-2)]/30 transition-colors duration-150">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-[var(--ig-ink)]">
-                                    {{ $startup->startupProfile->company_name ?? 'N/A' }}
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-semibold text-[var(--ig-ink)]">
+                                        {{ $startup->startupProfile?->company_name ?? 'N/A' }}
+                                    </div>
+                                    @if($startup->startupProfile?->industry)
+                                        <div class="text-xs text-[var(--ig-muted)] font-mono">{{ $startup->startupProfile->industry }}</div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--ig-muted)] font-mono">
                                     {{ $startup->email }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($startup->startupProfile && $startup->startupProfile->is_verified)
+                                    @if($startup->startupProfile?->is_verified)
                                         <span class="ig-chip ig-chip-success">Verified</span>
                                     @else
                                         <span class="ig-chip ig-chip-warn">Pending</span>
