@@ -17,7 +17,7 @@
         }
         body {
             font-family: 'Inter', sans-serif;
-            color: #1E293B;
+            color: #0B0F14;
             line-height: 1.4;
             font-size: 9pt;
             background: #ffffff;
@@ -28,14 +28,15 @@
             min-height: 297mm;
         }
         
-        /* Left Column (Sidebar) */
+        /* Left Column (Sidebar) - Matches warm cream secondary background */
         .sidebar {
-            background: #0F172A;
-            color: #F1F5F9;
+            background: #ECE7DC;
+            color: #0B0F14;
             padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 20px;
+            border-right: 1px solid #D6CFBE;
         }
         .profile-photo-container {
             display: flex;
@@ -47,23 +48,23 @@
             width: 90px;
             height: 90px;
             border-radius: 50%;
-            background: #4F46E5;
+            background: #FF4F19; /* Tangerine */
             color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 32pt;
             font-weight: 800;
-            border: 3px solid #334155;
+            border: 3px solid #D6CFBE;
         }
         
         .sidebar-section-title {
             font-size: 8pt;
             font-weight: 800;
-            color: #38BDF8; /* Sky accent */
+            color: #FF4F19; /* Tangerine */
             text-transform: uppercase;
             letter-spacing: 1px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid #D6CFBE;
             padding-bottom: 4px;
             margin-bottom: 8px;
         }
@@ -73,11 +74,11 @@
         .sidebar-item-title {
             font-weight: 700;
             font-size: 8.5pt;
-            color: #F1F5F9;
+            color: #0B0F14;
         }
         .sidebar-item-desc {
             font-size: 8pt;
-            color: #94A3B8;
+            color: #5C6470;
             margin-top: 1px;
         }
         
@@ -88,7 +89,7 @@
         .skills-group-title {
             font-size: 7.5pt;
             font-weight: 700;
-            color: #64748B;
+            color: #5C6470;
             text-transform: uppercase;
             margin-bottom: 3px;
         }
@@ -98,11 +99,11 @@
             gap: 4px;
         }
         .skill-badge {
-            background: #1E293B;
-            color: #38BDF8;
+            background: #FFFFFF;
+            color: #0B0F14;
             font-size: 7.5pt;
             padding: 1px 6px;
-            border: 1px solid #334155;
+            border: 1px solid #D6CFBE;
             border-radius: 4px;
             font-weight: 500;
             font-family: 'Fira Code', monospace;
@@ -118,13 +119,13 @@
         .main-header h1 {
             font-size: 24pt;
             font-weight: 900;
-            color: #0F172A;
+            color: #0B0F14;
             line-height: 1.1;
         }
         .main-header .subtitle {
             font-size: 11pt;
             font-weight: 600;
-            color: #4F46E5;
+            color: #FF4F19; /* Tangerine */
             margin-top: 2px;
             margin-bottom: 12px;
         }
@@ -133,25 +134,25 @@
             flex-wrap: wrap;
             gap: 12px;
             font-size: 8pt;
-            color: #475569;
+            color: #5C6470;
         }
         .contact-row a {
-            color: #4F46E5;
+            color: #FF4F19;
             text-decoration: none;
             font-weight: 600;
         }
         .summary-text {
-            color: #334155;
+            color: #2B3038;
             font-size: 8.5pt;
             text-align: justify;
         }
         .section-title {
             font-size: 10pt;
             font-weight: 800;
-            color: #0F172A;
+            color: #0B0F14;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            border-bottom: 2px solid #E2E8F0;
+            border-bottom: 2px solid #D6CFBE;
             padding-bottom: 3px;
             margin-bottom: 12px;
         }
@@ -165,17 +166,17 @@
         }
         .company-name {
             font-weight: 800;
-            color: #0F172A;
+            color: #0B0F14;
             font-size: 9.5pt;
         }
         .duration {
             font-size: 8pt;
-            color: #64748B;
+            color: #5C6470;
             font-weight: 600;
         }
         .exp-role {
             font-weight: 600;
-            color: #4F46E5;
+            color: #FF4F19;
             font-size: 8.5pt;
             margin-bottom: 6px;
         }
@@ -184,13 +185,13 @@
             padding-left: 12px;
             position: relative;
             font-size: 8.5pt;
-            color: #334155;
+            color: #2B3038;
         }
         .project-bullet::before {
             content: ">";
             position: absolute;
             left: 0;
-            color: #38BDF8;
+            color: #FF4F19;
             font-family: 'Fira Code', monospace;
             font-weight: bold;
         }
@@ -201,15 +202,15 @@
             margin-left: 6px;
         }
         .tag {
-            background: #F1F5F9;
-            color: #475569;
+            background: #ECE7DC;
+            color: #2B3038;
             padding: 0 4px;
             border-radius: 3px;
             font-weight: 600;
         }
         .tag.verified {
-            background: #E0F2FE;
-            color: #0369A1;
+            background: #FFE3D6;
+            color: #FF4F19;
         }
 
         /* Portfolio project cards */
@@ -219,8 +220,8 @@
             gap: 10px;
         }
         .project-card {
-            background: #F8FAFC;
-            border: 1px solid #E2E8F0;
+            background: #F4F1EA; /* warm cream */
+            border: 1px solid #E5E0D3;
             border-radius: 6px;
             padding: 10px 12px;
             display: flex;
@@ -230,11 +231,11 @@
         .card-title {
             font-weight: 700;
             font-size: 8.5pt;
-            color: #0F172A;
+            color: #0B0F14;
         }
         .card-desc {
             font-size: 8pt;
-            color: #475569;
+            color: #5C6470;
             margin-top: 4px;
             margin-bottom: 8px;
             text-align: justify;
@@ -245,7 +246,7 @@
             font-size: 7.5pt;
         }
         .card-links a {
-            color: #4F46E5;
+            color: #FF4F19;
             text-decoration: none;
             font-weight: 600;
         }
@@ -253,8 +254,8 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #38BDF8;
-            color: #0F172A;
+            background: #FF4F19;
+            color: #ffffff;
             border: none;
             padding: 8px 16px;
             border-radius: 6px;
@@ -291,7 +292,7 @@
                 <div class="sidebar-item">
                     <div class="sidebar-item-title">{{ $profile->college_name ?: 'University Name' }}</div>
                     <div class="sidebar-item-desc">{{ $profile->degree_name ?: 'Degree Details' }}</div>
-                    <div class="sidebar-item-desc" style="color: #38BDF8; font-weight: 500;">
+                    <div class="sidebar-item-desc" style="color: #FF4F19; font-weight: 500;">
                         {{ $profile->graduation_year ? 'Class of ' . $profile->graduation_year : '' }}
                         @if($profile->cgpa)
                             | CGPA: {{ $profile->cgpa }}

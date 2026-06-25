@@ -179,14 +179,18 @@
 
                 <!-- Right: Preview -->
                 <div class="lg:col-span-7 flex flex-col">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-[var(--ig-muted)] mb-3">Live Resume Preview</label>
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-[var(--ig-muted)]">Live Resume Preview</label>
+                        <a id="full-preview-btn" href="{{ route('student.cv.download', ['theme' => $profile->resume_theme]) }}" target="_blank" class="ig-btn py-1.5 px-4 text-xs bg-[var(--ig-accent)] text-white hover:bg-[#E03E0B] flex items-center gap-1.5">
+                            <span>Open Full Preview ↗</span>
+                        </a>
+                    </div>
                     <div class="flex-1 bg-neutral-900 border border-[var(--ig-line)] rounded-2xl overflow-hidden min-h-[480px] flex flex-col relative">
                         <!-- Top browser bar representation -->
                         <div class="h-8 bg-neutral-800 border-b border-neutral-700 flex items-center px-4 gap-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
                             <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                            <span class="text-[10px] text-neutral-400 font-mono ml-4 select-all flex-1 truncate">interngrowth.com/resume/preview</span>
                         </div>
                         <iframe id="resume-preview-iframe" src="{{ route('student.cv.download', ['theme' => $profile->resume_theme]) }}" class="w-full flex-1 border-0 bg-white"></iframe>
                     </div>
@@ -367,6 +371,12 @@
                     const hideLow = document.getElementById('hide_low_rated').checked ? 1 : 0;
                     let previewUrl = "{{ route('student.cv.download') }}?theme=" + theme + "&hide_low_rated=" + hideLow;
                     document.getElementById('resume-preview-iframe').src = previewUrl;
+                    
+                    const fullPreviewBtn = document.getElementById('full-preview-btn');
+                    if (fullPreviewBtn) {
+                        fullPreviewBtn.href = previewUrl;
+                    }
+                    
                     updateThemeSelection();
                 }
             })
