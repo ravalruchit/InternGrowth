@@ -46,6 +46,16 @@ Route::get('/', function () {
     ));
 });
 
+Route::get('/debug-google-config', function () {
+    return response()->json([
+        'client_id_exists' => !empty(config('services.google.client_id')),
+        'client_id_prefix' => substr(config('services.google.client_id'), 0, 10),
+        'client_secret_exists' => !empty(config('services.google.client_secret')),
+        'redirect_uri' => config('services.google.redirect'),
+        'env_google_client_id_exists' => !empty(env('GOOGLE_CLIENT_ID')),
+    ]);
+});
+
 Route::get('/test-landing', function () {
     $studentsCount = \App\Models\StudentProfile::count();
     $startupsCount = \App\Models\StartupProfile::count();
