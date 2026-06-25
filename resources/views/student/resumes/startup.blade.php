@@ -24,10 +24,9 @@
         }
         body.direct-view {
             background: #F4F1EA;
-            padding: 40px 20px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            padding: 0;
+            display: block;
+            min-height: 100vh;
         }
         .resume-container {
             width: 100%;
@@ -37,6 +36,7 @@
         body.direct-view .resume-container {
             width: 210mm;
             min-height: 297mm;
+            margin: 94px auto 40px auto;
             padding: 20mm;
             box-shadow: 0 15px 35px rgba(11, 15, 20, 0.1);
             border: 1px solid #D6CFBE;
@@ -50,6 +50,7 @@
             body.direct-view .resume-container {
                 width: 100%;
                 min-height: auto;
+                margin: 0;
                 padding: 0;
                 box-shadow: none;
                 border: none;
@@ -254,29 +255,94 @@
         .achievement-card span.icon {
             font-size: 14pt;
         }
-        .print-btn {
+        /* Preview Toolbar */
+        .preview-toolbar {
+            display: none;
+        }
+        body.direct-view .preview-toolbar {
+            display: flex;
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 54px;
+            background: #0B0F14;
+            border-bottom: 1px solid #2B3038;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 9999;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 4px 20px rgba(11, 15, 20, 0.15);
+        }
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .back-btn {
+            color: #9AA0AB;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s ease;
+        }
+        .back-btn:hover {
+            color: #ffffff;
+        }
+        .toolbar-divider {
+            width: 1px;
+            height: 16px;
+            background: #2B3038;
+        }
+        .theme-badge {
+            font-size: 10px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .theme-badge.theme-startup {
+            background: #EEF2F6;
+            color: #4F46E5;
+            border: 1px solid #CBD5E1;
+        }
+        .toolbar-center {
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        .download-pdf-btn {
             background: #4F46E5;
             color: #ffffff;
             border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 9pt;
-            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
-            transition: background 0.2s;
-            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
         }
-        .print-btn:hover {
+        .download-pdf-btn:hover {
             background: #4338CA;
+            transform: translateY(-1px);
+        }
+        .download-pdf-btn:active {
+            transform: translateY(0);
         }
         @media print {
-            .print-btn {
-                display: none;
+            .preview-toolbar {
+                display: none !important;
             }
             body {
                 padding: 0;
@@ -285,14 +351,33 @@
     </style>
 </head>
 <body>
-    <button class="print-btn" onclick="window.print()">📥 Save / Print PDF</button>
+    <!-- Document Viewer Toolbar -->
+    <div class="preview-toolbar">
+        <div class="toolbar-left">
+            <a href="{{ route('student.analytics') }}" class="back-btn">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                <span>Back to Studio</span>
+            </a>
+            <span class="toolbar-divider"></span>
+            <span class="theme-badge theme-startup">Startup Modern</span>
+        </div>
+        <div class="toolbar-center">
+            <span class="document-name">{{ $profile->user->name }} - Resume.pdf</span>
+        </div>
+        <div class="toolbar-right">
+            <button class="download-pdf-btn" onclick="window.print()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span>Print / Save PDF</span>
+            </button>
+        </div>
+    </div>
     <div class="resume-container">
 
     <!-- Header -->
     <div class="header">
         <h1>{{ $profile->user->name }}</h1>
-        @if($profile->professional_title)
-            <div class="title">{{ $profile->professional_title }}</div>
+        @if($professionalTitle)
+            <div class="title">{{ $professionalTitle }}</div>
         @endif
         
         <div class="contact-grid">

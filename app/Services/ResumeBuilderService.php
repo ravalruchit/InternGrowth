@@ -76,7 +76,7 @@ class ResumeBuilderService
             if (!isset($grouped[$startupId])) {
                 $grouped[$startupId] = [
                     'company_name' => $companyName,
-                    'role' => $profile->professional_title ?: (($profile->primary_domain ?: 'Freelance') . ' Developer'),
+                    'role' => $this->getCleanRole($profile),
                     'min_date' => $app->submission->updated_at,
                     'max_date' => $app->submission->updated_at,
                     'projects' => [],
@@ -118,7 +118,7 @@ class ResumeBuilderService
             $avgRating = count($data['ratings']) > 0 ? (array_sum($data['ratings']) / count($data['ratings'])) : null;
             $experiences[] = [
                 'company_name' => $data['company_name'],
-                'role' => $data['role'] . ' (InternGrowth Verified Projects)',
+                'role' => $data['role'],
                 'duration' => $data['min_date']->format('M Y') . ' – ' . $data['max_date']->format('M Y'),
                 'projects' => $data['projects'],
                 'avg_rating' => $avgRating,
@@ -128,6 +128,32 @@ class ResumeBuilderService
         }
 
         return $experiences;
+    }
+
+    /**
+     * Get a clean, professional role title for the candidate based on preferences or domain fallback.
+     */
+    public function getCleanRole(StudentProfile $profile): string
+    {
+        if ($profile->professional_title) {
+            return $profile->professional_title;
+        }
+
+        $domain = $profile->primary_domain ?: 'Software Development';
+        switch ($domain) {
+            case 'Software Development':
+                return 'Software Developer';
+            case 'UI/UX Design':
+                return 'UI/UX Designer';
+            case 'Digital Marketing':
+                return 'Digital Marketer';
+            case 'Data & AI':
+                return 'Data & AI Specialist';
+            case 'Content & Business':
+                return 'Business Associate';
+            default:
+                return $domain . ' Specialist';
+        }
     }
 
     /**

@@ -435,13 +435,15 @@ class StudentController extends Controller
         $summary = $resumeService->generateProfessionalSummary($profile);
         $achievements = $resumeService->calculateAchievements($profile);
         $skillsCategorized = $resumeService->buildSkillSections($profile);
+        $professionalTitle = $profile->professional_title ?: $resumeService->getCleanRole($profile);
 
         return view('student.cv-download', compact(
             'profile',
             'experiences',
             'summary',
             'achievements',
-            'skillsCategorized'
+            'skillsCategorized',
+            'professionalTitle'
         ));
     }
 
