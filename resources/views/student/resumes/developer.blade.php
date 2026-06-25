@@ -346,18 +346,7 @@
                 </div>
             @endif
 
-            <!-- Certifications -->
-            @if($profile->show_certificates && $profile->certificates->count() > 0)
-                <div>
-                    <div class="sidebar-section-title">Certifications</div>
-                    @foreach($profile->certificates->take(2) as $cert)
-                        <div class="sidebar-item" style="margin-bottom:8px;">
-                            <div class="sidebar-item-title" style="font-size:8pt;">Verified Developer</div>
-                            <div class="sidebar-item-desc" style="font-size:7.5pt;">Cert ID: {{ substr($cert->certificate_number, 0, 10) }}</div>
-                        </div>
-                    @endforeach
-                </div>
-            @endif
+
         </div>
 
         <!-- Main Content -->
@@ -415,7 +404,7 @@
                             <div class="exp-role">{{ $exp['role'] }}</div>
                             @foreach($exp['projects'] as $proj)
                                 <div class="project-bullet">
-                                    <strong>{{ $proj['title'] }}</strong> — {{ $proj['description'] }}
+                                    <strong>{{ ucfirst($proj['title']) }}</strong> — {{ $proj['description'] }}
                                     @if($profile->show_ratings && $proj['rating'])
                                         <span class="project-tags">
                                             <span class="tag verified">✓ Verified</span>
@@ -455,5 +444,11 @@
             @endif
         </div>
     </div>
+    <script>
+        if (window.self !== window.top) {
+            const btn = document.querySelector('.print-btn');
+            if (btn) btn.style.display = 'none';
+        }
+    </script>
 </body>
 </html>

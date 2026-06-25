@@ -336,7 +336,7 @@
                     
                     @foreach($exp['projects'] as $proj)
                         <div class="project-bullet">
-                            <strong>{{ $proj['title'] }}</strong> — {{ $proj['description'] }}
+                            <strong>{{ ucfirst($proj['title']) }}</strong> — {{ $proj['description'] }}
                             <div class="project-meta">
                                 <span class="badge verified">✓ Verified</span>
                                 @if($profile->show_ratings && $proj['rating'])
@@ -403,18 +403,11 @@
         </div>
     @endif
 
-    <!-- Certifications -->
-    @if($profile->show_certificates && $profile->certificates->count() > 0)
-        <div class="section">
-            <div class="section-title">Certifications</div>
-            <div class="skills-container" style="gap:8px;">
-                @foreach($profile->certificates as $cert)
-                    <div class="skill-pill" style="padding: 6px 12px; background: #EEF2F6; border: none; font-size: 8.5pt; font-weight:600;">
-                        🎓 InternGrowth Verified Developer Certificate #{{ $cert->certificate_number }} ({{ $cert->issued_at->format('M Y') }})
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    @endif
+    <script>
+        if (window.self !== window.top) {
+            const btn = document.querySelector('.print-btn');
+            if (btn) btn.style.display = 'none';
+        }
+    </script>
 </body>
 </html>

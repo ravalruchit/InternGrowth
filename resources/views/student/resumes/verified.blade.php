@@ -400,7 +400,7 @@
                     
                     @foreach($exp['projects'] as $proj)
                         <div class="project-row">
-                            <span class="project-title">{{ $proj['title'] }}</span>
+                            <span class="project-title">{{ ucfirst($proj['title']) }}</span>
                             <p class="project-desc">{{ $proj['description'] }}</p>
                             <div class="project-tags">
                                 <span class="tag">✓ Verified Experience Receipt</span>
@@ -418,22 +418,11 @@
         </div>
     @endif
 
-    <!-- Certificates -->
-    @if($profile->show_certificates && $profile->certificates->count() > 0)
-        <div class="section">
-            <div class="section-title">Verified Certifications</div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                @foreach($profile->certificates as $cert)
-                    <div class="edu-card" style="border-left:3px solid #10B981; padding: 10px 12px; display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:16pt;">🏆</span>
-                        <div>
-                            <div style="font-weight:700; font-size:8.5pt; color:#0F172A;">InternGrowth Verified Developer</div>
-                            <div style="font-size:7.5pt; color:#64748B;">ID: {{ $cert->certificate_number }} · Issued: {{ $cert->issued_at->format('M Y') }}</div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    @endif
+    <script>
+        if (window.self !== window.top) {
+            const btn = document.querySelector('.print-btn');
+            if (btn) btn.style.display = 'none';
+        }
+    </script>
 </body>
 </html>

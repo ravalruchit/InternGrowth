@@ -1,4 +1,47 @@
 <x-app-layout>
+    <style>
+        .theme-card-label {
+            position: relative;
+            border: 2px solid var(--ig-line) !important;
+            border-radius: 12px !important;
+            padding: 12px !important;
+            transition: all 0.25s ease !important;
+            cursor: pointer;
+            background-color: var(--ig-surface);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .theme-card-label:hover {
+            border-color: rgba(255, 79, 25, 0.4) !important;
+        }
+        .theme-card-label.active-theme {
+            border-color: var(--ig-accent) !important;
+            background-color: rgba(255, 79, 25, 0.04) !important;
+            box-shadow: 0 0 0 1px var(--ig-accent) !important;
+        }
+        .theme-check-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--ig-accent);
+            color: #ffffff;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(255, 79, 25, 0.3);
+            border: 1px solid #ffffff;
+        }
+        .theme-card-label.active-theme .theme-check-badge {
+            display: flex;
+        }
+    </style>
+
     <div class="ig-container">
         <!-- Header -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-end mb-12 ig-anim-fade-up">
@@ -59,26 +102,30 @@
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-[var(--ig-muted)] mb-3">1. Select Template Theme</label>
                             <div class="grid grid-cols-2 gap-3">
-                                <label class="cursor-pointer border-2 border-[var(--ig-line)] rounded-xl p-3 flex flex-col justify-between hover:border-[var(--ig-accent)]/50 transition-all select-none group has-[:checked]:border-[var(--ig-accent)] has-[:checked]:bg-[var(--ig-accent-soft)]/10">
-                                    <input type="radio" name="resume_theme" value="ats" class="sr-only" {{ $profile->resume_theme === 'ats' ? 'checked' : '' }}>
+                                <label class="theme-card-label select-none relative group {{ $profile->resume_theme === 'ats' ? 'active-theme' : '' }}">
+                                    <input type="radio" name="resume_theme" value="ats" class="sr-only" {{ $profile->resume_theme === 'ats' ? 'checked' : '' }} onchange="updateThemeSelection()">
+                                    <span class="theme-check-badge">✓</span>
                                     <span class="font-bold text-xs text-[var(--ig-ink)]">ATS Professional</span>
                                     <span class="text-[9px] text-[var(--ig-muted)] mt-1">B&W, Single column, Corporate optimized</span>
                                 </label>
 
-                                <label class="cursor-pointer border-2 border-[var(--ig-line)] rounded-xl p-3 flex flex-col justify-between hover:border-[var(--ig-accent)]/50 transition-all select-none group has-[:checked]:border-[var(--ig-accent)] has-[:checked]:bg-[var(--ig-accent-soft)]/10">
-                                    <input type="radio" name="resume_theme" value="startup" class="sr-only" {{ $profile->resume_theme === 'startup' ? 'checked' : '' }}>
+                                <label class="theme-card-label select-none relative group {{ $profile->resume_theme === 'startup' ? 'active-theme' : '' }}">
+                                    <input type="radio" name="resume_theme" value="startup" class="sr-only" {{ $profile->resume_theme === 'startup' ? 'checked' : '' }} onchange="updateThemeSelection()">
+                                    <span class="theme-check-badge">✓</span>
                                     <span class="font-bold text-xs text-[var(--ig-ink)]">Startup Modern</span>
                                     <span class="text-[9px] text-[var(--ig-muted)] mt-1">Colored badges, Project-focused</span>
                                 </label>
 
-                                <label class="cursor-pointer border-2 border-[var(--ig-line)] rounded-xl p-3 flex flex-col justify-between hover:border-[var(--ig-accent)]/50 transition-all select-none group has-[:checked]:border-[var(--ig-accent)] has-[:checked]:bg-[var(--ig-accent-soft)]/10">
-                                    <input type="radio" name="resume_theme" value="verified" class="sr-only" {{ $profile->resume_theme === 'verified' ? 'checked' : '' }}>
+                                <label class="theme-card-label select-none relative group {{ $profile->resume_theme === 'verified' ? 'active-theme' : '' }}">
+                                    <input type="radio" name="resume_theme" value="verified" class="sr-only" {{ $profile->resume_theme === 'verified' ? 'checked' : '' }} onchange="updateThemeSelection()">
+                                    <span class="theme-check-badge">✓</span>
                                     <span class="font-bold text-xs text-[var(--ig-ink)]">InternGrowth Verified</span>
                                     <span class="text-[9px] text-[var(--ig-muted)] mt-1">IPRS scores, Earnings, Trust badges</span>
                                 </label>
 
-                                <label class="cursor-pointer border-2 border-[var(--ig-line)] rounded-xl p-3 flex flex-col justify-between hover:border-[var(--ig-accent)]/50 transition-all select-none group has-[:checked]:border-[var(--ig-accent)] has-[:checked]:bg-[var(--ig-accent-soft)]/10">
-                                    <input type="radio" name="resume_theme" value="developer" class="sr-only" {{ $profile->resume_theme === 'developer' ? 'checked' : '' }}>
+                                <label class="theme-card-label select-none relative group {{ $profile->resume_theme === 'developer' ? 'active-theme' : '' }}">
+                                    <input type="radio" name="resume_theme" value="developer" class="sr-only" {{ $profile->resume_theme === 'developer' ? 'checked' : '' }} onchange="updateThemeSelection()">
+                                    <span class="theme-check-badge">✓</span>
                                     <span class="font-bold text-xs text-[var(--ig-ink)]">Developer Portfolio</span>
                                     <span class="text-[9px] text-[var(--ig-muted)] mt-1">Two-column, GitHub, LeetCode focus</span>
                                 </label>
@@ -102,11 +149,6 @@
                                 <label class="flex items-center justify-between cursor-pointer select-none">
                                     <span class="text-xs text-[var(--ig-ink-2)] font-semibold">Include Startup Ratings</span>
                                     <input type="checkbox" name="show_ratings" value="1" {{ $profile->show_ratings ? 'checked' : '' }} class="rounded text-[var(--ig-accent)] focus:ring-[var(--ig-accent)]">
-                                </label>
-
-                                <label class="flex items-center justify-between cursor-pointer select-none">
-                                    <span class="text-xs text-[var(--ig-ink-2)] font-semibold">Include Certificates</span>
-                                    <input type="checkbox" name="show_certificates" value="1" {{ $profile->show_certificates ? 'checked' : '' }} class="rounded text-[var(--ig-accent)] focus:ring-[var(--ig-accent)]">
                                 </label>
 
                                 <label class="flex items-center justify-between cursor-pointer select-none">
@@ -284,17 +326,31 @@
     </div>
 
     <script>
+        function updateThemeSelection() {
+            document.querySelectorAll('.theme-card-label').forEach(label => {
+                const radio = label.querySelector('input[type="radio"]');
+                if (radio && radio.checked) {
+                    label.classList.add('active-theme');
+                } else {
+                    label.classList.remove('active-theme');
+                }
+            });
+        }
+
         function saveResumeSettings() {
             const form = document.getElementById('resume-settings-form');
             const formData = new FormData(form);
             
             // Add unchecked checkboxes manually as false/0
-            const checkboxes = ['show_iprs', 'show_stipends', 'show_ratings', 'show_certificates', 'show_social_links', 'show_profile_photo'];
+            const checkboxes = ['show_iprs', 'show_stipends', 'show_ratings', 'show_social_links', 'show_profile_photo'];
             checkboxes.forEach(cb => {
                 if (!formData.has(cb)) {
                     formData.append(cb, 0);
                 }
             });
+
+            // Ensure show_certificates is always updated to 0/false bcz we removed it
+            formData.append('show_certificates', 0);
 
             fetch("{{ route('student.cv.settings') }}", {
                 method: 'POST',
@@ -311,6 +367,7 @@
                     const hideLow = document.getElementById('hide_low_rated').checked ? 1 : 0;
                     let previewUrl = "{{ route('student.cv.download') }}?theme=" + theme + "&hide_low_rated=" + hideLow;
                     document.getElementById('resume-preview-iframe').src = previewUrl;
+                    updateThemeSelection();
                 }
             })
             .catch(error => console.error('Error saving settings:', error));
@@ -326,5 +383,8 @@
 
         // Initialize auto-refresh on hide_low_rated click
         document.getElementById('hide_low_rated').addEventListener('change', saveResumeSettings);
+
+        // Initial setup on page load
+        document.addEventListener('DOMContentLoaded', updateThemeSelection);
     </script>
 </x-app-layout>

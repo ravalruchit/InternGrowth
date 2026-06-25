@@ -205,7 +205,7 @@
                     <ul class="bullet-list">
                         @foreach($exp['projects'] as $proj)
                             <li>
-                                <strong>{{ $proj['title'] }}</strong>: {{ $proj['description'] }}
+                                <strong>{{ ucfirst($proj['title']) }}</strong>: {{ $proj['description'] }}
                                 @if($profile->show_ratings && $proj['rating'])
                                     (Rating: {{ $proj['rating'] }}/5)
                                 @endif
@@ -259,16 +259,11 @@
         </div>
     @endif
 
-    <!-- Certifications -->
-    @if($profile->show_certificates && $profile->certificates->count() > 0)
-        <div class="section">
-            <div class="section-title">Certifications</div>
-            <ul class="bullet-list">
-                @foreach($profile->certificates as $cert)
-                    <li>InternGrowth Verified Completion Certificate #{{ $cert->certificate_number }} (Issued: {{ $cert->issued_at->format('F Y') }})</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+    <script>
+        if (window.self !== window.top) {
+            const btn = document.querySelector('.print-btn');
+            if (btn) btn.style.display = 'none';
+        }
+    </script>
 </body>
 </html>
