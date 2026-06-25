@@ -47,12 +47,31 @@ Route::get('/', function () {
 });
 
 Route::get('/debug-google-config', function () {
+    $googleKeys = [];
+    foreach ($_ENV as $key => $val) {
+        if (str_starts_with(strtoupper(trim($key)), 'GOOGLE_')) {
+            $googleKeys[$key] = [
+                'exists' => !empty($val),
+                'length' => strlen($val),
+                'prefix' => substr($val, 0, 5),
+            ];
+        }
+    }
+    foreach ($_SERVER as $key => $val) {
+        if (str_starts_with(strtoupper(trim($key)), 'GOOGLE_')) {
+            $googleKeys['SERVER_' . $key] = [
+                'exists' => !empty($val),
+                'length' => strlen($val),
+                'prefix' => substr($val, 0, 5),
+            ];
+        }
+    }
     return response()->json([
         'client_id_exists' => !empty(config('services.google.client_id')),
         'client_id_prefix' => substr(config('services.google.client_id'), 0, 10),
         'client_secret_exists' => !empty(config('services.google.client_secret')),
         'redirect_uri' => config('services.google.redirect'),
-        'env_google_client_id_exists' => !empty(env('GOOGLE_CLIENT_ID')),
+        'detected_google_keys' => $googleKeys,
     ]);
 });
 
