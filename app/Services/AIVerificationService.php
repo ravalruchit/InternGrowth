@@ -74,8 +74,8 @@ class AIVerificationService
                                     'text' => $prompt,
                                 ],
                                 [
-                                    'inline_data' => [
-                                        'mime_type' => $mimeType,
+                                    'inlineData' => [
+                                        'mimeType' => $mimeType,
                                         'data'      => $base64,
                                     ],
                                 ],
@@ -126,8 +126,8 @@ class AIVerificationService
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
             Log::error('AIVerificationService: Connection error', ['message' => $e->getMessage()]);
             return $this->errorResult('Could not reach AI service. Your ID has been queued for manual review.');
-        } catch (\Exception $e) {
-            Log::error('AIVerificationService exception', ['message' => $e->getMessage()]);
+        } catch (\Throwable $e) {
+            Log::error('AIVerificationService exception', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return $this->errorResult('An unexpected error occurred. Your ID has been queued for manual review.');
         }
     }
@@ -292,7 +292,11 @@ PROMPT;
     private function compressImage(string $filePath): string
     {
         $mime = $this->getMimeType($filePath);
-        $originalBytes = file_get_contents($filePath);
+        $originalBytes = @file_get_contents($filePath);
+        if ($originalBytes === false) {
+            Log::error('AIVerificationService: Failed to read file ' . $filePath);
+            return '';
+        }
         
         if (!extension_loaded('gd')) {
             Log::warning('GD extension not loaded. Sending uncompressed image.');

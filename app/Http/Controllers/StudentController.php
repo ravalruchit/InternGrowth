@@ -544,6 +544,14 @@ class StudentController extends Controller
     public function showIdVerification()
     {
         $profile = auth()->user()->studentProfile;
+        if (!$profile) {
+            $profile = auth()->user()->studentProfile()->create([
+                'bio' => null,
+                'portfolio_links' => [],
+                'reliability_score' => 0,
+                'is_verified' => false,
+            ]);
+        }
 
         // If already verified by any method, redirect to dashboard
         if ($profile->is_verified) {
@@ -583,6 +591,14 @@ class StudentController extends Controller
         }
 
         $profile = auth()->user()->studentProfile;
+        if (!$profile) {
+            $profile = auth()->user()->studentProfile()->create([
+                'bio' => null,
+                'portfolio_links' => [],
+                'reliability_score' => 0,
+                'is_verified' => false,
+            ]);
+        }
 
         // Prevent re-submission if already AI-approved or admin-approved
         if (in_array($profile->id_card_verification_status, ['ai_approved', 'admin_approved'])) {
@@ -655,7 +671,7 @@ class StudentController extends Controller
                         ->with('ai_rejected', true)
                         ->with('ai_result', $result);
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('ID Verification failed', [
                 'user_id' => auth()->id(),
                 'error'   => $e->getMessage(),
@@ -663,9 +679,13 @@ class StudentController extends Controller
             ]);
 
             // Reset status so the student can retry
-            $profile->update([
-                'id_card_verification_status' => 'not_submitted',
-            ]);
+            try {
+                $profile->update([
+                    'id_card_verification_status' => 'none',
+                ]);
+            } catch (\Throwable $dbEx) {
+                // Ignore DB error if profile update fails to avoid secondary fatal errors
+            }
 
             return back()->withInput()->with('error', 'Something went wrong during verification. Please try again. If the problem persists, use the college email verification method instead.');
         }
@@ -677,6 +697,13 @@ class StudentController extends Controller
     public function verificationStatus()
     {
         $profile = auth()->user()->studentProfile;
+        if (!$profile) {
+            return response()->json([
+                'is_verified'                 => false,
+                'id_card_verification_status' => 'none',
+                'verification_method'         => null,
+            ]);
+        }
 
         return response()->json([
             'is_verified'                 => $profile->is_verified,

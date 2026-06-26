@@ -113,8 +113,8 @@ PROMPT;
                         'parts' => [
                             ['text' => $prompt],
                             [
-                                'inline_data' => [
-                                    'mime_type' => $mimeType,
+                                'inlineData' => [
+                                    'mimeType' => $mimeType,
                                     'data'      => $base64,
                                 ],
                             ],

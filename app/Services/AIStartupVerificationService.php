@@ -58,8 +58,8 @@ class AIStartupVerificationService
             $parts = [
                 ['text' => $prompt],
                 [
-                    'inline_data' => [
-                        'mime_type' => $regResult['mime'],
+                    'inlineData' => [
+                        'mimeType' => $regResult['mime'],
                         'data'      => $regResult['base64'],
                     ],
                 ],
@@ -67,8 +67,8 @@ class AIStartupVerificationService
 
             if ($gstResult) {
                 $parts[] = [
-                    'inline_data' => [
-                        'mime_type' => $gstResult['mime'],
+                    'inlineData' => [
+                        'mimeType' => $gstResult['mime'],
                         'data'      => $gstResult['base64'],
                     ],
                 ];
@@ -230,8 +230,8 @@ class AIStartupVerificationService
                 ]
             ];
 
-        } catch (\Exception $e) {
-            Log::error('AIStartupVerificationService exception', ['message' => $e->getMessage()]);
+        } catch (\Throwable $e) {
+            Log::error('AIStartupVerificationService exception', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return $this->errorResult('An unexpected error occurred during AI analysis. Queued for manual review.');
         }
     }
@@ -253,7 +253,12 @@ class AIStartupVerificationService
             $imageBytes = $this->compressImage($fullPath);
             $base64     = base64_encode($imageBytes);
         } else {
-            $base64     = base64_encode(file_get_contents($fullPath));
+            $contentBytes = @file_get_contents($fullPath);
+            if ($contentBytes === false) {
+                Log::error('AIStartupVerificationService: Failed to read file ' . $fullPath);
+                return null;
+            }
+            $base64     = base64_encode($contentBytes);
         }
 
         return [
@@ -359,7 +364,11 @@ PROMPT;
     private function compressImage(string $filePath): string
     {
         $mime = $this->getMimeType($filePath);
-        $originalBytes = file_get_contents($filePath);
+        $originalBytes = @file_get_contents($filePath);
+        if ($originalBytes === false) {
+            Log::error('AIStartupVerificationService: Failed to read file ' . $filePath);
+            return '';
+        }
 
         try {
             $src = null;
