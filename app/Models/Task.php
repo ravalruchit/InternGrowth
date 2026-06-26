@@ -12,7 +12,7 @@ class Task extends Model
     protected $fillable = [
         'startup_profile_id', 'title', 'description', 'requirements', 'required_skills',
         'stipend', 'escrow_amount', 'escrow_locked', 'status', 'is_flagged',
-        'domain', 'role'
+        'domain', 'role', 'deadline', 'approved_student_id'
     ];
 
 
@@ -20,12 +20,18 @@ class Task extends Model
         'required_skills' => 'array',
         'stipend' => 'decimal:2',
         'escrow_amount' => 'decimal:2',
-        'escrow_locked' => 'boolean'
+        'escrow_locked' => 'boolean',
+        'deadline' => 'datetime'
     ];
 
     public function startup(): BelongsTo
     {
         return $this->belongsTo(StartupProfile::class, 'startup_profile_id');
+    }
+
+    public function approvedStudent(): BelongsTo
+    {
+        return $this->belongsTo(StudentProfile::class, 'approved_student_id');
     }
 
     public function skills(): BelongsToMany

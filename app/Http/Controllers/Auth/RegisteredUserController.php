@@ -32,40 +32,44 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', 'min:3'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'in:student,startup'],
             'primary_domain' => ['required_if:role,student', 'nullable', 'string'],
             'preferred_role' => ['required_if:role,student', 'nullable', 'string'],
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-            'is_verified' => $request->role === 'student' ? true : false,
-        ]);
-
-        // Create profile based on role
-        if ($user->isStudent()) {
-            $profile = \App\Models\StudentProfile::create([
-                'user_id' => $user->id,
-                'bio' => null,
-                'portfolio_links' => [],
-                'reliability_score' => 0,
-                'primary_domain' => $request->primary_domain,
-                'preferred_role' => $request->preferred_role,
-            ]);
-        } elseif ($user->isStartup()) {
-            \App\Models\StartupProfile::create([
-                'user_id' => $user->id,
-                'company_name' => $request->name,
-                'description' => null,
-                'website' => null,
+        $user = \Illuminate\Support\Facades\DB::transaction(function() use ($request) {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => $request->role,
                 'is_verified' => false,
-                'credibility_score' => 0,
             ]);
-        }
+
+            // Create profile based on role
+            if ($user->isStudent()) {
+                \App\Models\StudentProfile::create([
+                    'user_id' => $user->id,
+                    'bio' => null,
+                    'portfolio_links' => [],
+                    'reliability_score' => 0,
+                    'primary_domain' => $request->primary_domain,
+                    'preferred_role' => $request->preferred_role,
+                ]);
+            } elseif ($user->isStartup()) {
+                \App\Models\StartupProfile::create([
+                    'user_id' => $user->id,
+                    'company_name' => $request->name,
+                    'description' => null,
+                    'website' => null,
+                    'is_verified' => false,
+                    'credibility_score' => 0,
+                ]);
+            }
+
+            return $user;
+        });
 
         event(new Registered($user));
 

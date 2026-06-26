@@ -74,22 +74,22 @@ class WalletTopupController extends Controller
 
     public function approve(Request $request, $id)
     {
-        $topup = WalletTopupRequest::with('startup')->findOrFail($id);
-
-        if (!$topup->isPending()) {
-            return back()->with('error', 'This request has already been reviewed.');
-        }
-
         $validated = $request->validate([
             'admin_notes' => 'nullable|string|max:500',
         ]);
 
-        \Illuminate\Support\Facades\DB::transaction(function() use ($topup, $validated) {
-            // Credit the startup wallet
+        $approved = false;
+
+        \Illuminate\Support\Facades\DB::transaction(function() use ($id, $validated, &$approved) {
+            $topup = WalletTopupRequest::with('startup')->lockForUpdate()->findOrFail($id);
+
+            if (!$topup->isPending()) {
+                return;
+            }
+
             $startup = $topup->startup;
             $startup->increment('wallet_balance', $topup->amount);
 
-            // Record transaction
             Transaction::create([
                 'user_type'    => 'startup',
                 'user_id'      => $startup->id,
@@ -99,22 +99,27 @@ class WalletTopupController extends Controller
                 'reference_id' => 'topup_' . $topup->id,
             ]);
 
-            // Update request status
             $topup->update([
                 'status'      => 'approved',
                 'admin_notes' => $validated['admin_notes'] ?? null,
                 'reviewed_at' => now(),
             ]);
 
-            // Notify startup
             Notification::create([
                 'user_id' => $startup->user_id,
                 'title'   => 'Wallet Top-up Approved',
                 'message' => '₹' . number_format($topup->amount, 2) . ' has been added to your wallet.',
                 'type'    => 'success',
             ]);
+
+            $approved = true;
         });
 
+        if (!$approved) {
+            return back()->with('error', 'This request has already been reviewed.');
+        }
+
+        $topup = WalletTopupRequest::with('startup')->findOrFail($id);
         return back()->with('success', '₹' . number_format($topup->amount, 2) . ' added to ' . $topup->startup->company_name . '\'s wallet.');
     }
 

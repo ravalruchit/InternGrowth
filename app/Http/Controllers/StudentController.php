@@ -7,6 +7,8 @@ use App\Services\MatchingService;
 use App\Services\AIVerificationService;
 use Illuminate\Http\Request;
 use App\Models\Skill;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Storage;
 
 class StudentController extends Controller
 {
@@ -19,7 +21,15 @@ class StudentController extends Controller
     {
         $profile = auth()->user()->studentProfile->load(['skills', 'reputationScore', 'portfolio.items', 'startupReviews']);
         $hiringOffers = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
-            ->whereIn('status', ['pending', 'pending_joining', 'joined'])
+            ->where(function($q) {
+                $q->where(function($sub) {
+                    $sub->where('status', 'pending')
+                        ->where(function($exp) {
+                            $exp->whereNull('expires_at')
+                                ->orWhere('expires_at', '>=', now());
+                        });
+                })->orWhereIn('status', ['pending_joining', 'joined']);
+            })
             ->with('startup')
             ->get();
 
@@ -85,9 +95,9 @@ class StudentController extends Controller
         $completedTasksCountForReadiness = \App\Models\Application::where('student_profile_id', $profile->id)
             ->whereHas('submission', fn($q) => $q->where('status', 'accepted'))->count();
         $internshipCountForReadiness = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
-            ->where('offer_type', 'internship')->whereIn('status', ['accepted', 'joined', 'completed'])->count();
+            ->where('offer_type', 'internship')->whereIn('status', ['pending_joining', 'joined', 'completed'])->count();
         $jobCountForReadiness = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
-            ->where('offer_type', 'job')->whereIn('status', ['accepted', 'joined', 'completed'])->count();
+            ->where('offer_type', 'job')->whereIn('status', ['pending_joining', 'joined', 'completed'])->count();
         $verifiedPortfolioCountForReadiness = $profile->portfolio ? $profile->portfolio->items->whereNotNull('verification_badge')->count() : 0;
         
         $totalCompletedForReadiness = $completedTasksCountForReadiness + $internshipCountForReadiness + $jobCountForReadiness + $verifiedPortfolioCountForReadiness;
@@ -156,14 +166,34 @@ class StudentController extends Controller
             'state' => 'nullable|string|max:255',
             'country' => 'nullable|string|max:255',
             'college_name' => 'nullable|string|max:255',
-            'graduation_year' => 'nullable|integer',
+            'graduation_year' => [
+                'nullable',
+                'integer',
+                'min:2000',
+                'max:' . (date('Y') + 5),
+            ],
         ]);
+
+        \App\Helpers\ContactDetector::validate($validated['bio'] ?? '', 'bio');
+
+        $profile = auth()->user()->studentProfile;
+
+        if ($request->graduation_year && $request->graduation_year < now()->year - 2) {
+            return back()->withErrors([
+                'graduation_year' => 'Only current students or graduates from the last two years are allowed.'
+            ]);
+        }
+
+        if ($profile->is_verified && $profile->graduation_year !== null && $request->has('graduation_year') && (int)$request->graduation_year !== (int)$profile->graduation_year) {
+            return back()->withErrors([
+                'graduation_year' => 'Verified graduation year cannot be modified.'
+            ]);
+        }
 
         // Update user name
         auth()->user()->update(['name' => $validated['name']]);
 
         // Update profile
-        $profile = auth()->user()->studentProfile;
         $profile->update([
             'bio' => $validated['bio'],
             'primary_domain' => $validated['primary_domain'] ?? null,
@@ -228,16 +258,31 @@ class StudentController extends Controller
 
         $profile = auth()->user()->studentProfile;
 
-        // Generate 6-digit verification code
+        $sendKey = 'verify-send:' . $profile->id;
+        if (RateLimiter::tooManyAttempts($sendKey, 3)) {
+            return back()->with('error', 'Too many verification emails sent. Please try again in an hour.');
+        }
+
+        $duplicateEmail = \App\Models\StudentProfile::where('college_email', $validated['college_email'])
+            ->where('id', '!=', $profile->id)
+            ->where('is_verified', true)
+            ->exists();
+        if ($duplicateEmail) {
+            return back()->withInput()->with('error', 'This college email is already verified on another account.');
+        }
+
         $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $expiresAt = now()->addHours(24);
 
         $profile->update([
             'college_email' => $validated['college_email'],
             'college_name' => $validated['college_name'],
             'verification_token' => $code,
+            'verification_token_expires_at' => $expiresAt,
         ]);
 
-        // Send verification email with code
+        RateLimiter::hit($sendKey, 3600);
+
         try {
             \Mail::send('emails.student-verification-code', ['code' => $code, 'profile' => $profile], function($message) use ($validated) {
                 $message->to($validated['college_email']);
@@ -268,12 +313,25 @@ class StudentController extends Controller
     public function verifyCode(Request $request)
     {
         $request->validate([
-            'code' => 'required|string',
+            'code' => 'required|string|size:6',
         ]);
 
         $profile = auth()->user()->studentProfile;
-        
-        // Remove any spaces or special characters from input
+
+        $verifyKey = 'verify-code:' . $profile->id;
+        if (RateLimiter::tooManyAttempts($verifyKey, 10)) {
+            return back()->withInput()->with('error', 'Too many failed attempts. Please request a new verification code.');
+        }
+
+        if (!$profile->verification_token || !$profile->verification_token_expires_at) {
+            return redirect()->route('student.verification')->with('error', 'Please request a verification code first.');
+        }
+
+        if ($profile->verification_token_expires_at->isPast()) {
+            $profile->update(['verification_token' => null, 'verification_token_expires_at' => null]);
+            return back()->withInput()->with('error', 'Verification code has expired. Please request a new one.');
+        }
+
         $inputCode = preg_replace('/[^0-9]/', '', $request->code);
         $storedCode = preg_replace('/[^0-9]/', '', $profile->verification_token);
 
@@ -282,25 +340,24 @@ class StudentController extends Controller
                 'is_verified' => true,
                 'email_verified_at' => now(),
                 'verification_token' => null,
+                'verification_token_expires_at' => null,
+                'verification_method' => 'college_email',
             ]);
+
+            RateLimiter::clear($verifyKey);
 
             return redirect()->route('student.dashboard')->with('success', 'College email verified successfully! You now have access to all tasks.');
         }
+
+        RateLimiter::hit($verifyKey, 900);
 
         return back()->withInput()->with('error', 'Invalid verification code. Please try again.');
     }
 
     public function verifyEmail($token)
     {
-        $profile = \App\Models\StudentProfile::where('verification_token', $token)->firstOrFail();
-
-        $profile->update([
-            'is_verified' => true,
-            'email_verified_at' => now(),
-            'verification_token' => null,
-        ]);
-
-        return redirect()->route('student.dashboard')->with('success', 'College email verified successfully! You now have access to all tasks.');
+        return redirect()->route('login')
+            ->with('error', 'Email verification links are no longer supported. Please log in and verify using the 6-digit code sent to your college email.');
     }
 
     public function analytics()
@@ -310,16 +367,15 @@ class StudentController extends Controller
             'ratings'
         ]);
 
-        // Get all applications with their tasks and submissions
+        // Get all applications with their tasks (and skills, startup) and submissions
         $applications = \App\Models\Application::where('student_profile_id', $profile->id)
-            ->with(['task.startup', 'submission'])
+            ->with(['task.startup', 'task.skills', 'submission'])
             ->get();
 
-        // Load ratings separately for each application
+        // Key loaded ratings by task_id to avoid N+1 query
+        $ratings = $profile->ratings->keyBy('task_id');
         foreach($applications as $application) {
-            $application->rating = \App\Models\Rating::where('task_id', $application->task_id)
-                ->where('student_profile_id', $profile->id)
-                ->first();
+            $application->rating = $ratings->get($application->task_id);
         }
 
         // Calculate analytics
@@ -534,8 +590,18 @@ class StudentController extends Controller
                 ->with('success', 'Your college ID is already verified!');
         }
 
-        // Store the uploaded image
-        $path = $request->file('id_card_image')->store('id-cards', 'public');
+        if ($profile->id_card_verification_status === 'processing') {
+            return back()->with('error', 'Your ID is still being verified. Please wait a moment.');
+        }
+
+        // Remove previous upload from private storage
+        if ($profile->id_card_path) {
+            Storage::disk('local')->delete($profile->id_card_path);
+            Storage::disk('public')->delete($profile->id_card_path);
+        }
+
+        // Store on private disk — not web-accessible
+        $path = $request->file('id_card_image')->store('id-cards', 'local');
 
         // Mark as processing
         $profile->update([
@@ -547,7 +613,7 @@ class StudentController extends Controller
         ]);
 
         // Run AI verification (passing the graduation year to cross-reference)
-        $aiService = new AIVerificationService();
+        $aiService = app(AIVerificationService::class);
         $result    = $aiService->verifyCollegeId($path, auth()->user()->name, (int) $request->graduation_year);
 
         // Store the AI result
@@ -615,9 +681,9 @@ class StudentController extends Controller
             'skills_demonstrated.required' => 'Please select at least one skill demonstrated in this project.',
         ]);
 
+        \App\Helpers\ContactDetector::validate($validated['description'] ?? '', 'description');
+
         $profile = auth()->user()->studentProfile;
-        
-        // Ensure student has a portfolio record
         $portfolio = $profile->portfolio;
         if (!$portfolio) {
             $portfolio = \App\Models\Portfolio::create([

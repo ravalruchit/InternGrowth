@@ -91,7 +91,7 @@ class StartupReputationService
     {
         // Hiring offer acceptance rate.
         $totalRespondedOffers = $startup->hiringOffers()
-            ->whereIn('status', ['accepted', 'rejected'])
+            ->whereIn('status', ['pending_joining', 'joined', 'completed', 'rejected'])
             ->count();
 
         if ($totalRespondedOffers === 0) {
@@ -99,7 +99,7 @@ class StartupReputationService
         }
 
         $acceptedOffersCount = $startup->hiringOffers()
-            ->where('status', 'accepted')
+            ->whereIn('status', ['pending_joining', 'joined', 'completed'])
             ->count();
 
         return ($acceptedOffersCount / $totalRespondedOffers) * 100;

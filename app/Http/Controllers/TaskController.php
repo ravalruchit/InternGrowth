@@ -113,6 +113,7 @@ class TaskController extends Controller
             'skills.*'    => 'exists:skills,id',
             'domain'      => 'required|string|in:' . implode(',', array_keys(\App\Models\StudentProfile::$domains)),
             'role'        => 'required|string',
+            'deadline'    => 'nullable|date|after_or_equal:today',
         ]);
 
 
@@ -123,18 +124,19 @@ class TaskController extends Controller
         $validated['startup_profile_id'] = auth()->user()->startupProfile->id;
         $validated['required_skills']    = $skillNames;
 
-        // Escrow logic
-        $startup     = auth()->user()->startupProfile;
         $escrowAmount = $validated['stipend'] ?? 0;
-
-        if ($escrowAmount > 0 && $startup->wallet_balance < $escrowAmount) {
-            return back()->with('error', 'Insufficient wallet balance. Please add money first. Current balance: ₹' . $startup->wallet_balance);
-        }
-
         $validated['escrow_amount'] = $escrowAmount;
         $validated['escrow_locked'] = $escrowAmount > 0;
 
-        \Illuminate\Support\Facades\DB::transaction(function() use ($validated, $skillIds, $escrowAmount, $startup) {
+        \Illuminate\Support\Facades\DB::transaction(function() use ($validated, $skillIds, $escrowAmount) {
+            $startup = \App\Models\StartupProfile::lockForUpdate()->findOrFail(auth()->user()->startupProfile->id);
+
+            if ($escrowAmount > 0 && $startup->wallet_balance < $escrowAmount) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'stipend' => 'Insufficient wallet balance. Please add money first. Current balance: ₹' . $startup->wallet_balance
+                ]);
+            }
+
             $task = $this->repository->create($validated);
             $task->skills()->attach($skillIds);
 
@@ -200,6 +202,7 @@ class TaskController extends Controller
             'skills.*'    => 'exists:skills,id',
             'domain'      => 'required|string|in:' . implode(',', array_keys(\App\Models\StudentProfile::$domains)),
             'role'        => 'required|string',
+            'deadline'    => 'nullable|date',
         ]);
 
 
@@ -207,18 +210,19 @@ class TaskController extends Controller
         $skillNames = Skill::whereIn('id', $skillIds)->pluck('name')->toArray();
         $validated['required_skills'] = $skillNames;
 
-        $startup = auth()->user()->startupProfile;
         $oldStipend = floatval($task->stipend);
         $newStipend = floatval($validated['stipend'] ?? 0);
         $diff = $newStipend - $oldStipend;
 
-        if ($diff > 0) {
-            if ($startup->wallet_balance < $diff) {
-                return back()->with('error', 'Insufficient wallet balance to cover the increased stipend. Additional required: ₹' . $diff);
-            }
-        }
+        \Illuminate\Support\Facades\DB::transaction(function() use ($task, $id, $validated, $skillIds, $diff, $newStipend, $oldStipend) {
+            $startup = \App\Models\StartupProfile::lockForUpdate()->findOrFail(auth()->user()->startupProfile->id);
 
-        \Illuminate\Support\Facades\DB::transaction(function() use ($task, $id, $validated, $skillIds, $diff, $newStipend, $oldStipend, $startup) {
+            if ($diff > 0 && $startup->wallet_balance < $diff) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'stipend' => 'Insufficient wallet balance to cover the increased stipend. Additional required: ₹' . $diff
+                ]);
+            }
+
             $validated['escrow_amount'] = $newStipend;
             $validated['escrow_locked'] = $newStipend > 0;
 
@@ -283,9 +287,10 @@ class TaskController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Check if task has applications
-        if ($task->applications()->count() > 0) {
-            return redirect()->route('startup.dashboard')->with('error', 'Cannot delete task with existing applications');
+        // Check if task has any non-rejected applications
+        $nonRejectedCount = $task->applications()->where('status', '!=', 'rejected')->count();
+        if ($nonRejectedCount > 0) {
+            return redirect()->route('startup.dashboard')->with('error', 'Cannot delete task with active or approved applications');
         }
 
         \Illuminate\Support\Facades\DB::transaction(function() use ($task) {

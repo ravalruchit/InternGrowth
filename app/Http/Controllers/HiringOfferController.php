@@ -56,10 +56,9 @@ class HiringOfferController extends Controller
         // Compute success fee based on user criteria
         $successFee = 0.00;
         if ($validated['offer_type'] === 'internship') {
-            // Check if there is already an active (pending or accepted) promotional offer (fee = 0)
+            // One promotional ₹0 internship offer per startup (lifetime)
             $hasPromoClaimed = HiringOffer::where('startup_profile_id', $startup->id)
                 ->where('offer_type', 'internship')
-                ->whereIn('status', ['pending', 'accepted'])
                 ->where('reserved_fee', 0.00)
                 ->exists();
             
@@ -73,17 +72,20 @@ class HiringOfferController extends Controller
             $successFee = $annualCTC * 0.05;
         }
 
-        // Block sending offer if wallet funds are insufficient to cover reservation fee
-        if ($startup->wallet_balance < $successFee) {
-            return back()->with('error', 'Insufficient funds in wallet to cover the success fee reservation (Required: ₹' . number_format($successFee, 2) . ', Current Balance: ₹' . number_format($startup->wallet_balance, 2) . '). Please top up your wallet.');
-        }
-
         $validated['startup_profile_id'] = $startup->id;
         $validated['status'] = 'pending';
         $validated['expires_at'] = now()->addDays(7);
         $validated['reserved_fee'] = $successFee;
 
-        $offer = \Illuminate\Support\Facades\DB::transaction(function() use ($validated, $startup, $successFee, $student) {
+        $offer = \Illuminate\Support\Facades\DB::transaction(function() use ($validated, $successFee, $student) {
+            $startup = StartupProfile::lockForUpdate()->findOrFail(auth()->user()->startupProfile->id);
+
+            if ($startup->wallet_balance < $successFee) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'wallet' => 'Insufficient funds in wallet to cover the success fee reservation (Required: ₹' . number_format($successFee, 2) . ', Current Balance: ₹' . number_format($startup->wallet_balance, 2) . '). Please top up your wallet.'
+                ]);
+            }
+
             $offer = HiringOffer::create($validated);
 
             if ($successFee > 0) {
@@ -177,37 +179,27 @@ class HiringOfferController extends Controller
 
     public function reject($id)
     {
-        $offer = HiringOffer::with(['student.user', 'startup'])->findOrFail($id);
+        \Illuminate\Support\Facades\DB::transaction(function() use ($id) {
+            $offer = HiringOffer::with(['student.user', 'startup'])->lockForUpdate()->findOrFail($id);
 
-        if (!auth()->user()->studentProfile || $offer->student_profile_id !== auth()->user()->studentProfile->id) {
-            abort(403, 'Unauthorized action.');
-        }
+            if (!auth()->user()->studentProfile || $offer->student_profile_id !== auth()->user()->studentProfile->id) {
+                abort(403, 'Unauthorized action.');
+            }
 
-        if ($offer->status !== 'pending') {
-            return back()->with('error', 'This offer is no longer pending.');
-        }
+            if ($offer->status !== 'pending') {
+                abort(400, 'This offer is no longer pending.');
+            }
 
-        $startup = $offer->startup;
-
-        \Illuminate\Support\Facades\DB::transaction(function() use ($offer, $startup) {
             $offer->update(['status' => 'rejected']);
 
-            // Refund the reserved fee to startup wallet
-            if ($offer->reserved_fee > 0) {
-                $startup->increment('wallet_balance', $offer->reserved_fee);
-
-                Transaction::create([
-                    'user_type' => 'startup',
-                    'user_id' => $startup->id,
-                    'type' => 'credit',
-                    'amount' => $offer->reserved_fee,
-                    'description' => "Refunded success fee reservation for declined offer ID: {$offer->id}",
-                    'reference_id' => "offer_{$offer->id}"
-                ]);
-            }
+            \App\Services\OfferRefundService::refundReservedFee(
+                $offer,
+                "Refunded success fee reservation for declined offer ID: {$offer->id}"
+            );
         });
 
-        // Notify startup
+        $offer = HiringOffer::with(['student.user', 'startup'])->findOrFail($id);
+
         Notification::create([
             'user_id' => $offer->startup->user_id,
             'title' => 'Hiring Offer Declined',
@@ -220,37 +212,27 @@ class HiringOfferController extends Controller
 
     public function withdraw($id)
     {
-        $offer = HiringOffer::with(['student.user', 'startup'])->findOrFail($id);
+        \Illuminate\Support\Facades\DB::transaction(function() use ($id) {
+            $offer = HiringOffer::with(['student.user', 'startup'])->lockForUpdate()->findOrFail($id);
 
-        if (!auth()->user()->startupProfile || $offer->startup_profile_id !== auth()->user()->startupProfile->id) {
-            abort(403, 'Unauthorized action.');
-        }
+            if (!auth()->user()->startupProfile || $offer->startup_profile_id !== auth()->user()->startupProfile->id) {
+                abort(403, 'Unauthorized action.');
+            }
 
-        if ($offer->status !== 'pending') {
-            return back()->with('error', 'This offer cannot be withdrawn.');
-        }
+            if ($offer->status !== 'pending') {
+                abort(400, 'This offer cannot be withdrawn.');
+            }
 
-        $startup = $offer->startup;
-
-        \Illuminate\Support\Facades\DB::transaction(function() use ($offer, $startup) {
             $offer->update(['status' => 'withdrawn']);
 
-            // Refund the reserved fee to startup wallet
-            if ($offer->reserved_fee > 0) {
-                $startup->increment('wallet_balance', $offer->reserved_fee);
-
-                Transaction::create([
-                    'user_type' => 'startup',
-                    'user_id' => $startup->id,
-                    'type' => 'credit',
-                    'amount' => $offer->reserved_fee,
-                    'description' => "Refunded success fee reservation for withdrawn offer ID: {$offer->id}",
-                    'reference_id' => "offer_{$offer->id}"
-                ]);
-            }
+            \App\Services\OfferRefundService::refundReservedFee(
+                $offer,
+                "Refunded success fee reservation for withdrawn offer ID: {$offer->id}"
+            );
         });
 
-        // Notify student
+        $offer = HiringOffer::with(['student.user', 'startup'])->findOrFail($id);
+
         Notification::create([
             'user_id' => $offer->student->user_id,
             'title' => 'Offer Withdrawn',
@@ -263,16 +245,6 @@ class HiringOfferController extends Controller
 
     public function counterOffer(Request $request, $id)
     {
-        $offer = HiringOffer::with(['student.user', 'startup'])->findOrFail($id);
-
-        if (!auth()->user()->studentProfile || $offer->student_profile_id !== auth()->user()->studentProfile->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        if ($offer->status !== 'pending') {
-            return back()->with('error', 'This offer is no longer pending.');
-        }
-
         $validated = $request->validate([
             'counter_compensation' => 'required|numeric|min:0',
             'counter_note' => 'required|string|max:1000'
@@ -280,31 +252,31 @@ class HiringOfferController extends Controller
 
         \App\Helpers\ContactDetector::validate($validated['counter_note'], 'counter_note');
 
-        $startup = $offer->startup;
+        \Illuminate\Support\Facades\DB::transaction(function() use ($id, $validated) {
+            $offer = HiringOffer::with(['student.user', 'startup'])->lockForUpdate()->findOrFail($id);
 
-        \Illuminate\Support\Facades\DB::transaction(function() use ($offer, $validated, $startup) {
+            if (!auth()->user()->studentProfile || $offer->student_profile_id !== auth()->user()->studentProfile->id) {
+                abort(403, 'Unauthorized action.');
+            }
+
+            if ($offer->status !== 'pending') {
+                abort(400, 'This offer is no longer pending.');
+            }
+
             $offer->update([
                 'status' => 'countered',
                 'counter_compensation' => $validated['counter_compensation'],
                 'counter_note' => $validated['counter_note']
             ]);
 
-            // Refund reserved fee to startup wallet
-            if ($offer->reserved_fee > 0) {
-                $startup->increment('wallet_balance', $offer->reserved_fee);
-
-                Transaction::create([
-                    'user_type' => 'startup',
-                    'user_id' => $startup->id,
-                    'type' => 'credit',
-                    'amount' => $offer->reserved_fee,
-                    'description' => "Refunded success fee reservation for countered offer ID: {$offer->id}",
-                    'reference_id' => "offer_{$offer->id}"
-                ]);
-            }
+            \App\Services\OfferRefundService::refundReservedFee(
+                $offer,
+                "Refunded success fee reservation for countered offer ID: {$offer->id}"
+            );
         });
 
-        // Notify startup
+        $offer = HiringOffer::with(['student.user', 'startup'])->findOrFail($id);
+
         Notification::create([
             'user_id' => $offer->startup->user_id,
             'title' => 'Offer Countered by Student',
@@ -338,6 +310,8 @@ class HiringOfferController extends Controller
             } else {
                 abort(403);
             }
+
+            $offer->refresh();
 
             // Check if BOTH confirmed
             if ($offer->student_joining_status === 'joined' && $offer->startup_joining_status === 'joined') {
@@ -429,30 +403,10 @@ class HiringOfferController extends Controller
             if ($refundStartup) {
                 $offer->update(['status' => $newStatus]);
 
-                // Refund reserved fee to startup wallet
-                if ($offer->reserved_fee > 0) {
-                    $startup = $offer->startup;
-                    $startup->increment('wallet_balance', $offer->reserved_fee);
-
-                    Transaction::create([
-                        'user_type' => 'startup',
-                        'user_id' => $startup->id,
-                        'type' => 'credit',
-                        'amount' => $offer->reserved_fee,
-                        'description' => "Refunded reserved fee for failed hiring confirmation on offer ID: {$offer->id}",
-                        'reference_id' => "offer_{$offer->id}"
-                    ]);
-
-                    // Mark original reservation as reversed
-                    $originalTx = Transaction::where('user_type', 'startup')
-                        ->where('user_id', $startup->id)
-                        ->where('type', 'debit')
-                        ->where('reference_id', "offer_{$offer->id}")
-                        ->first();
-                    if ($originalTx) {
-                        $originalTx->update(['status' => 'reversed']);
-                    }
-                }
+                \App\Services\OfferRefundService::refundReservedFee(
+                    $offer,
+                    "Refunded reserved fee for failed hiring confirmation on offer ID: {$offer->id}"
+                );
 
                 // Notify startup
                 Notification::create([
@@ -522,12 +476,14 @@ class HiringOfferController extends Controller
                 ]
             );
 
-            $ratingVal = match($validated['rating']) {
-                'excellent' => 5.0,
-                'good' => 4.0,
-                'average' => 3.0,
-                default => 2.0,
-            };
+            $ratingVal = 2.0;
+            if ($validated['rating'] === 'excellent') {
+                $ratingVal = 5.0;
+            } elseif ($validated['rating'] === 'good') {
+                $ratingVal = 4.0;
+            } elseif ($validated['rating'] === 'average') {
+                $ratingVal = 3.0;
+            }
 
             \App\Models\PortfolioItem::create([
                 'portfolio_id' => $portfolio->id,

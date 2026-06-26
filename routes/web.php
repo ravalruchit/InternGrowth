@@ -5,7 +5,7 @@ use App\Http\Controllers\{
     TaskController, ApplicationController, SubmissionController,
     CertificateController, LeaderboardController, RatingController, MessageController,
     WalletController, AdminWalletController, WalletTopupController, ReportController,
-    NotificationController, StartupReviewController, TalentProfileController
+    NotificationController, StartupReviewController, TalentProfileController, WithdrawalController
 };
 use App\Http\Controllers\Auth\GoogleAuthController;
 use Illuminate\Support\Facades\Route;
@@ -46,34 +46,6 @@ Route::get('/', function () {
     ));
 });
 
-Route::get('/debug-google-config', function () {
-    $googleKeys = [];
-    foreach ($_ENV as $key => $val) {
-        if (str_starts_with(strtoupper(trim($key)), 'GOOGLE_')) {
-            $googleKeys[$key] = [
-                'exists' => !empty($val),
-                'length' => strlen($val),
-                'prefix' => substr($val, 0, 5),
-            ];
-        }
-    }
-    foreach ($_SERVER as $key => $val) {
-        if (str_starts_with(strtoupper(trim($key)), 'GOOGLE_')) {
-            $googleKeys['SERVER_' . $key] = [
-                'exists' => !empty($val),
-                'length' => strlen($val),
-                'prefix' => substr($val, 0, 5),
-            ];
-        }
-    }
-    return response()->json([
-        'client_id_exists' => !empty(config('services.google.client_id')),
-        'client_id_prefix' => substr(config('services.google.client_id'), 0, 10),
-        'client_secret_exists' => !empty(config('services.google.client_secret')),
-        'redirect_uri' => config('services.google.redirect'),
-        'detected_google_keys' => $googleKeys,
-    ]);
-});
 
 Route::get('/test-landing', function () {
     $studentsCount = \App\Models\StudentProfile::count();
@@ -129,18 +101,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/cv/download', [StudentController::class, 'downloadCV'])->name('cv.download');
         Route::post('/cv/settings', [StudentController::class, 'updateResumeSettings'])->name('cv.settings');
         Route::get('/verification', [StudentController::class, 'verification'])->name('verification');
-        Route::post('/verification/send', [StudentController::class, 'sendVerification'])->name('verification.send');
+        Route::post('/verification/send', [StudentController::class, 'sendVerification'])->middleware('throttle:3,60')->name('verification.send');
         Route::get('/verification/code', [StudentController::class, 'showVerificationCode'])->name('verification.code');
-        Route::post('/verification/verify', [StudentController::class, 'verifyCode'])->name('verification.verify');
+        Route::post('/verification/verify', [StudentController::class, 'verifyCode'])->middleware('throttle:10,1')->name('verification.verify');
         // ── College ID Card AI Verification ──────────────────────────────────
         Route::get('/verify-id', [StudentController::class, 'showIdVerification'])->name('verify-id');
-        Route::post('/verify-id', [StudentController::class, 'submitIdVerification'])->name('verify-id.submit');
+        Route::post('/verify-id', [StudentController::class, 'submitIdVerification'])->middleware('throttle:3,60')->name('verify-id.submit');
         Route::get('/verify-id/status', [StudentController::class, 'verificationStatus'])->name('verify-id.status');
         // ─────────────────────────────────────────────────────────────────────
         Route::post('/tasks/{taskId}/review', [StartupReviewController::class, 'store'])->name('tasks.review');
         Route::post('/portfolio/{itemId}/evidence', [TalentProfileController::class, 'updateEvidence'])->name('portfolio.evidence');
         Route::post('/portfolio/project', [StudentController::class, 'storePortfolioItem'])->name('portfolio.project.store');
         Route::delete('/portfolio/project/{id}', [StudentController::class, 'deletePortfolioItem'])->name('portfolio.project.destroy');
+        Route::get('/wallet/withdraw', [WithdrawalController::class, 'index'])->name('wallet.withdraw');
+        Route::post('/wallet/withdraw', [WithdrawalController::class, 'store'])->name('wallet.withdraw.store');
     });
 
     // Startup Routes
@@ -211,6 +185,7 @@ Route::middleware('auth')->group(function () {
 
         // Student ID Card AI Review Queue
         Route::get('/student-id-queue', [AdminController::class, 'studentIdQueue'])->name('student-id-queue');
+        Route::get('/student-id-queue/{id}/id-card', [AdminController::class, 'viewStudentIdCard'])->name('student-id-queue.id-card');
         Route::post('/student-id-queue/{id}/approve', [AdminController::class, 'approveStudentId'])->name('student-id-queue.approve');
         Route::post('/student-id-queue/{id}/reject', [AdminController::class, 'rejectStudentId'])->name('student-id-queue.reject');
 
@@ -222,6 +197,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/analytics/export/revenue', [AdminController::class, 'exportRevenue'])->name('analytics.export.revenue');
         Route::get('/analytics/export/hiring', [AdminController::class, 'exportHiring'])->name('analytics.export.hiring');
         Route::get('/analytics/export/users', [AdminController::class, 'exportUsers'])->name('analytics.export.users');
+
+        // Student Withdrawals Management
+        Route::get('/withdrawals', [WithdrawalController::class, 'adminIndex'])->name('withdrawals.index');
+        Route::post('/withdrawals/{id}/approve', [WithdrawalController::class, 'adminApprove'])->name('withdrawals.approve');
+        Route::post('/withdrawals/{id}/reject', [WithdrawalController::class, 'adminReject'])->name('withdrawals.reject');
     });
 
     // Shared Routes

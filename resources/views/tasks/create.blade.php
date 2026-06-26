@@ -140,6 +140,20 @@
                             @error('stipend')<p class="text-[var(--ig-rose)] text-xs mt-1">{{ $message }}</p>@enderror
                         </div>
 
+                        {{-- Deadline --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-[var(--ig-ink)] mb-2">
+                                Task Deadline (Optional)
+                            </label>
+                            <div class="relative">
+                                <input type="datetime-local" name="deadline" id="f-deadline" value="{{ old('deadline') }}"
+                                       class="ig-input"
+                                       placeholder="Select deadline date and time">
+                            </div>
+                            <p class="text-xs text-[var(--ig-muted)] mt-1.5">Specify the date and time when task submissions close.</p>
+                            @error('deadline')<p class="text-[var(--ig-rose)] text-xs mt-1">{{ $message }}</p>@enderror
+                        </div>
+
                         <div class="flex items-center gap-4 pt-4">
                             <button type="submit" class="ig-btn ig-btn-primary flex-1 justify-center">
                                 <span>Post Task</span><span class="arrow">→</span>

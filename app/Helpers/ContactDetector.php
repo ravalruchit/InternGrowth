@@ -31,6 +31,10 @@ class ContactDetector
         // 2. Normalize text to check for obfuscated numbers (e.g. "nine eight seven")
         $normalizedText = strtolower($text);
         
+        // Normalize separators for phone/number detection to prevent bypasses like "nine_eight_seven"
+        $cleanedTextForNumbers = str_replace(['_', '-', '.', ','], ' ', $normalizedText);
+        $cleanedTextForNumbers = preg_replace('/\s+/', ' ', $cleanedTextForNumbers);
+        
         // Map word numbers to digits
         $wordMap = [
             'zero' => '0', 'one' => '1', 'two' => '2', 'three' => '3', 'four' => '4',
@@ -39,7 +43,7 @@ class ContactDetector
         ];
         
         // Replace words with digits in a temporary string
-        $digitizedText = $normalizedText;
+        $digitizedText = $cleanedTextForNumbers;
         foreach ($wordMap as $word => $digit) {
             // Use word boundary to avoid partial replacements like "stone" -> "st1"
             $digitizedText = preg_replace('/\b' . preg_quote($word, '/') . '\b/', $digit, $digitizedText);
@@ -58,7 +62,7 @@ class ContactDetector
 
         // Check for general patterns like "call me on +91..." or "message me on..."
         $callMeRegex = '/(?:call|whatsapp|contact|message|reach|msg|ping)\s+(?:me\s+)?(?:at|on|via)?\s*[\d\s\-\+\(\)]{8,}/i';
-        if (preg_match($callMeRegex, $text, $matches)) {
+        if (preg_match($callMeRegex, $text, $matches) || preg_match($callMeRegex, $digitizedText, $matches)) {
             return [
                 'type' => 'phone_phrase',
                 'matched' => $matches[0],
@@ -78,6 +82,8 @@ class ContactDetector
             'github.com',
             'facebook.com',
             'fb.me',
+            'x.com',
+            'twitter.com',
         ];
 
         foreach ($socialKeywords as $keyword) {

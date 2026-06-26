@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AuthorizesPlatformAccess;
 use App\Repositories\ApplicationRepository;
 use Illuminate\Http\Request;
 use App\Models\Notification;
 
 class ApplicationController extends Controller
 {
+    use AuthorizesPlatformAccess;
+
     public function __construct(private ApplicationRepository $repository) {}
 
     public function store(Request $request, $taskId)
@@ -18,8 +21,18 @@ class ApplicationController extends Controller
 
         \App\Helpers\ContactDetector::validate($validated['cover_letter'] ?? '', 'cover_letter');
 
+        $studentProfileId = auth()->user()->studentProfile->id;
+
+        $exists = \App\Models\Application::where('task_id', $taskId)
+            ->where('student_profile_id', $studentProfileId)
+            ->exists();
+
+        if ($exists) {
+            return redirect()->route('tasks.show', $taskId)->with('error', 'You have already applied to this task.');
+        }
+
         $validated['task_id'] = $taskId;
-        $validated['student_profile_id'] = auth()->user()->studentProfile->id;
+        $validated['student_profile_id'] = $studentProfileId;
 
         $application = $this->repository->create($validated);
 
@@ -39,20 +52,53 @@ class ApplicationController extends Controller
 
     public function approve($id)
     {
-        $application = $this->repository->updateStatus($id, 'approved');
-        
-        Notification::create([
-            'user_id' => $application->student->user_id,
-            'title' => 'Application Approved',
-            'message' => 'Your application has been approved',
-            'type' => 'success'
-        ]);
+        try {
+            $application = \Illuminate\Support\Facades\DB::transaction(function() use ($id) {
+                $application = \App\Models\Application::with('task')->findOrFail($id);
+                $task = \App\Models\Task::lockForUpdate()->findOrFail($application->task_id);
 
-        return back()->with('success', 'Application approved');
+                // Authorization check: Ensure task belongs to startup
+                if ($task->startup_profile_id !== auth()->user()->startupProfile->id) {
+                    abort(403, 'Unauthorized action.');
+                }
+
+                if ($task->approved_student_id !== null) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'error' => 'Another student has already been approved for this task.'
+                    ]);
+                }
+
+                // Update application status to approved
+                $application->update(['status' => 'approved']);
+
+                // Record the approved student ID on the task
+                $task->update(['approved_student_id' => $application->student_profile_id]);
+
+                return $application;
+            });
+
+            // Reload relationships to notify the student
+            $application->load('student.user');
+
+            Notification::create([
+                'user_id' => $application->student->user_id,
+                'title' => 'Application Approved',
+                'message' => 'Your application has been approved',
+                'type' => 'success'
+            ]);
+
+            return back()->with('success', 'Application approved');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors());
+        }
     }
 
     public function reject($id)
     {
+        $application = \App\Models\Application::with(['student.user', 'task'])->findOrFail($id);
+        $this->authorizeStartupOwnsApplication($application);
+
         $application = $this->repository->updateStatus($id, 'rejected');
         
         Notification::create([
@@ -70,6 +116,10 @@ class ApplicationController extends Controller
         $validated = $request->validate([
             'status' => 'required|in:applied,shortlisted,approved,interview,rejected,internship_offered,internship_accepted,hired'
         ]);
+
+        if ($validated['status'] === 'approved') {
+            return $this->approve($id);
+        }
 
         $application = \App\Models\Application::with(['student.user', 'task'])->findOrFail($id);
 

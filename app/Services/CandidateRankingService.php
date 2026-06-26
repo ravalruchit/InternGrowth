@@ -126,8 +126,8 @@ class CandidateRankingService
     public function calculateVerifiedWorkScore(StudentProfile $student): array
     {
         $completedTasksCount = $student->applications->filter(fn($app) => $app->submission && $app->submission->status === 'accepted')->count();
-        $internshipCount = $student->hiringOffers->where('offer_type', 'internship')->where('status', 'accepted')->count();
-        $jobCount = $student->hiringOffers->where('offer_type', 'job')->where('status', 'accepted')->count();
+        $internshipCount = $student->hiringOffers->where('offer_type', 'internship')->whereIn('status', ['pending_joining', 'joined', 'completed'])->count();
+        $jobCount = $student->hiringOffers->where('offer_type', 'job')->whereIn('status', ['pending_joining', 'joined', 'completed'])->count();
         $verifiedPortfolioCount = $student->portfolio ? $student->portfolio->items->whereNotNull('verification_badge')->count() : 0;
         
         $totalCompleted = $completedTasksCount + $internshipCount + $jobCount + $verifiedPortfolioCount;

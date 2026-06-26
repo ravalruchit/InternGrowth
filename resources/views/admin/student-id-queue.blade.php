@@ -67,13 +67,13 @@
                         @if($profile->id_card_path)
                             <div class="relative overflow-hidden rounded-2xl border border-[var(--ig-line-2)] hover:border-[var(--ig-ink)] transition-colors duration-300">
                                 <img
-                                    src="{{ asset('storage/' . $profile->id_card_path) }}"
+                                    src="{{ route('admin.student-id-queue.id-card', $profile->id) }}"
                                     alt="College ID"
                                     class="w-full h-48 object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
-                                    onclick="openImageModal('{{ asset('storage/' . $profile->id_card_path) }}')"
+                                    onclick="openImageModal('{{ route('admin.student-id-queue.id-card', $profile->id) }}')"
                                 >
                             </div>
-                            <button onclick="openImageModal('{{ asset('storage/' . $profile->id_card_path) }}')" class="w-full text-center text-xs font-bold text-[var(--ig-accent)] mt-3 hover:underline flex items-center justify-center gap-1">
+                            <button onclick="openImageModal('{{ route('admin.student-id-queue.id-card', $profile->id) }}')" class="w-full text-center text-xs font-bold text-[var(--ig-accent)] mt-3 hover:underline flex items-center justify-center gap-1">
                                 Preview Full Size
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                             </button>

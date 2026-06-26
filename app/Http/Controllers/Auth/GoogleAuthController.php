@@ -96,41 +96,42 @@ class GoogleAuthController extends Controller
             return back()->with('error', 'Please select your career domain and preferred role.');
         }
 
-        // Create user
-        $user = User::create([
-            'name' => $googleUser['name'],
-            'email' => $googleUser['email'],
-            'password' => bcrypt(Str::random(32)), // Random password since they use Google
-            'role' => $role,
-            'email_verified_at' => now(), // Auto-verify Google users
-        ]);
-        
-        // Create profile based on role
-        if ($role === 'student') {
-            $profile = StudentProfile::create([
-                'user_id' => $user->id,
-                'bio' => '',
-                'portfolio_url' => '',
-                'github_url' => '',
-                'linkedin_url' => '',
-                'reliability_score' => 1.0,
-                'primary_domain' => $primaryDomain,
-                'preferred_role' => $preferredRole,
+        // Create user and profile atomically
+        $user = \Illuminate\Support\Facades\DB::transaction(function() use ($googleUser, $role, $primaryDomain, $preferredRole) {
+            $user = User::create([
+                'name' => $googleUser['name'],
+                'email' => $googleUser['email'],
+                'password' => bcrypt(Str::random(32)), // Random password since they use Google
+                'role' => $role,
+                'email_verified_at' => now(), // Auto-verify Google users
             ]);
-        } else {
-            StartupProfile::create([
-                'user_id' => $user->id,
-                'company_name' => '',
-                'description' => '',
-                'industry' => '',
-                'website' => '',
-                'location' => '',
-                'team_size' => '',
-                'founded_year' => null,
-                'credibility_score' => 1.0,
-                'is_verified' => false,
-            ]);
-        }
+            
+            // Create profile based on role
+            if ($role === 'student') {
+                StudentProfile::create([
+                    'user_id' => $user->id,
+                    'bio' => '',
+                    'portfolio_url' => '',
+                    'github_url' => '',
+                    'linkedin_url' => '',
+                    'reliability_score' => 1.0,
+                    'primary_domain' => $primaryDomain,
+                    'preferred_role' => $preferredRole,
+                ]);
+            } else {
+                StartupProfile::create([
+                    'user_id' => $user->id,
+                    'company_name' => '',
+                    'description' => '',
+                    'industry' => '',
+                    'website' => '',
+                    'credibility_score' => 1.0,
+                    'is_verified' => false,
+                ]);
+            }
+
+            return $user;
+        });
         
         // Clear session
         session()->forget('google_user');

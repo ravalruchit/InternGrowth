@@ -42,8 +42,11 @@ class AIVerificationService
         }
 
         try {
-            // ── Resolve file path ─────────────────────────────────────────────
-            $fullPath = storage_path('app/public/' . $imagePath);
+            // ── Resolve file path (private disk first, then legacy public) ───
+            $fullPath = storage_path('app/private/' . $imagePath);
+            if (!file_exists($fullPath)) {
+                $fullPath = storage_path('app/public/' . $imagePath);
+            }
             if (!file_exists($fullPath)) {
                 $fullPath = storage_path('app/' . $imagePath);
             }
@@ -228,6 +231,13 @@ PROMPT;
         } else {
             $approved       = false;
             $recommendation = 'reject';
+        }
+
+        // Never auto-approve if AI says the name does not match
+        $nameMatch = (bool) ($parsed['name_match'] ?? false);
+        if ($recommendation === 'approve' && !$nameMatch) {
+            $approved       = false;
+            $recommendation = 'manual_review';
         }
 
         return [

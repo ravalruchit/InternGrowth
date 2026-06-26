@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\StartupProfile;
 use App\Models\StudentProfile;
 use App\Models\Transaction;
+use Illuminate\Support\Facades\DB;
 
 class AdminWalletController extends Controller
 {
@@ -25,23 +26,25 @@ class AdminWalletController extends Controller
             'amount' => 'required|numeric|min:1',
             'description' => 'nullable|string'
         ]);
-        
-        if ($validated['user_type'] === 'startup') {
-            $profile = StartupProfile::findOrFail($validated['user_id']);
-        } else {
-            $profile = StudentProfile::findOrFail($validated['user_id']);
-        }
-        
-        $profile->increment('wallet_balance', $validated['amount']);
-        
-        Transaction::create([
-            'user_type' => $validated['user_type'],
-            'user_id' => $validated['user_id'],
-            'type' => 'credit',
-            'amount' => $validated['amount'],
-            'description' => $validated['description'] ?? 'Money added by admin',
-            'reference_id' => 'admin_' . time()
-        ]);
+
+        DB::transaction(function () use ($validated) {
+            if ($validated['user_type'] === 'startup') {
+                $profile = StartupProfile::lockForUpdate()->findOrFail($validated['user_id']);
+            } else {
+                $profile = StudentProfile::lockForUpdate()->findOrFail($validated['user_id']);
+            }
+
+            $profile->increment('wallet_balance', $validated['amount']);
+
+            Transaction::create([
+                'user_type' => $validated['user_type'],
+                'user_id' => $validated['user_id'],
+                'type' => 'credit',
+                'amount' => $validated['amount'],
+                'description' => $validated['description'] ?? 'Money added by admin',
+                'reference_id' => 'admin_credit_' . $validated['user_type'] . '_' . $validated['user_id'] . '_' . now()->timestamp,
+            ]);
+        });
         
         return back()->with('success', '₹' . $validated['amount'] . ' added successfully!');
     }
@@ -54,27 +57,31 @@ class AdminWalletController extends Controller
             'amount' => 'required|numeric|min:1',
             'description' => 'nullable|string'
         ]);
-        
-        if ($validated['user_type'] === 'startup') {
-            $profile = StartupProfile::findOrFail($validated['user_id']);
-        } else {
-            $profile = StudentProfile::findOrFail($validated['user_id']);
-        }
-        
-        if ($profile->wallet_balance < $validated['amount']) {
-            return back()->with('error', 'Insufficient balance!');
-        }
-        
-        $profile->decrement('wallet_balance', $validated['amount']);
-        
-        Transaction::create([
-            'user_type' => $validated['user_type'],
-            'user_id' => $validated['user_id'],
-            'type' => 'debit',
-            'amount' => $validated['amount'],
-            'description' => $validated['description'] ?? 'Money deducted by admin',
-            'reference_id' => 'admin_' . time()
-        ]);
+
+        DB::transaction(function () use ($validated) {
+            if ($validated['user_type'] === 'startup') {
+                $profile = StartupProfile::lockForUpdate()->findOrFail($validated['user_id']);
+            } else {
+                $profile = StudentProfile::lockForUpdate()->findOrFail($validated['user_id']);
+            }
+
+            if ($profile->wallet_balance < $validated['amount']) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'amount' => 'Insufficient balance!',
+                ]);
+            }
+
+            $profile->decrement('wallet_balance', $validated['amount']);
+
+            Transaction::create([
+                'user_type' => $validated['user_type'],
+                'user_id' => $validated['user_id'],
+                'type' => 'debit',
+                'amount' => $validated['amount'],
+                'description' => $validated['description'] ?? 'Money deducted by admin',
+                'reference_id' => 'admin_debit_' . $validated['user_type'] . '_' . $validated['user_id'] . '_' . now()->timestamp,
+            ]);
+        });
         
         return back()->with('success', '₹' . $validated['amount'] . ' deducted successfully!');
     }

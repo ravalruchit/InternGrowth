@@ -15,6 +15,9 @@
                 </p>
             </div>
             <div class="lg:col-span-5 flex flex-wrap gap-3 justify-start lg:justify-end">
+                <a href="{{ route('admin.withdrawals.index') }}" class="ig-btn ig-btn-primary text-xs py-2 px-3 flex items-center gap-1.5 shadow-sm">
+                    💸 Withdrawals Queue
+                </a>
                 <a href="{{ route('admin.analytics.export.revenue') }}" class="ig-btn ig-btn-ghost text-xs py-2 px-3 flex items-center gap-1.5 shadow-sm">
                     📥 Revenue CSV
                 </a>

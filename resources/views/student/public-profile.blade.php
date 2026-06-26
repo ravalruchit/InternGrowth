@@ -47,16 +47,19 @@
 
                     <p class="text-sm text-[var(--ig-ink-2)] leading-relaxed mb-6 font-normal">{{ $profile->bio ?? 'No bio provided.' }}</p>
 
-                    <div class="border-t border-[var(--ig-line)] pt-5">
-                        <h3 class="text-xs font-bold text-[var(--ig-muted)] uppercase tracking-wider mb-2">Academic Status</h3>
-                        <p class="text-sm font-semibold text-[var(--ig-ink)]">🏫 {{ $profile->college_name ?? 'N/A' }}</p>
-                        <p class="text-xs text-[var(--ig-muted)] mt-1">{{ $profile->college_email ?? 'N/A' }}</p>
-                    </div>
-
-                    <!-- Contact Details -->
                     @php
                         $isContactUnlocked = $profile->contactDetailsUnlockedFor(auth()->user());
                     @endphp
+
+                    <div class="border-t border-[var(--ig-line)] pt-5">
+                        <h3 class="text-xs font-bold text-[var(--ig-muted)] uppercase tracking-wider mb-2">Academic Status</h3>
+                        <p class="text-sm font-semibold text-[var(--ig-ink)]">🏫 {{ $profile->college_name ?? 'N/A' }}</p>
+                        @if($isContactUnlocked && $profile->college_email)
+                            <p class="text-xs text-[var(--ig-muted)] mt-1">{{ $profile->college_email }}</p>
+                        @endif
+                    </div>
+
+                    <!-- Contact Details -->
                     @if($isContactUnlocked)
                         <div class="border-t border-[var(--ig-line)] pt-5">
                             <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2">🔓 Contact Information</h3>
@@ -67,7 +70,7 @@
                                 </div>
                                 <div class="flex items-center justify-between py-1 border-b border-emerald-100">
                                     <span class="text-emerald-800 font-medium">Phone</span>
-                                    <span class="font-mono text-gray-900 font-bold select-all">+91 98765 43210</span>
+                                    <span class="font-mono text-gray-900 font-bold select-all">{{ $profile->phone_number ?? 'Not provided' }}</span>
                                 </div>
                                 @if($profile->portfolio_links && count($profile->portfolio_links) > 0)
                                     <div class="py-1">

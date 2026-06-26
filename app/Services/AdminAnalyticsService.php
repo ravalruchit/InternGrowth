@@ -38,7 +38,7 @@ class AdminAnalyticsService
             ? (Escrow::where('status', 'released')->count() / $escrowTotal) * 100 
             : 100.00;
 
-        $hiringTotal = HiringOffer::whereIn('status', ['accepted', 'rejected', 'joined', 'completed'])->count();
+        $hiringTotal = HiringOffer::whereIn('status', ['pending_joining', 'rejected', 'joined', 'completed'])->count();
         $hiringSuccessRate = $hiringTotal > 0 
             ? (HiringOffer::whereIn('status', ['joined', 'completed'])->count() / $hiringTotal) * 100 
             : 100.00;
@@ -71,7 +71,7 @@ class AdminAnalyticsService
         $prevEscrowSuccessRate = $prevEscrowTotal > 0 ? ($prevEscrowReleased / $prevEscrowTotal) * 100 : 100;
 
         $prevHiringJoined = HiringOffer::where('created_at', '<', $prevMonth)->whereIn('status', ['joined', 'completed'])->count();
-        $prevHiringTotal = HiringOffer::where('created_at', '<', $prevMonth)->whereIn('status', ['accepted', 'rejected', 'joined', 'completed'])->count();
+        $prevHiringTotal = HiringOffer::where('created_at', '<', $prevMonth)->whereIn('status', ['pending_joining', 'rejected', 'joined', 'completed'])->count();
         $prevHiringSuccessRate = $prevHiringTotal > 0 ? ($prevHiringJoined / $prevHiringTotal) * 100 : 100;
 
         $prevHealthScore = round(
@@ -114,7 +114,12 @@ class AdminAnalyticsService
 
         // Forecasting
         $pipelineCommissions = Task::where('status', 'posted')->sum('stipend') * 0.10;
-        $pipelineOffers = HiringOffer::where('status', 'pending')->sum('reserved_fee');
+        $pipelineOffers = HiringOffer::where('status', 'pending')
+            ->where(function($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>=', now());
+            })
+            ->sum('reserved_fee');
         $expectedRevenueThisMonth = $revenueThisMonth + $pipelineCommissions + $pipelineOffers;
 
         // Next month: Actual revenue this month * current growth rate trend (or fallback if 0)
@@ -311,7 +316,7 @@ class AdminAnalyticsService
         $funnelTaskCompleted = Application::whereHas('submission', fn($q) => $q->where('status', 'accepted'))->count();
         $funnelInterviewed = Interview::where('status', 'completed')->distinct('student_profile_id')->count();
         $funnelOfferSent = HiringOffer::count();
-        $funnelOfferAccepted = HiringOffer::whereIn('status', ['accepted', 'joined', 'completed'])->count();
+        $funnelOfferAccepted = HiringOffer::whereIn('status', ['pending_joining', 'joined', 'completed'])->count();
         $funnelJoined = HiringOffer::whereIn('status', ['joined', 'completed'])->count();
         $funnelCompleted = HiringOffer::where('status', 'completed')->count();
 

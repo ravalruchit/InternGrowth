@@ -74,15 +74,31 @@
                     </div>
                 </div>
 
-                <!-- Rewards -->
-                @if($task->stipend)
-                    <div class="grid grid-cols-1 gap-4 ig-reveal">
-                        <div class="ig-card p-6">
-                            <p class="ig-eyebrow mb-2">Stipend</p>
-                            <p class="ig-display text-4xl text-[var(--ig-lime-deep)]">
-                                ₹{{ number_format($task->stipend, 0) }}
-                            </p>
-                        </div>
+                <!-- Rewards & Deadline -->
+                @if($task->stipend || $task->deadline)
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 ig-reveal">
+                        @if($task->stipend)
+                            <div class="ig-card p-6">
+                                <p class="ig-eyebrow mb-2">Stipend</p>
+                                <p class="ig-display text-4xl text-[var(--ig-lime-deep)]">
+                                    ₹{{ number_format($task->stipend, 0) }}
+                                </p>
+                            </div>
+                        @endif
+
+                        @if($task->deadline)
+                            <div class="ig-card p-6 flex flex-col justify-between">
+                                <div>
+                                    <p class="ig-eyebrow mb-2">Deadline</p>
+                                    <p class="text-xl text-[var(--ig-rose)] font-bold mt-1">
+                                        {{ $task->deadline->format('M d, Y h:i A') }}
+                                    </p>
+                                </div>
+                                <span class="text-xs text-[var(--ig-muted)] mt-2 block">
+                                    ⏳ {{ $task->deadline->diffForHumans() }}
+                                </span>
+                            </div>
+                        @endif
                     </div>
                 @endif
 

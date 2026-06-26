@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AuthorizesPlatformAccess;
 use App\Models\Submission;
 use App\Models\Rating;
 use App\Models\Notification;
@@ -9,6 +10,8 @@ use Illuminate\Http\Request;
 
 class SubmissionController extends Controller
 {
+    use AuthorizesPlatformAccess;
+
     public function create($applicationId)
     {
         $application = \App\Models\Application::with('task.startup')->findOrFail($applicationId);
@@ -33,10 +36,24 @@ class SubmissionController extends Controller
 
     public function store(Request $request, $applicationId)
     {
+        $application = \App\Models\Application::with('task.startup')->findOrFail($applicationId);
+
+        if ($application->student_profile_id !== auth()->user()->studentProfile->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($application->status !== 'approved') {
+            return redirect()->route('dashboard')->with('error', 'You can only submit work for approved applications.');
+        }
+
+        if ($application->submission) {
+            return redirect()->route('dashboard')->with('error', 'You have already submitted work for this task.');
+        }
+
         $validated = $request->validate([
             'content' => 'required|string',
             'files' => 'nullable|array',
-            'files.*' => 'nullable|file|max:10240', // 10MB max per file
+            'files.*' => 'nullable|file|mimes:pdf,doc,docx,zip,rar,jpg,jpeg,png,gif,webp,txt|max:10240',
         ]);
 
         $validated['application_id'] = $applicationId;
@@ -63,9 +80,7 @@ class SubmissionController extends Controller
         $validated['files'] = !empty($uploadedFiles) ? $uploadedFiles : null;
         $submission = Submission::create($validated);
 
-        // Notify the startup that work was submitted
-        $application = \App\Models\Application::with('task.startup')->find($applicationId);
-        if ($application && $application->task && $application->task->startup) {
+        if ($application->task && $application->task->startup) {
             \App\Models\Notification::create([
                 'user_id' => $application->task->startup->user_id,
                 'title'   => 'Work Submitted',
@@ -83,6 +98,8 @@ class SubmissionController extends Controller
             'application.task.skills', 
             'application.student'
         ])->findOrFail($id);
+
+        $this->authorizeStartupOwnsSubmission($submission);
         
         // Check if rating exists for this task and student
         $rating = Rating::where('task_id', $submission->application->task_id)
@@ -105,12 +122,18 @@ class SubmissionController extends Controller
     public function accept(Request $request, $id)
     {
         $moneyMessage = \Illuminate\Support\Facades\DB::transaction(function() use ($id) {
-            $submission = Submission::with(['application.task.skills', 'application.student'])
+            $submission = Submission::with(['application.task.skills', 'application.student', 'application.task.startup'])
                 ->lockForUpdate()
                 ->findOrFail($id);
 
+            $this->authorizeStartupOwnsSubmission($submission);
+
             if ($submission->status === 'accepted') {
                 abort(400, 'Submission already accepted.');
+            }
+
+            if (!in_array($submission->status, ['submitted', 'revision_requested'])) {
+                abort(400, 'Submission cannot be accepted in its current state.');
             }
 
             $submission->update(['status' => 'accepted']);
@@ -123,7 +146,7 @@ class SubmissionController extends Controller
             $escrow = $task->escrow;
             $moneyMsg = '';
             if ($escrow && $escrow->status === 'locked') {
-                $platformFee = round($escrow->amount * (env('PLATFORM_FEE_PERCENTAGE', 10) / 100), 2);
+                $platformFee = round($escrow->amount * (config('app.platform_fee_percentage', 10) / 100), 2);
                 $studentAmount = round($escrow->amount - $platformFee, 2);
                 
                 // Add to student wallet
@@ -188,9 +211,11 @@ class SubmissionController extends Controller
         $validated = $request->validate(['feedback' => 'required|string|min:20']);
         
         $moneyMessage = \Illuminate\Support\Facades\DB::transaction(function() use ($id, $validated) {
-            $submission = Submission::with('application.student', 'application.task')
+            $submission = Submission::with('application.student', 'application.task.startup')
                 ->lockForUpdate()
                 ->findOrFail($id);
+
+            $this->authorizeStartupOwnsSubmission($submission);
 
             if ($submission->status === 'accepted' || $submission->status === 'rejected') {
                 abort(400, 'Submission already reviewed.');
@@ -244,15 +269,26 @@ class SubmissionController extends Controller
     {
         $validated = $request->validate(['feedback' => 'required|string']);
         
-        $submission = Submission::with('application.student')->findOrFail($id);
-        $submission->update(['status' => 'revision_requested', 'feedback' => $validated['feedback']]);
+        \Illuminate\Support\Facades\DB::transaction(function() use ($id, $validated) {
+            $submission = Submission::with('application.student', 'application.task.startup')
+                ->lockForUpdate()
+                ->findOrFail($id);
+            
+            $this->authorizeStartupOwnsSubmission($submission);
 
-        Notification::create([
-            'user_id' => $submission->application->student->user_id,
-            'title' => 'Revision Requested',
-            'message' => 'Please revise your submission based on feedback.',
-            'type' => 'info'
-        ]);
+            if ($submission->status === 'accepted' || $submission->status === 'rejected') {
+                abort(400, 'Submission already reviewed.');
+            }
+
+            $submission->update(['status' => 'revision_requested', 'feedback' => $validated['feedback']]);
+
+            Notification::create([
+                'user_id' => $submission->application->student->user_id,
+                'title' => 'Revision Requested',
+                'message' => 'Please revise your submission based on feedback.',
+                'type' => 'info'
+            ]);
+        });
 
         return back()->with('success', 'Revision requested');
     }
@@ -285,14 +321,19 @@ class SubmissionController extends Controller
         $validated = $request->validate([
             'content' => 'required|string',
             'files' => 'nullable|array',
-            'files.*' => 'nullable|file|max:10240',
+            'files.*' => 'nullable|file|mimes:pdf,doc,docx,zip,rar,jpg,jpeg,png,gif,webp,txt|max:10240',
         ]);
 
-        $submission = Submission::findOrFail($id);
+        $submission = Submission::with('application.task.startup')->findOrFail($id);
         
         // Check if user owns this submission
         if ($submission->application->student_profile_id !== auth()->user()->studentProfile->id) {
             abort(403, 'Unauthorized action.');
+        }
+
+        // Check if revision is requested
+        if ($submission->status !== 'revision_requested') {
+            return redirect()->route('dashboard')->with('error', 'This submission is not pending revision.');
         }
         
         // Handle file uploads
@@ -355,11 +396,7 @@ class SubmissionController extends Controller
     {
         $submission = Submission::with('application.task.skills')->findOrFail($id);
 
-        // Authorize: only the task's startup can verify skills
-        $startup = auth()->user()->startupProfile;
-        if (!$startup || $submission->application->task->startup_profile_id !== $startup->id) {
-            abort(403, 'Unauthorized.');
-        }
+        $this->authorizeStartupOwnsSubmission($submission);
 
         // Submission must be accepted
         if ($submission->status !== 'accepted') {
@@ -376,7 +413,7 @@ class SubmissionController extends Controller
         $service = new \App\Services\SkillVerificationService();
         $service->verifySkillsFromStartupReview(
             $submission->application->student_profile_id,
-            $startup->id,
+            auth()->user()->startupProfile->id,
             $submission->application->task_id,
             $validated['skills'],
             'task'

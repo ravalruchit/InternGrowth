@@ -41,12 +41,19 @@ class PortfolioItem extends Model
      */
     public function badgeLabel(): array
     {
-        return match ($this->verification_badge) {
-            'outstanding_performance' => ['emoji' => '🏆', 'label' => 'Outstanding Performance', 'color' => 'amber'],
-            'certified' => ['emoji' => '🎓', 'label' => 'Certified', 'color' => 'accent'],
-            'featured' => ['emoji' => '⭐', 'label' => 'Featured', 'color' => 'lime'],
-            default => ['emoji' => '✅', 'label' => 'Verified Project', 'color' => 'emerald'],
-        };
+        if ($this->verification_badge === 'outstanding_performance') {
+            return ['emoji' => '🏆', 'label' => 'Outstanding Performance', 'color' => 'amber'];
+        }
+
+        if ($this->verification_badge === 'certified') {
+            return ['emoji' => '🎓', 'label' => 'Certified', 'color' => 'accent'];
+        }
+
+        if ($this->verification_badge === 'featured') {
+            return ['emoji' => '⭐', 'label' => 'Featured', 'color' => 'lime'];
+        }
+
+        return ['emoji' => '✅', 'label' => 'Verified Project', 'color' => 'emerald'];
     }
 
     /**

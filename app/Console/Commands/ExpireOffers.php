@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\HiringOffer;
 use App\Models\Notification;
+use App\Services\OfferRefundService;
 
 class ExpireOffers extends Command
 {
@@ -14,11 +15,11 @@ class ExpireOffers extends Command
 
     public function handle()
     {
-        $expiredOffers = HiringOffer::where('status', 'pending')
+        $expiredOfferIds = HiringOffer::where('status', 'pending')
             ->where('expires_at', '<', now())
-            ->get();
+            ->pluck('id');
 
-        $count = $expiredOffers->count();
+        $count = $expiredOfferIds->count();
 
         if ($count === 0) {
             $this->info('No expired hiring offers found.');
@@ -27,26 +28,28 @@ class ExpireOffers extends Command
 
         $this->info("Found {$count} expired offer(s). Updating statuses...");
 
-        foreach ($expiredOffers as $offer) {
-            \Illuminate\Support\Facades\DB::transaction(function() use ($offer) {
+        foreach ($expiredOfferIds as $offerId) {
+            $offer = null;
+
+            \Illuminate\Support\Facades\DB::transaction(function() use ($offerId, &$offer) {
+                $offer = HiringOffer::with(['student.user', 'startup'])->lockForUpdate()->find($offerId);
+
+                if (!$offer || $offer->getRawOriginal('status') !== 'pending') {
+                    return;
+                }
+
                 $offer->update(['status' => 'expired']);
 
-                if ($offer->reserved_fee > 0) {
-                    $startup = $offer->startup;
-                    $startup->increment('wallet_balance', $offer->reserved_fee);
-
-                    \App\Models\Transaction::create([
-                        'user_type' => 'startup',
-                        'user_id' => $startup->id,
-                        'type' => 'credit',
-                        'amount' => $offer->reserved_fee,
-                        'description' => "Refunded success fee reservation for expired offer ID: {$offer->id}",
-                        'reference_id' => "offer_{$offer->id}"
-                    ]);
-                }
+                OfferRefundService::refundReservedFee(
+                    $offer,
+                    "Refunded success fee reservation for expired offer ID: {$offer->id}"
+                );
             });
 
-            // Notify student
+            if (!$offer || $offer->getRawOriginal('status') !== 'expired') {
+                continue;
+            }
+
             Notification::create([
                 'user_id' => $offer->student->user_id,
                 'title' => 'Offer Expired',
@@ -54,7 +57,6 @@ class ExpireOffers extends Command
                 'type' => 'warning'
             ]);
 
-            // Notify startup
             Notification::create([
                 'user_id' => $offer->startup->user_id,
                 'title' => 'Offer Expired',

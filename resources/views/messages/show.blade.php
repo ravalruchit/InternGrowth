@@ -524,7 +524,7 @@
                         </div>
                         <div>
                             <p class="text-xs uppercase font-bold text-gray-400">Contact Phone</p>
-                            <p class="font-semibold text-gray-800 mt-0.5">+91 98765 43210</p>
+                            <p class="font-semibold text-gray-800 mt-0.5">{{ $conversation->student->phone_number ?? 'Not provided' }}</p>
                         </div>
                         @if($conversation->student->portfolio_links && count($conversation->student->portfolio_links) > 0)
                             <div>

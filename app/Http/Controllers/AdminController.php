@@ -84,7 +84,12 @@ class AdminController extends Controller
             'bio' => 'nullable|string',
             'college_name' => 'nullable|string|max:255',
             'degree_name' => 'nullable|string|max:255',
-            'graduation_year' => 'nullable|integer|min:2000|max:2100',
+            'graduation_year' => [
+                'nullable',
+                'integer',
+                'min:2000',
+                'max:' . (date('Y') + 5),
+            ],
             'cgpa' => 'nullable|numeric|between:0,10.00',
             'primary_domain' => 'nullable|string|max:255',
             'preferred_role' => 'nullable|string|max:255',
@@ -134,14 +139,19 @@ class AdminController extends Controller
             'bio' => 'nullable|string',
             'college_name' => 'nullable|string|max:255',
             'degree_name' => 'nullable|string|max:255',
-            'graduation_year' => 'nullable|integer|min:2000|max:2100',
+            'graduation_year' => [
+                'nullable',
+                'integer',
+                'min:2000',
+                'max:' . (date('Y') + 5),
+            ],
             'cgpa' => 'nullable|numeric|between:0,10.00',
             'primary_domain' => 'nullable|string|max:255',
             'preferred_role' => 'nullable|string|max:255',
             'professional_title' => 'nullable|string|max:255',
         ]);
 
-        $user = User::findOrFail($id);
+        $user = User::where('role', 'student')->findOrFail($id);
         $user->update([
             'name' => $request->name,
             'email' => $request->email,
@@ -270,7 +280,7 @@ class AdminController extends Controller
             'is_verified' => 'boolean',
         ]);
 
-        $user = User::findOrFail($id);
+        $user = User::where('role', 'startup')->findOrFail($id);
         $user->update([
             'name' => $request->name,
             'email' => $request->email,
@@ -469,9 +479,29 @@ class AdminController extends Controller
             'id_card_verified_at'         => now(),
             'is_verified'                 => true,
             'verification_method'         => 'admin_manual',
+            'college_name'                => $profile->college_name ?: ($profile->id_card_ai_result['college_name'] ?? null),
         ]);
 
         return back()->with('success', 'Student ID verified. Student now has full platform access.');
+    }
+
+    /**
+     * Serve a student's ID card image to admins only (private storage).
+     */
+    public function viewStudentIdCard($id)
+    {
+        $profile = \App\Models\StudentProfile::findOrFail($id);
+        abort_unless($profile->id_card_path, 404);
+
+        if (\Illuminate\Support\Facades\Storage::disk('local')->exists($profile->id_card_path)) {
+            return \Illuminate\Support\Facades\Storage::disk('local')->response($profile->id_card_path);
+        }
+
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($profile->id_card_path)) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->response($profile->id_card_path);
+        }
+
+        abort(404, 'ID card image not found.');
     }
 
     /**

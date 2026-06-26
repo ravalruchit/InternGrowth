@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AuthorizesPlatformAccess;
 use App\Models\Rating;
 use App\Models\Submission;
 use Illuminate\Http\Request;
 
 class RatingController extends Controller
 {
+    use AuthorizesPlatformAccess;
+
     public function store(Request $request, $submissionId)
     {
         $validated = $request->validate([
@@ -15,7 +18,8 @@ class RatingController extends Controller
             'comment' => 'nullable|string',
         ]);
 
-        $submission = Submission::with('application')->findOrFail($submissionId);
+        $submission = Submission::with('application.task')->findOrFail($submissionId);
+        $this->authorizeStartupOwnsSubmission($submission);
 
         Rating::create([
             'task_id' => $submission->application->task_id,
@@ -25,10 +29,8 @@ class RatingController extends Controller
             'comment' => $validated['comment'] ?? null,
         ]);
 
-        // Update student reliability score and multi-dimensional reputation
         $studentProfile = $submission->application->student;
         
-        // Sync rating to dynamic portfolio item
         $portfolioService = new \App\Services\PortfolioAutomationService();
         $portfolioService->updateRatingOnPortfolioItem(
             $studentProfile->id, 
@@ -36,7 +38,6 @@ class RatingController extends Controller
             $validated['rating']
         );
 
-        // Sync rating to skill verification records
         $skillsService = new \App\Services\SkillVerificationService();
         $skillsService->syncTaskRatingToSkills(
             $studentProfile->id, 

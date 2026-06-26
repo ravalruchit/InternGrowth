@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AuthorizesPlatformAccess;
 use App\Models\Conversation;
 use App\Models\Message;
-use App\Models\StudentProfile;
-use App\Models\StartupProfile;
 use Illuminate\Http\Request;
 
 class MessageController extends Controller
 {
+    use AuthorizesPlatformAccess;
+
     public function index()
     {
         $user = auth()->user();
@@ -34,7 +35,8 @@ class MessageController extends Controller
         $conversation = Conversation::with(['messages.sender', 'student.user', 'startup.user', 'task'])
             ->findOrFail($id);
 
-        // Mark messages as read
+        $this->authorizeConversationAccess($conversation);
+
         $conversation->messages()
             ->where('sender_id', '!=', auth()->id())
             ->where('is_read', false)
@@ -50,12 +52,12 @@ class MessageController extends Controller
         ]);
 
         $conversation = Conversation::findOrFail($conversationId);
+        $this->authorizeConversationAccess($conversation);
 
-        // Check if contact details are unlocked for this student-startup pairing
         $unlocked = false;
         $acceptedOfferExists = \App\Models\HiringOffer::where('student_profile_id', $conversation->student_profile_id)
             ->where('startup_profile_id', $conversation->startup_profile_id)
-            ->where('status', 'accepted')
+            ->whereIn('status', ['pending_joining', 'joined', 'completed'])
             ->exists();
         if ($acceptedOfferExists) {
             $unlocked = true;
@@ -87,6 +89,20 @@ class MessageController extends Controller
 
     public function create($studentId, $startupId, $taskId = null)
     {
+        $user = auth()->user();
+
+        if ($user->isStudent()) {
+            if ((int) $studentId !== $user->studentProfile->id) {
+                abort(403, 'Unauthorized action.');
+            }
+        } elseif ($user->isStartup()) {
+            if ((int) $startupId !== $user->startupProfile->id) {
+                abort(403, 'Unauthorized action.');
+            }
+        } else {
+            abort(403, 'Unauthorized action.');
+        }
+
         $conversation = Conversation::firstOrCreate([
             'student_profile_id' => $studentId,
             'startup_profile_id' => $startupId,

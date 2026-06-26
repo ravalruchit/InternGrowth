@@ -123,4 +123,14 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Platform Fee Percentage
+    |--------------------------------------------------------------------------
+    |
+    | Defines the percentage of payment kept by the platform when releasing escrow.
+    |
+    */
+    'platform_fee_percentage' => env('PLATFORM_FEE_PERCENTAGE', 10),
+
 ];

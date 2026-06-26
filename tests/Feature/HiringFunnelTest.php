@@ -93,6 +93,8 @@ class HiringFunnelTest extends TestCase
 
     public function test_contact_details_unmasked_after_offer_accepted()
     {
+        $this->studentProfile->update(['phone_number' => '+91 9876543210']);
+
         // Accept the offer / update status to hired
         $this->application->update(['status' => 'hired']);
 
@@ -102,7 +104,7 @@ class HiringFunnelTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('🔓 Contact Information');
         $response->assertSee($this->studentUser->email);
-        $response->assertSee('+91 98765 43210');
+        $response->assertSee('+91 9876543210');
         $response->assertSee('https://github.com/alice');
     }
 
@@ -342,7 +344,7 @@ class HiringFunnelTest extends TestCase
         // Refund transaction should exist
         $creditTx = \App\Models\Transaction::where('user_type', 'startup')
             ->where('type', 'credit')
-            ->where('reference_id', "offer_{$offer->id}")
+            ->where('reference_id', "offer_refund_{$offer->id}")
             ->first();
         $this->assertNotNull($creditTx);
         $this->assertEquals(1999.00, $creditTx->amount);

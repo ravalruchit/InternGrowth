@@ -224,7 +224,7 @@ class MatchingService
     private function calculateExperienceScore($student)
     {
         // Calculate based on completed tasks, certificates, etc.
-        $completedTasks = $student->user->studentProfile->applications()
+        $completedTasks = $student->applications()
             ->whereHas('submission', function($q) {
                 $q->where('status', 'accepted');
             })->count();

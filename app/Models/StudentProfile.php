@@ -57,6 +57,7 @@ class StudentProfile extends Model
         'college_email',
         'college_name',
         'verification_token',
+        'verification_token_expires_at',
         'is_verified',
         'email_verified_at',
         'availability',
@@ -94,8 +95,9 @@ class StudentProfile extends Model
     protected $casts = [
         'portfolio_links'          => 'array',
         'wallet_balance'           => 'decimal:2',
-        'is_verified'              => 'boolean',
-        'email_verified_at'        => 'datetime',
+        'is_verified'                    => 'boolean',
+        'verification_token_expires_at'  => 'datetime',
+        'email_verified_at'              => 'datetime',
         'id_card_ai_result'        => 'array',
         'id_card_submitted_at'     => 'datetime',
         'id_card_verified_at'      => 'datetime',
@@ -195,19 +197,19 @@ class StudentProfile extends Model
             // Check if there is an accepted hiring offer
             $hasAcceptedOffer = \App\Models\HiringOffer::where('student_profile_id', $this->id)
                 ->where('startup_profile_id', $startupId)
-                ->where('status', 'accepted')
+                ->whereIn('status', ['pending_joining', 'joined', 'completed'])
                 ->exists();
 
             if ($hasAcceptedOffer) {
                 return true;
             }
 
-            // Check if there is an accepted/hired application
+            // Check if there is an approved/accepted/hired application
             $hasAcceptedApp = \App\Models\Application::where('student_profile_id', $this->id)
                 ->whereHas('task', function($q) use ($startupId) {
                     $q->where('startup_profile_id', $startupId);
                 })
-                ->whereIn('status', ['internship_accepted', 'hired'])
+                ->whereIn('status', ['approved', 'internship_accepted', 'hired'])
                 ->exists();
 
             if ($hasAcceptedApp) {
@@ -216,5 +218,10 @@ class StudentProfile extends Model
         }
 
         return false;
+    }
+
+    public function withdrawalRequests(): HasMany
+    {
+        return $this->hasMany(WithdrawalRequest::class, 'student_profile_id');
     }
 }

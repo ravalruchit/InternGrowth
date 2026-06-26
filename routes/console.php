@@ -8,3 +8,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Illuminate\Support\Facades\Schedule::command('interviews:remind')->everyMinute();
+Illuminate\Support\Facades\Schedule::command('offers:expire')->hourly();

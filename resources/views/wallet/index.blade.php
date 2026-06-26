@@ -41,7 +41,9 @@
                             <p class="text-[12.5px] leading-relaxed" style="color:#C9C1AE">
                                 Withdraw your earnings directly to your bank account anytime.
                             </p>
-                            <span class="ig-chip ig-chip-lime mt-3">All transactions verified</span>
+                            <a href="{{ route('student.wallet.withdraw') }}" class="ig-btn ig-btn-primary mt-4 w-full justify-center">
+                                <span>Request Withdrawal</span><span class="arrow">→</span>
+                            </a>
                         </div>
                     @endif
                 </div>

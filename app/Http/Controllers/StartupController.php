@@ -19,6 +19,11 @@ class StartupController extends Controller
         $tasks = $profile->tasks()
             ->with([
                 'applications.student.user', 
+                'applications.student.skills',
+                'applications.student.reputationScore',
+                'applications.student.portfolio.items',
+                'applications.student.skillVerifications.skill',
+                'applications.student.hiringOffers',
                 'applications.submission',
                 'ratings'
             ])
@@ -189,6 +194,7 @@ class StartupController extends Controller
         }
 
         $request->validate([
+            'company_name'                => 'required|string|max:255',
             'company_registration_number' => ['required', 'string', 'regex:/^[UL][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/i'],
             'gst_number'                  => ['required', 'string', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/i'],
             'company_address'             => 'required|string',
