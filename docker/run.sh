@@ -1,5 +1,15 @@
 #!/bin/sh
 
+# Ensure required storage subdirectories exist (Render uses ephemeral filesystem)
+echo "Creating required storage directories..."
+mkdir -p /var/www/html/storage/framework/views
+mkdir -p /var/www/html/storage/framework/cache/data
+mkdir -p /var/www/html/storage/framework/sessions
+mkdir -p /var/www/html/storage/logs
+mkdir -p /var/www/html/storage/app/private/id-cards
+mkdir -p /var/www/html/storage/app/public
+mkdir -p /var/www/html/bootstrap/cache
+
 # Cache Laravel configurations, routes, and views for maximum performance
 echo "Optimizing Laravel configuration and routes..."
 php artisan config:cache

@@ -53,6 +53,7 @@ RUN echo "clear_env = no" >> /usr/local/etc/php-fpm.d/www.conf
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+COPY docker/php.ini /usr/local/etc/php/conf.d/php.ini
 
 
 # Expose port 80

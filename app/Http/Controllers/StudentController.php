@@ -600,55 +600,74 @@ class StudentController extends Controller
             Storage::disk('public')->delete($profile->id_card_path);
         }
 
-        // Store on private disk — not web-accessible
-        $path = $request->file('id_card_image')->store('id-cards', 'local');
+        try {
+            // Store on private disk — not web-accessible
+            $path = $request->file('id_card_image')->store('id-cards', 'local');
 
-        // Mark as processing
-        $profile->update([
-            'graduation_year'             => $request->graduation_year,
-            'id_card_path'                => $path,
-            'id_card_verification_status' => 'processing',
-            'id_card_submitted_at'        => now(),
-            'id_card_ai_result'           => null,
-        ]);
+            if (!$path) {
+                return back()->withInput()->with('error', 'Failed to save the uploaded image. Please try again.');
+            }
 
-        // Run AI verification (passing the graduation year to cross-reference)
-        $aiService = app(AIVerificationService::class);
-        $result    = $aiService->verifyCollegeId($path, auth()->user()->name, (int) $request->graduation_year);
+            // Mark as processing
+            $profile->update([
+                'graduation_year'             => $request->graduation_year,
+                'id_card_path'                => $path,
+                'id_card_verification_status' => 'processing',
+                'id_card_submitted_at'        => now(),
+                'id_card_ai_result'           => null,
+            ]);
 
-        // Store the AI result
-        $profile->update(['id_card_ai_result' => $result]);
+            // Run AI verification (passing the graduation year to cross-reference)
+            $aiService = app(AIVerificationService::class);
+            $result    = $aiService->verifyCollegeId($path, auth()->user()->name, (int) $request->graduation_year);
 
-        // Apply decision based on recommendation
-        switch ($result['recommendation']) {
-            case 'approve':
-                $profile->update([
-                    'id_card_verification_status' => 'ai_approved',
-                    'id_card_verified_at'         => now(),
-                    'is_verified'                 => true,
-                    'verification_method'         => 'college_id_ai',
-                    // Store college name extracted by AI if not already set
-                    'college_name'                => $profile->college_name ?: ($result['college_name'] ?? null),
-                ]);
-                return redirect()->route('student.verify-id')
-                    ->with('ai_approved', true)
-                    ->with('ai_result', $result);
+            // Store the AI result
+            $profile->update(['id_card_ai_result' => $result]);
 
-            case 'manual_review':
-                $profile->update([
-                    'id_card_verification_status' => 'manual_review',
-                ]);
-                return redirect()->route('student.verify-id')
-                    ->with('manual_review', true)
-                    ->with('ai_result', $result);
+            // Apply decision based on recommendation
+            switch ($result['recommendation']) {
+                case 'approve':
+                    $profile->update([
+                        'id_card_verification_status' => 'ai_approved',
+                        'id_card_verified_at'         => now(),
+                        'is_verified'                 => true,
+                        'verification_method'         => 'college_id_ai',
+                        // Store college name extracted by AI if not already set
+                        'college_name'                => $profile->college_name ?: ($result['college_name'] ?? null),
+                    ]);
+                    return redirect()->route('student.verify-id')
+                        ->with('ai_approved', true)
+                        ->with('ai_result', $result);
 
-            default: // reject
-                $profile->update([
-                    'id_card_verification_status' => 'ai_rejected',
-                ]);
-                return redirect()->route('student.verify-id')
-                    ->with('ai_rejected', true)
-                    ->with('ai_result', $result);
+                case 'manual_review':
+                    $profile->update([
+                        'id_card_verification_status' => 'manual_review',
+                    ]);
+                    return redirect()->route('student.verify-id')
+                        ->with('manual_review', true)
+                        ->with('ai_result', $result);
+
+                default: // reject
+                    $profile->update([
+                        'id_card_verification_status' => 'ai_rejected',
+                    ]);
+                    return redirect()->route('student.verify-id')
+                        ->with('ai_rejected', true)
+                        ->with('ai_result', $result);
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('ID Verification failed', [
+                'user_id' => auth()->id(),
+                'error'   => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+
+            // Reset status so the student can retry
+            $profile->update([
+                'id_card_verification_status' => 'not_submitted',
+            ]);
+
+            return back()->withInput()->with('error', 'Something went wrong during verification. Please try again. If the problem persists, use the college email verification method instead.');
         }
     }
 
