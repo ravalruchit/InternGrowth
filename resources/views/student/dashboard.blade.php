@@ -49,175 +49,44 @@
         @endif
 
         <!-- ─── Offers & Placements ─── -->
-        @if($hiringOffers && $hiringOffers->count() > 0)
-            <section class="mb-12 ig-reveal">
-                <div class="ig-section-head">
+        <!-- ─── Offers & Placements Stats ─── -->
+        <section class="mb-12 ig-reveal">
+            <div class="ig-card p-6 md:p-8 bg-white border border-[var(--ig-line)] rounded-3xl relative overflow-hidden">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
                         <p class="ig-eyebrow mb-2">— Placements & Offers</p>
-                        <h2 class="ig-display text-3xl">Direct Offers & Hiring Status <span class="text-[var(--ig-muted)]">· {{ $hiringOffers->count() }}</span></h2>
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    @foreach($hiringOffers as $offer)
-                        <div class="ig-card-dark p-7 relative overflow-hidden">
-                            <div class="absolute -top-16 -right-16 w-48 h-48 rounded-full blur-3xl opacity-30" style="background:var(--ig-accent)"></div>
-                            <div class="relative grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                                <div class="md:col-span-2">
-                                    @if($offer->status === 'pending')
-                                        <span class="ig-chip ig-chip-lime">{{ strtoupper($offer->offer_type) }} OFFER RECEIVED</span>
-                                    @elseif($offer->status === 'countered')
-                                        <span class="ig-chip bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">🔄 COUNTER PROPOSED (AWAITING STARTUP RESPONSE)</span>
-                                    @elseif($offer->status === 'pending_joining')
-                                        <span class="ig-chip ig-chip-warn">PENDING JOINING VERIFICATION</span>
-                                    @elseif($offer->status === 'joined')
-                                        <span class="ig-chip ig-chip-success">✅ PLACEMENT VERIFIED & ACTIVE</span>
-                                    @endif
-                                    <h3 class="ig-display text-3xl text-white mt-3">{{ $offer->title }}</h3>
-                                    <p class="ig-mono text-[12px] mt-1" style="color:#9C9580">from <span class="text-white font-semibold">{{ $offer->startup->company_name }}</span></p>
-                                    <p class="text-sm mt-4 leading-relaxed" style="color:#C9C1AE">{{ Str::limit($offer->description, 180) }}</p>
-                                    <button onclick="document.getElementById('offer-detail-modal-{{ $offer->id }}').showModal()" class="text-xs text-[var(--ig-lime)] hover:underline font-bold mt-4 flex items-center gap-1 bg-transparent border-none cursor-pointer">
-                                        👁️ View Full Offer Details
-                                    </button>
-                                </div>
-                                <div class="md:text-right">
-                                    <p class="ig-eyebrow mb-1" style="color:#9C9580">Compensation</p>
-                                    @if($offer->status === 'countered')
-                                        <p class="text-xs line-through text-white/40 mb-0.5">₹{{ number_format($offer->compensation, 0) }}</p>
-                                        <p class="ig-stat-num text-3xl text-[var(--ig-lime)]">₹{{ number_format($offer->counter_compensation, 0) }}</p>
-                                        <span class="text-[9px] font-bold uppercase tracking-wider text-yellow-400 block mt-1">Proposed Counter</span>
-                                    @else
-                                        <p class="ig-stat-num text-4xl text-[var(--ig-lime)]">₹{{ number_format($offer->compensation, 0) }}</p>
-                                        <p class="ig-mono text-[11px] mt-1" style="color:#9C9580">per {{ $offer->compensation_period === 'annual' ? 'year' : 'month' }}</p>
-                                    @endif
-                                    
-                                    <div class="flex flex-col md:items-end gap-2 mt-5">
-                                        @if($offer->status === 'pending')
-                                            <div class="flex gap-2 justify-end">
-                                                <button onclick="document.getElementById('offer-detail-modal-{{ $offer->id }}').showModal()" class="ig-btn" style="background:transparent;color:#C9C1AE;border:1px solid rgba(255,255,255,.15)">Decline / Counter</button>
-                                                <form method="POST" action="{{ route('student.offers.accept', $offer->id) }}">@csrf
-                                                    <button class="ig-btn ig-btn-lime cursor-pointer"><span>Accept Offer</span><span class="arrow">→</span></button>
-                                                </form>
-                                            </div>
-                                        @elseif($offer->status === 'countered')
-                                            <p class="text-xs text-[var(--ig-muted)]">Startup review in progress.</p>
-                                        @elseif($offer->status === 'pending_joining')
-                                            @if($offer->student_joining_status === 'pending')
-                                                <p class="text-xs text-[var(--ig-muted)] mb-1">Did you join this internship/position?</p>
-                                                <div class="flex gap-2 justify-end">
-                                                    <form method="POST" action="{{ route('offers.cancel-joining', $offer->id) }}" onsubmit="return confirm('Are you sure you want to cancel this placement? This will notify the startup and refund their reserved fee.')">@csrf
-                                                        <button class="ig-btn" style="background:transparent;color:#f87171;border:1px solid rgba(248,113,113,.3)">No, Cancel</button>
-                                                    </form>
-                                                    <form method="POST" action="{{ route('offers.confirm-joining', $offer->id) }}">@csrf
-                                                        <button class="ig-btn ig-btn-lime"><span>Yes, I Joined</span><span class="arrow">✓</span></button>
-                                                    </form>
-                                                </div>
-                                            @elseif($offer->student_joining_status === 'joined')
-                                                <p class="text-xs text-[var(--ig-warn)] mb-2 font-medium">Joined! Awaiting startup verification...</p>
-                                                <form method="POST" action="{{ route('offers.cancel-joining', $offer->id) }}" onsubmit="return confirm('Are you sure you want to cancel this placement? This will notify the startup and refund their reserved fee.')">@csrf
-                                                    <button class="ig-btn text-xs" style="background:transparent;color:#f87171;border:1px solid rgba(248,113,113,.3);padding:8px 12px">Cancel Placement</button>
-                                                </form>
-                                            @endif
-                                        @elseif($offer->status === 'joined')
-                                            <p class="text-xs text-[var(--ig-lime)] font-semibold mt-2">Verified placement. Work is currently in progress.</p>
-                                            <a href="{{ route('student.internship.updates', $offer->id) }}" class="ig-btn ig-btn-lime text-xs mt-3 text-center inline-block cursor-pointer">
-                                                <span>📂 Internship Workspace</span>
-                                            </a>
-                                        @endif
-                                    </div>
-                                </div>
+                        <h2 class="ig-display text-2xl text-[var(--ig-ink)] font-bold">Direct Offers & Placements</h2>
+                        
+                        <div class="flex flex-wrap gap-x-8 gap-y-4 mt-6">
+                            <div>
+                                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-extrabold block">Active Internships</span>
+                                <span class="text-2xl font-black text-emerald-600 font-poppins mt-0.5 block">
+                                    {{ $hiringOffers->whereIn('status', ['joined', 'active'])->count() }}
+                                </span>
+                            </div>
+                            <div class="border-l border-[var(--ig-line)] pl-8">
+                                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-extrabold block">Pending Offers</span>
+                                <span class="text-2xl font-black text-amber-600 font-poppins mt-0.5 block">
+                                    {{ $hiringOffers->whereIn('status', ['pending', 'countered'])->count() }}
+                                </span>
+                            </div>
+                            <div class="border-l border-[var(--ig-line)] pl-8">
+                                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-extrabold block">Completed</span>
+                                <span class="text-2xl font-black text-indigo-600 font-poppins mt-0.5 block">
+                                    {{ \App\Models\HiringOffer::where('student_profile_id', $profile->id)->where('status', 'completed')->count() }}
+                                </span>
                             </div>
                         </div>
-
-                        <!-- Detailed Offer Modal -->
-                        <dialog id="offer-detail-modal-{{ $offer->id }}" class="rounded-3xl p-8 bg-[var(--ig-surface-ink)] border border-white/10 max-w-lg w-full shadow-2xl backdrop:bg-black/80 text-left text-white">
-                            <div class="relative">
-                                <button onclick="document.getElementById('offer-detail-modal-{{ $offer->id }}').close()" class="absolute top-0 right-0 text-gray-400 hover:text-white transition bg-transparent border-none cursor-pointer">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                </button>
-                                
-                                <span class="ig-chip ig-chip-lime text-[10px] font-bold uppercase tracking-wider mb-2">
-                                    {{ $offer->offer_type }} offer
-                                </span>
-                                
-                                <h3 class="ig-display text-2xl text-white mt-2">{{ $offer->title }}</h3>
-                                <p class="ig-mono text-xs text-[var(--ig-muted)] mt-1">from <strong class="text-white">{{ $offer->startup->company_name }}</strong></p>
-                                
-                                <div class="grid grid-cols-2 gap-4 bg-white/5 border border-white/10 rounded-2xl p-4 my-6">
-                                    <div>
-                                        <span class="block text-2xl font-black text-[var(--ig-lime)]">₹{{ number_format($offer->compensation, 0) }}</span>
-                                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Compensation (per {{ $offer->compensation_period === 'annual' ? 'yr' : 'mo' }})</span>
-                                    </div>
-                                    <div>
-                                        <span class="block text-sm font-black text-white mt-1">{{ $offer->start_date->format('M d, Y') }}</span>
-                                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Start Date</span>
-                                    </div>
-                                    @if($offer->end_date)
-                                        <div class="col-span-2 border-t border-white/10 pt-2.5">
-                                            <span class="block text-sm font-semibold text-white">{{ $offer->end_date->format('M d, Y') }}</span>
-                                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">End Date</span>
-                                        </div>
-                                    @endif
-                                </div>
-                                
-                                <div class="space-y-4">
-                                    <div>
-                                        <h4 class="text-[10px] font-bold text-[var(--ig-lime)] uppercase tracking-widest mb-1.5">Role Description</h4>
-                                        <p class="text-xs text-slate-300 leading-relaxed font-normal whitespace-pre-wrap">{{ $offer->description }}</p>
-                                    </div>
-                                    
-                                    @if($offer->contract_terms)
-                                        <div>
-                                            <h4 class="text-[10px] font-bold text-[var(--ig-lime)] uppercase tracking-widest mb-1.5">Perks & Contract Terms</h4>
-                                            <p class="text-xs text-slate-300 leading-relaxed font-normal whitespace-pre-wrap">{{ $offer->contract_terms }}</p>
-                                        </div>
-                                    @endif
-                                </div>
-                                
-                                @if($offer->status === 'pending')
-                                    <!-- Counter Offer Container -->
-                                    <div id="counter-offer-container-{{ $offer->id }}" class="hidden mt-6 pt-5 border-t border-white/10 space-y-4">
-                                        <h4 class="text-[10px] font-bold text-[var(--ig-lime)] uppercase tracking-widest">Submit Counter Offer</h4>
-                                        <form method="POST" action="{{ route('student.offers.counter', $offer->id) }}" class="space-y-4">
-                                            @csrf
-                                            <div>
-                                                <label class="block text-[10px] font-bold text-white/70 uppercase tracking-wider mb-1">Counter Compensation (₹)</label>
-                                                <input type="number" name="counter_compensation" required min="0" placeholder="e.g. 18000" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-[var(--ig-lime)]">
-                                            </div>
-                                            <div>
-                                                <label class="block text-[10px] font-bold text-white/70 uppercase tracking-wider mb-1">Why should we consider this? (Note)</label>
-                                                <textarea name="counter_note" required rows="2" placeholder="Explain your experience or why you are asking for this rate..." class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-[var(--ig-lime)] resize-none"></textarea>
-                                            </div>
-                                            <div class="flex justify-end gap-2">
-                                                <button type="button" onclick="document.getElementById('counter-offer-container-{{ $offer->id }}').classList.add('hidden')" class="text-xs text-gray-400 hover:text-white px-3 py-1.5 bg-transparent border-none cursor-pointer">Cancel</button>
-                                                <button type="submit" class="bg-gradient-to-r from-yellow-500 to-amber-600 hover:shadow-lg text-white font-bold px-4 py-1.5 rounded-lg text-xs transition border-none cursor-pointer">Submit Counter</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                    
-                                    <div class="mt-8 pt-5 border-t border-white/10 flex justify-between gap-3 items-center" id="main-actions-{{ $offer->id }}">
-                                        <button onclick="document.getElementById('counter-offer-container-{{ $offer->id }}').classList.remove('hidden')" class="text-xs text-yellow-400 hover:underline font-bold bg-transparent border-none cursor-pointer">
-                                            🔄 Counter Offer
-                                        </button>
-                                        <div class="flex gap-2">
-                                            <form method="POST" action="{{ route('student.offers.reject', $offer->id) }}">
-                                                @csrf
-                                                <button type="submit" class="ig-btn text-xs text-white border-white/20 hover:bg-white/10 cursor-pointer" style="padding: 10px 18px; background: transparent; border: 1px solid rgba(255,255,255,0.15);">Decline</button>
-                                            </form>
-                                            <form method="POST" action="{{ route('student.offers.accept', $offer->id) }}">
-                                                @csrf
-                                                <button type="submit" class="ig-btn ig-btn-lime text-xs cursor-pointer" style="padding: 10px 22px;">Accept Offer</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        </dialog>
-                    @endforeach
+                    </div>
+                    
+                    <div>
+                        <a href="{{ route('student.internships.index') }}" class="ig-btn bg-[var(--ig-accent)] hover:bg-violet-700 text-white font-extrabold px-6 py-3 rounded-2xl text-xs shadow-sm transition block text-center whitespace-nowrap">
+                            View My Internships
+                        </a>
+                    </div>
                 </div>
-            </section>
-        @endif
+            </div>
+        </section>
 
         <!-- ─── Scheduled Interviews ─── -->
         @if($interviews && $interviews->count() > 0)
@@ -354,31 +223,50 @@
                 </div>
             </div>
 
-            <!-- Stats column -->
-            <div class="lg:col-span-4 grid grid-cols-2 gap-4">
-                @php
-                    $stats = [
-                        ['Projects', $projectsCompleted, 'ig-card', ''],
-                        ['Intern offers', $internshipOffersCount, 'ig-card', ''],
-                        ['Job offers', $jobOffersCount, 'ig-card', ''],
-                        ['Earnings', '₹'.number_format($totalEarnings, 0), 'ig-card', 'lime-accent'],
-                    ];
-                @endphp
-                @foreach($stats as $s)
-                    <div class="{{ $s[2] }} p-5 ig-reveal {{ $loop->iteration === 4 ? 'col-span-2' : '' }}">
-                        <p class="ig-eyebrow text-[10px]">{{ $s[0] }}</p>
-                        <p class="ig-stat-num text-3xl mt-3">{{ $s[1] }}</p>
+            <!-- Notifications Center Widget -->
+            <div class="lg:col-span-4 ig-card p-6 flex flex-col justify-between ig-reveal">
+                <div>
+                    <div class="flex items-center justify-between mb-6 pb-2 border-b border-[var(--ig-line)]">
+                        <h3 class="text-xs uppercase font-extrabold tracking-widest text-[var(--ig-muted)]">🔔 Recent Updates</h3>
+                        <span class="text-[10px] font-black text-[var(--ig-accent)] bg-[var(--ig-accent-soft)] px-2 py-0.5 rounded-full">Inbox</span>
                     </div>
-                @endforeach
-                <a href="{{ route('wallet.index') }}" class="col-span-2 ig-card-dark p-5 flex items-center justify-between ig-reveal">
-                    <div>
-                        <p class="ig-eyebrow text-[10px]" style="color:#9C9580">Wallet balance</p>
-                        <p class="ig-stat-num text-3xl text-white mt-2">₹{{ number_format($profile->wallet_balance, 0) }}</p>
+
+                    @php
+                        $recentNotifications = \App\Models\Notification::where('user_id', auth()->id())
+                            ->latest()
+                            ->take(4)
+                            ->get();
+                        $iconMap = [
+                            'success' => '🟢',
+                            'warning' => '🚨',
+                            'error' => '❌',
+                            'info' => '⭐'
+                        ];
+                    @endphp
+
+                    <div class="space-y-4">
+                        @forelse($recentNotifications as $notif)
+                            <a href="{{ $notif->target_url ?: '#' }}" class="block p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition group">
+                                <div class="flex items-start gap-2.5">
+                                    <span class="text-sm flex-shrink-0 mt-0.5">{{ $iconMap[$notif->type] ?? '✓' }}</span>
+                                    <div class="min-w-0">
+                                        <h4 class="font-bold text-xs text-gray-800 group-hover:text-[var(--ig-accent)] transition truncate">{{ $notif->title }}</h4>
+                                        <p class="text-[10px] text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">{{ $notif->message }}</p>
+                                        <span class="text-[9px] text-gray-400 mt-1 block font-medium">{{ $notif->created_at->diffForHumans() }}</span>
+                                    </div>
+                                </div>
+                            </a>
+                        @empty
+                            <p class="text-xs text-[var(--ig-muted)] py-8 text-center italic">No recent notifications</p>
+                        @endforelse
                     </div>
-                    <span class="text-[var(--ig-lime)]">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                    </span>
-                </a>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-[var(--ig-line)] text-center">
+                    <a href="{{ route('notifications.index') }}" class="text-[11px] font-black text-gray-600 hover:text-gray-900 transition flex items-center justify-center gap-1">
+                        View All Notifications <span class="arrow">→</span>
+                    </a>
+                </div>
             </div>
         </div>
 

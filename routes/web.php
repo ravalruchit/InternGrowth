@@ -118,6 +118,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/internship/{offer}/updates', [StudentController::class, 'listUpdates'])->name('internship.updates');
         Route::post('/internship/{offer}/updates', [StudentController::class, 'storeUpdate'])->name('internship.updates.store');
         Route::post('/internship/{offer}/reports', [StudentController::class, 'storeWeeklyReport'])->name('internship.reports.store');
+
+        // New student internships center
+        Route::get('/internships', [StudentController::class, 'internships'])->name('internships.index');
+        Route::get('/internships/{id}/workspace', [StudentController::class, 'workspace'])->name('internships.workspace');
+        Route::post('/internships/{id}/checkin', [StudentController::class, 'checkIn'])->name('internships.checkin');
     });
 
     // Startup Routes

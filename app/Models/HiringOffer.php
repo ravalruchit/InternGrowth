@@ -34,7 +34,9 @@ class HiringOffer extends Model
         'hiring_success_rating',
         'hiring_success_rated_at',
         'internship_score',
-        'converted_to_full_time'
+        'converted_to_full_time',
+        'last_checked_in_at',
+        'current_streak'
     ];
 
     /**
@@ -56,7 +58,8 @@ class HiringOffer extends Model
         'expires_at' => 'datetime',
         'joining_confirmed_at' => 'datetime',
         'completed_at' => 'datetime',
-        'hiring_success_rated_at' => 'datetime'
+        'hiring_success_rated_at' => 'datetime',
+        'last_checked_in_at' => 'datetime'
     ];
 
     public function startup(): BelongsTo

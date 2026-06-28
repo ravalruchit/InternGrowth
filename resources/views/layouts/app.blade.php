@@ -27,6 +27,7 @@
                     <a href="{{ route('tasks.index') }}" class="ig-nav-link {{ request()->routeIs('tasks.index') ? 'active' : '' }}">Marketplace</a>
                     <a href="{{ route('leaderboard') }}" class="ig-nav-link {{ request()->routeIs('leaderboard') ? 'active' : '' }}">Leaderboard</a>
                     @if(auth()->check() && auth()->user()->isStudent())
+                        <a href="{{ route('student.internships.index') }}" class="ig-nav-link {{ request()->routeIs('student.internships.*') ? 'active' : '' }}">🎯 My Internships</a>
                         <a href="{{ route('student.analytics') }}" class="ig-nav-link {{ request()->routeIs('student.analytics') ? 'active' : '' }}">Analytics</a>
                     @endif
                     @if(auth()->check() && auth()->user()->isStartup())
@@ -67,6 +68,10 @@
                         </button>
                         <div class="absolute right-0 mt-2 w-56 bg-white rounded-2xl border border-[var(--ig-line)] shadow-[var(--shadow-lg)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
                             @if(auth()->user()->role === 'student')
+                                <a href="{{ route('student.internships.index') }}" class="flex items-center gap-3 px-4 py-3 text-sm hover:bg-[var(--ig-bg)] transition font-semibold">
+                                    <span class="text-[var(--ig-muted)] text-base">🎯</span>
+                                    My Internships
+                                </a>
                                 <a href="{{ route('student.profile') }}" class="flex items-center gap-3 px-4 py-3 text-sm hover:bg-[var(--ig-bg)] transition">
                                     <svg class="w-4 h-4 text-[var(--ig-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                     My Profile

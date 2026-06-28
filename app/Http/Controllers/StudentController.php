@@ -867,4 +867,153 @@ class StudentController extends Controller
 
         return back()->with('success', 'Weekly report submitted successfully.');
     }
+
+    public function internships()
+    {
+        $profile = auth()->user()->studentProfile;
+        $allOffers = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
+            ->with(['startup.user', 'weeklyReports'])
+            ->get();
+
+        // Categorize offers
+        $pending = $allOffers->filter(fn($o) => in_array($o->status, ['pending', 'countered']));
+        $active = $allOffers->filter(fn($o) => in_array($o->status, ['joined', 'active']));
+        $completed = $allOffers->filter(fn($o) => $o->status === 'completed');
+        $archive = $allOffers->filter(fn($o) => in_array($o->status, ['rejected', 'expired', 'withdrawn', 'terminated']));
+
+        // Calculate earnings
+        $taskEarnings = \App\Models\Application::where('student_profile_id', $profile->id)
+            ->whereHas('submission', function($q) { $q->where('status', 'accepted'); })
+            ->with('task')
+            ->get()
+            ->sum(fn($app) => $app->task->stipend ?? 0.00);
+
+        $offerEarnings = $allOffers->filter(fn($o) => in_array($o->status, ['joined', 'active', 'completed']))
+            ->sum(function($o) {
+                if ($o->status === 'completed') {
+                    $months = max(1, $o->start_date->diffInMonths($o->completed_at ?: $o->end_date));
+                    return $o->compensation * $months;
+                } else {
+                    $months = max(1, $o->start_date->diffInMonths(now()));
+                    return $o->compensation * $months;
+                }
+            });
+        $totalEarnings = $taskEarnings + $offerEarnings;
+
+        // Calculate average startup rating
+        $completedRatings = $completed->whereNotNull('hiring_success_rating')
+            ->map(function($o) {
+                if ($o->hiring_success_rating === 'excellent') return 5;
+                if ($o->hiring_success_rating === 'good') return 4;
+                if ($o->hiring_success_rating === 'average') return 3;
+                if ($o->hiring_success_rating === 'poor') return 2;
+                return 1;
+            });
+        $taskRatings = \App\Models\Rating::where('student_profile_id', $profile->id)->pluck('rating');
+        $allRatings = $completedRatings->concat($taskRatings);
+        $avgRating = $allRatings->count() > 0 ? round($allRatings->average(), 1) : 5.0;
+
+        $analytics = [
+            'total_offers' => $allOffers->count(),
+            'completed' => $completed->count(),
+            'active' => $active->count(),
+            'earnings' => $totalEarnings,
+            'avg_rating' => $avgRating
+        ];
+
+        return view('student.internships.index', compact('pending', 'active', 'completed', 'archive', 'analytics'));
+    }
+
+    public function workspace($id)
+    {
+        $profile = auth()->user()->studentProfile;
+        $offer = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
+            ->with(['updates' => function($q) { $q->latest(); }, 'weeklyReports' => function($q) { $q->orderBy('week_number', 'desc'); }, 'startup.user'])
+            ->findOrFail($id);
+
+        $canCheckInToday = true;
+        if ($offer->last_checked_in_at && $offer->last_checked_in_at->isToday()) {
+            $canCheckInToday = false;
+        }
+
+        $conversation = \App\Models\Conversation::where('student_profile_id', $profile->id)
+            ->where('startup_profile_id', $offer->startup_profile_id)
+            ->first();
+        $conversationId = $conversation ? $conversation->id : null;
+
+        $nextWeekNumber = $offer->weeklyReports->max('week_number') + 1;
+
+        return view('student.internships.workspace', compact('offer', 'canCheckInToday', 'conversationId', 'nextWeekNumber'));
+    }
+
+    public function checkIn($id)
+    {
+        $profile = auth()->user()->studentProfile;
+        $offer = \App\Models\HiringOffer::where('student_profile_id', $profile->id)->findOrFail($id);
+
+        if ($offer->last_checked_in_at && $offer->last_checked_in_at->isToday()) {
+            return back()->with('error', 'You have already checked in for today!');
+        }
+
+        $streak = $offer->current_streak;
+        $lastCheckin = $offer->last_checked_in_at;
+
+        if ($lastCheckin) {
+            $diff = $lastCheckin->copy()->startOfDay()->diffInDays(now()->startOfDay());
+            $isYesterday = $diff == 1; // Loose comparison
+            if ($isYesterday) {
+                $streak++;
+            } else {
+                $streak = 1; // Streak broken
+            }
+        } else {
+            $streak = 1; // First checkin
+        }
+
+        $offer->current_streak = $streak;
+        $offer->last_checked_in_at = now();
+        $offer->save();
+
+        // Increment student's IPRS Score
+        $reputation = \App\Models\ReputationScore::firstOrCreate(
+            ['student_profile_id' => $profile->id],
+            ['overall_score' => 50.00]
+        );
+
+        $iprsEarned = 5.00;
+        $milestoneAchieved = false;
+
+        if ($streak > 0 && $streak % 10 === 0) {
+            $iprsEarned += 25.00;
+            $milestoneAchieved = true;
+        }
+
+        $reputation->overall_score += $iprsEarned;
+        $reputation->save();
+
+        // Recalculate reputation rank/statistics
+        $reputationService = new \App\Services\ReputationEngineService();
+        $reputationService->updateReputation($profile->id);
+
+        // Notifications
+        \App\Models\Notification::create([
+            'user_id' => auth()->id(),
+            'title' => 'Daily Check-In Completed',
+            'message' => "🟢 Worked Today checked. Streak updated to {$streak} days. +{$iprsEarned} IPRS points added!",
+            'type' => 'success',
+            'action_url' => route('student.internships.workspace', $offer->id)
+        ]);
+
+        if ($milestoneAchieved) {
+            \App\Models\Notification::create([
+                'user_id' => auth()->id(),
+                'title' => '🏆 Streak Milestone Achieved!',
+                'message' => "Amazing persistence! Your {$streak}-day check-in streak earned you +25 bonus IPRS points.",
+                'type' => 'success',
+                'action_url' => route('student.internships.workspace', $offer->id)
+            ]);
+        }
+
+        return back()->with('success', "Check-in successful! Streak: {$streak} days (+{$iprsEarned} IPRS credited).");
+    }
 }
