@@ -8,6 +8,9 @@ mkdir -p storage/framework/cache/data
 mkdir -p storage/framework/sessions
 mkdir -p storage/framework/testing
 mkdir -p storage/logs
+mkdir -p storage/app/private
+mkdir -p storage/app/private/id-cards
+mkdir -p storage/app/public
 mkdir -p bootstrap/cache
 
 # Set correct permissions
