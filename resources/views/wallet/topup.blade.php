@@ -35,6 +35,20 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div class="ig-banner ig-banner-warn">
+                <span class="text-lg">⚠️</span>
+                <div>
+                    <h3 class="font-bold text-[var(--ig-rose)]">Please fix the following issues:</h3>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-[var(--ig-muted)] mt-1 font-semibold">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
+
         <!-- Current Balance -->
         <div class="ig-card-dark p-6 relative overflow-hidden bg-gradient-to-br from-[var(--ig-surface-ink)] to-[#1b2027]">
             <p class="ig-eyebrow text-[#FAF6EB]/60">Current Wallet Balance</p>

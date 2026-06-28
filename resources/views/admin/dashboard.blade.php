@@ -775,6 +775,16 @@
                         <p class="text-[10px] text-[var(--ig-muted)] mt-0.5 font-bold tracking-wider uppercase">GEMINI DIAGNOSTICS CONTROL</p>
                     </div>
                 </a>
+                <a href="{{ route('admin.circumvention') }}" class="ig-card p-6 flex flex-col justify-between h-36 group relative overflow-hidden bg-white border border-[var(--ig-line)] hover:translate-y-[-4px] hover:shadow-md transition-all duration-300">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] text-[var(--ig-accent)] font-mono font-bold bg-[var(--ig-accent-soft)] py-0.5 px-2 rounded-full transition-all duration-300 group-hover:bg-[var(--ig-accent)] group-hover:text-white">09</span>
+                        <span class="text-[var(--ig-muted)] group-hover:text-[var(--ig-accent)] group-hover:translate-x-1 transition-all duration-300">→</span>
+                    </div>
+                    <div>
+                        <h3 class="ig-display text-base text-[var(--ig-ink)] font-bold group-hover:text-[var(--ig-accent)] transition-colors duration-300">🛡️ Circumvention Auditor</h3>
+                        <p class="text-[10px] text-[var(--ig-muted)] mt-0.5 font-bold tracking-wider uppercase">VERIFY CONTRACT COMPLIANCE</p>
+                    </div>
+                </a>
             </div>
         </div>
 

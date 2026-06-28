@@ -32,7 +32,9 @@ class HiringOffer extends Model
         'completed_at',
         'completion_notes',
         'hiring_success_rating',
-        'hiring_success_rated_at'
+        'hiring_success_rated_at',
+        'internship_score',
+        'converted_to_full_time'
     ];
 
     /**
@@ -54,8 +56,7 @@ class HiringOffer extends Model
         'expires_at' => 'datetime',
         'joining_confirmed_at' => 'datetime',
         'completed_at' => 'datetime',
-        'hiring_success_rated_at' => 'datetime',
-        'contract_terms' => 'array'
+        'hiring_success_rated_at' => 'datetime'
     ];
 
     public function startup(): BelongsTo
@@ -71,5 +72,15 @@ class HiringOffer extends Model
     public function sourceTask(): BelongsTo
     {
         return $this->belongsTo(Task::class, 'source_task_id');
+    }
+
+    public function updates()
+    {
+        return $this->hasMany(InternshipUpdate::class, 'hiring_offer_id');
+    }
+
+    public function weeklyReports()
+    {
+        return $this->hasMany(WeeklyReport::class, 'hiring_offer_id');
     }
 }

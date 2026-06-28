@@ -29,6 +29,9 @@
                     @if(auth()->check() && auth()->user()->isStudent())
                         <a href="{{ route('student.analytics') }}" class="ig-nav-link {{ request()->routeIs('student.analytics') ? 'active' : '' }}">Analytics</a>
                     @endif
+                    @if(auth()->check() && auth()->user()->isStartup())
+                        <a href="{{ route('startup.team.index') }}" class="ig-nav-link {{ request()->routeIs('startup.team.*') ? 'active' : '' }}">⭐ My Team</a>
+                    @endif
                 </div>
 
                 <!-- Right -->
@@ -72,6 +75,10 @@
                                 <a href="{{ route('startup.profile') }}" class="flex items-center gap-3 px-4 py-3 text-sm hover:bg-[var(--ig-bg)] transition">
                                     <svg class="w-4 h-4 text-[var(--ig-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16"/></svg>
                                     Company Profile
+                                </a>
+                                <a href="{{ route('startup.team.index') }}" class="flex items-center gap-3 px-4 py-3 text-sm hover:bg-[var(--ig-bg)] transition">
+                                    <span class="text-[var(--ig-muted)]">⭐</span>
+                                    My Team
                                 </a>
                             @endif
                             <div class="h-px bg-[var(--ig-line)]"></div>

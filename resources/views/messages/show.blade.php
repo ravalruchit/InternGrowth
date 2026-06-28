@@ -1,5 +1,16 @@
 <x-app-layout>
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <!-- Flash Messages & Validation Errors -->
+        @if($errors->any())
+            <div class="ig-banner mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl text-sm text-red-955 font-semibold shadow-sm">
+                <p class="font-black text-red-955 mb-1.5">Please fix the following issues:</p>
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         @if(auth()->check() && auth()->user()->isStudent())
             <x-reputation-card compact="true" />
         @endif

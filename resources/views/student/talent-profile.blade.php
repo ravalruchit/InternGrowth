@@ -1,6 +1,28 @@
 <x-app-layout>
     <div class="ig-container py-12 ig-anim-fade-up">
         
+        <!-- Flash Messages & Validation Errors -->
+        @if(session('success'))
+            <div class="ig-banner ig-banner-success mb-6 text-sm">
+                <p class="font-bold text-emerald-950">✓ {{ session('success') }}</p>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="ig-banner mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-950 font-bold shadow-sm">
+                <p>⚠️ {{ session('error') }}</p>
+            </div>
+        @endif
+        @if($errors->any())
+            <div class="ig-banner mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl text-sm text-red-955 font-semibold shadow-sm">
+                <p class="font-black text-red-955 mb-1.5">Please fix the following issues:</p>
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <!-- Hero Header Card -->
         <div class="ig-card p-6 sm:p-8 bg-gradient-to-br from-white via-[var(--ig-bg-2)] to-white relative overflow-hidden mb-8 border border-[var(--ig-line-2)] shadow-sm">
             <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -379,6 +401,13 @@
                             <textarea name="contract_terms" rows="2" placeholder="e.g. Certificate, Flexible Hours, Work From Home" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--ig-lime)] resize-none"></textarea>
                         </div>
 
+                        <div class="flex items-start gap-2 pt-2 text-[var(--ig-lime)]/90 text-xs">
+                            <input type="checkbox" name="agreement" id="agreement-check-intern-talent" required value="1" class="mt-0.5 rounded text-[var(--ig-lime)] focus:ring-[var(--ig-lime)] bg-black/40 border-white/10">
+                            <label for="agreement-check-intern-talent" class="leading-tight font-semibold">
+                                I confirm that this hiring process will be completed through InternGrowth (Payment Agreement).
+                            </label>
+                        </div>
+
                         <div class="flex justify-end space-x-3 pt-4">
                             <button type="button" onclick="toggleModal('internship-modal')" class="ig-btn ig-btn-ghost text-xs text-white border-white/20 hover:bg-white/10 hover:text-white" style="padding: 10px 18px;">Cancel</button>
                             <button type="submit" class="ig-btn ig-btn-lime text-xs" style="padding: 10px 22px;">Send Offer</button>
@@ -434,6 +463,13 @@
                         <div>
                             <label class="block text-xs font-bold text-white/70 uppercase tracking-wider mb-1">Contract Terms & Benefits</label>
                             <textarea name="contract_terms" rows="2" placeholder="e.g. Health Insurance, Annual Leave, Bonus Structure" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--ig-lime)] resize-none"></textarea>
+                        </div>
+
+                        <div class="flex items-start gap-2 pt-2 text-[var(--ig-lime)]/90 text-xs">
+                            <input type="checkbox" name="agreement" id="agreement-check-job-talent" required value="1" class="mt-0.5 rounded text-[var(--ig-lime)] focus:ring-[var(--ig-lime)] bg-black/40 border-white/10">
+                            <label for="agreement-check-job-talent" class="leading-tight font-semibold">
+                                I confirm that this hiring process will be completed through InternGrowth (Payment Agreement).
+                            </label>
                         </div>
 
                         <div class="flex justify-end space-x-3 pt-4">

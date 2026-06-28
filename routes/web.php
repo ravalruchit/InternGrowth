@@ -5,7 +5,7 @@ use App\Http\Controllers\{
     TaskController, ApplicationController, SubmissionController,
     CertificateController, LeaderboardController, RatingController, MessageController,
     WalletController, AdminWalletController, WalletTopupController, ReportController,
-    NotificationController, StartupReviewController, TalentProfileController, WithdrawalController
+    NotificationController, StartupReviewController, TalentProfileController, WithdrawalController, StartupTeamController
 };
 use App\Http\Controllers\Auth\GoogleAuthController;
 use Illuminate\Support\Facades\Route;
@@ -115,6 +115,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('/portfolio/project/{id}', [StudentController::class, 'deletePortfolioItem'])->name('portfolio.project.destroy');
         Route::get('/wallet/withdraw', [WithdrawalController::class, 'index'])->name('wallet.withdraw');
         Route::post('/wallet/withdraw', [WithdrawalController::class, 'store'])->name('wallet.withdraw.store');
+        Route::get('/internship/{offer}/updates', [StudentController::class, 'listUpdates'])->name('internship.updates');
+        Route::post('/internship/{offer}/updates', [StudentController::class, 'storeUpdate'])->name('internship.updates.store');
+        Route::post('/internship/{offer}/reports', [StudentController::class, 'storeWeeklyReport'])->name('internship.reports.store');
     });
 
     // Startup Routes
@@ -139,6 +142,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/submissions/{id}/verify-skills', [SubmissionController::class, 'verifySkills'])->name('submissions.verify-skills');
         Route::get('/candidates', [StartupController::class, 'candidates'])->name('candidates');
         Route::post('/candidates/{id}/save', [StartupController::class, 'toggleSaveCandidate'])->name('candidates.save');
+
+        // Startup Team Management Hub
+        Route::get('/team', [StartupTeamController::class, 'index'])->name('team.index');
+        Route::get('/team/{offer}/work', [StartupTeamController::class, 'viewWork'])->name('team.work');
+        Route::get('/team/{offer}/reports', [StartupTeamController::class, 'viewReports'])->name('team.reports');
+        Route::post('/team/reports/{report}/feedback', [StartupTeamController::class, 'submitWeeklyFeedback'])->name('team.reports.feedback');
+        Route::get('/team/{offer}/convert', [StartupTeamController::class, 'showConversionForm'])->name('team.convert.form');
+        Route::post('/team/{offer}/convert', [StartupTeamController::class, 'processConversion'])->name('team.convert');
     });
 
     // Admin Routes
@@ -202,6 +213,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/withdrawals', [WithdrawalController::class, 'adminIndex'])->name('withdrawals.index');
         Route::post('/withdrawals/{id}/approve', [WithdrawalController::class, 'adminApprove'])->name('withdrawals.approve');
         Route::post('/withdrawals/{id}/reject', [WithdrawalController::class, 'adminReject'])->name('withdrawals.reject');
+
+        // Circumvention Auditor Routes
+        Route::get('/circumvention', [AdminController::class, 'circumventionIndex'])->name('circumvention');
+        Route::post('/circumvention/{id}/audit', [AdminController::class, 'markAudited'])->name('circumvention.audit');
+        Route::post('/circumvention/{id}/penalize', [AdminController::class, 'chargeBypassPenalty'])->name('circumvention.penalize');
     });
 
     // Shared Routes
@@ -245,6 +261,8 @@ Route::middleware('auth')->group(function () {
     // Direct Hiring Pipeline Routes
     Route::post('/startup/offers', [App\Http\Controllers\HiringOfferController::class, 'store'])->name('startup.offers.store')->middleware('role:startup');
     Route::post('/startup/offers/{id}/withdraw', [App\Http\Controllers\HiringOfferController::class, 'withdraw'])->name('startup.offers.withdraw')->middleware('role:startup');
+    Route::post('/startup/offers/{id}/counter/accept', [App\Http\Controllers\HiringOfferController::class, 'acceptCounter'])->name('startup.offers.counter.accept')->middleware('role:startup');
+    Route::post('/startup/offers/{id}/counter/reject', [App\Http\Controllers\HiringOfferController::class, 'rejectCounter'])->name('startup.offers.counter.reject')->middleware('role:startup');
     Route::post('/student/offers/{id}/accept', [App\Http\Controllers\HiringOfferController::class, 'accept'])->name('student.offers.accept')->middleware('role:student');
     Route::post('/student/offers/{id}/reject', [App\Http\Controllers\HiringOfferController::class, 'reject'])->name('student.offers.reject')->middleware('role:student');
     Route::post('/student/offers/{id}/counter', [App\Http\Controllers\HiringOfferController::class, 'counterOffer'])->name('student.offers.counter')->middleware('role:student');
@@ -261,6 +279,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/startup/interviews/{id}/noshow', [App\Http\Controllers\InterviewController::class, 'noShow'])->name('startup.interviews.noshow')->middleware('role:startup');
     Route::post('/student/interviews/{id}/noshow', [App\Http\Controllers\InterviewController::class, 'studentNoShow'])->name('student.interviews.noshow')->middleware('role:student');
 });
+
+// Experience Certificates Public Routes
+Route::get('/certificates/verify/{certificateNumber}', [App\Http\Controllers\CertificateController::class, 'verify'])->name('certificates.verify');
+Route::get('/certificates/{id}/download', [App\Http\Controllers\CertificateController::class, 'download'])->name('certificates.download');
 
 require __DIR__.'/auth.php';
 

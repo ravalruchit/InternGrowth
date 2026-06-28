@@ -450,12 +450,42 @@ class HiringOfferController extends Controller
         \Illuminate\Support\Facades\DB::transaction(function() use ($offer, $validated) {
             $offer = HiringOffer::lockForUpdate()->find($offer->id);
 
+            // 1. Weekly Reports score
+            $avgWeeklyRating = \App\Models\WeeklyReport::where('hiring_offer_id', $offer->id)->whereNotNull('rating')->avg('rating') ?: 5;
+            $weeklyReportsScore = ($avgWeeklyRating / 5) * 100;
+
+            // 2. Startup Ratings score
+            $startupRatingScore = 60;
+            if ($validated['rating'] === 'excellent') $startupRatingScore = 100;
+            elseif ($validated['rating'] === 'good') $startupRatingScore = 80;
+            elseif ($validated['rating'] === 'average') $startupRatingScore = 60;
+            elseif ($validated['rating'] === 'poor') $startupRatingScore = 40;
+            elseif ($validated['rating'] === 'terminated') $startupRatingScore = 20;
+
+            // 3. Attendance score (interviews attended)
+            $totalInterviews = \Illuminate\Support\Facades\DB::table('interviews')->where('student_profile_id', $offer->student_profile_id)->where('startup_profile_id', $offer->startup_profile_id)->count();
+            $attendedInterviews = \Illuminate\Support\Facades\DB::table('interviews')->where('student_profile_id', $offer->student_profile_id)->where('startup_profile_id', $offer->startup_profile_id)->whereIn('status', ['accepted', 'completed', 'attended'])->count();
+            $attendanceScore = $totalInterviews > 0 ? ($attendedInterviews / $totalInterviews) * 100 : 100;
+
+            // 4. Activity score
+            $portfolioUpdates = \Illuminate\Support\Facades\DB::table('portfolio_items')->where('portfolio_id', function($q) use ($offer) {
+                $q->select('id')->from('portfolios')->where('student_profile_id', $offer->student_profile_id);
+            })->count();
+            $githubLinksCount = \App\Models\InternshipUpdate::where('hiring_offer_id', $offer->id)->whereNotNull('github_url')->count() + \App\Models\WeeklyReport::where('hiring_offer_id', $offer->id)->whereNotNull('github_url')->count();
+            $weeklyReportsCount = \App\Models\WeeklyReport::where('hiring_offer_id', $offer->id)->count();
+            $activityRaw = $portfolioUpdates + $githubLinksCount + $weeklyReportsCount;
+            $activityScore = min(100, $activityRaw * 10);
+
+            // Final Weighted Score
+            $finalScore = ($weeklyReportsScore * 0.40) + ($startupRatingScore * 0.30) + ($attendanceScore * 0.20) + ($activityScore * 0.10);
+
             $offer->update([
                 'status' => 'completed',
                 'completed_at' => now(),
                 'completion_notes' => $validated['notes'] ?? null,
                 'hiring_success_rating' => $validated['rating'],
-                'hiring_success_rated_at' => now()
+                'hiring_success_rated_at' => now(),
+                'internship_score' => $finalScore
             ]);
 
             // 1. Issue experience certificate
@@ -485,6 +515,20 @@ class HiringOfferController extends Controller
                 $ratingVal = 3.0;
             }
 
+            // Find first github/demo link from reports or updates
+            $firstReport = \App\Models\WeeklyReport::where('hiring_offer_id', $offer->id)->whereNotNull('github_url')->first();
+            $githubUrl = $firstReport ? $firstReport->github_url : null;
+            $demoUrl = $firstReport ? $firstReport->demo_url : null;
+
+            if (!$githubUrl) {
+                $firstUpdate = \App\Models\InternshipUpdate::where('hiring_offer_id', $offer->id)->whereNotNull('github_url')->first();
+                $githubUrl = $firstUpdate ? $firstUpdate->github_url : null;
+            }
+            if (!$demoUrl) {
+                $firstUpdate = \App\Models\InternshipUpdate::where('hiring_offer_id', $offer->id)->whereNotNull('demo_url')->first();
+                $demoUrl = $firstUpdate ? $firstUpdate->demo_url : null;
+            }
+
             \App\Models\PortfolioItem::create([
                 'portfolio_id' => $portfolio->id,
                 'hiring_offer_id' => $offer->id,
@@ -496,7 +540,10 @@ class HiringOfferController extends Controller
                 'completed_at' => now(),
                 'domain' => $offer->domain ?? 'Software Development',
                 'role' => $offer->role ?? 'Developer',
-                'rating_received' => $ratingVal
+                'rating_received' => $ratingVal,
+                'github_url' => $githubUrl,
+                'demo_url' => $demoUrl,
+                'verification_badge' => 'certified'
             ]);
 
             // 3. Recalculate reputation score
@@ -513,5 +560,114 @@ class HiringOfferController extends Controller
         });
 
         return back()->with('success', 'Internship marked as completed! Experience Certificate issued.');
+    }
+
+    public function acceptCounter(Request $request, $id)
+    {
+        $offer = HiringOffer::with(['student.user', 'startup'])->findOrFail($id);
+        $startup = auth()->user()->startupProfile;
+
+        if (!$startup || $offer->startup_profile_id !== $startup->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($offer->status !== 'countered') {
+            return back()->with('error', 'This offer is not in a countered state.');
+        }
+
+        // Calculate success fee for the counter rate
+        $successFee = 0.00;
+        if ($offer->offer_type === 'internship') {
+            $hasPromoClaimed = HiringOffer::where('startup_profile_id', $startup->id)
+                ->where('offer_type', 'internship')
+                ->where('reserved_fee', 0.00)
+                ->where('id', '!=', $offer->id)
+                ->exists();
+            $successFee = $hasPromoClaimed ? 1999.00 : 0.00;
+        } else {
+            $annualCTC = $offer->compensation_period === 'annual' 
+                ? $offer->counter_compensation 
+                : $offer->counter_compensation * 12;
+            $successFee = $annualCTC * 0.05;
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function() use ($offer, $successFee, $startup) {
+            $startup = StartupProfile::lockForUpdate()->find($startup->id);
+
+            if ($startup->wallet_balance < $successFee) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'wallet' => 'Insufficient funds in wallet to cover the success fee reservation (Required: ₹' . number_format($successFee, 2) . ', Current Balance: ₹' . number_format($startup->wallet_balance, 2) . '). Please top up your wallet.'
+                ]);
+            }
+
+            if ($successFee > 0) {
+                $startup->decrement('wallet_balance', $successFee);
+
+                Transaction::create([
+                    'user_type' => 'startup',
+                    'user_id' => $startup->id,
+                    'type' => 'debit',
+                    'amount' => $successFee,
+                    'description' => "Reserved success fee for accepted counter offer ID: {$offer->id} ({$offer->offer_type}) to {$offer->student->user->name}",
+                    'reference_id' => "offer_{$offer->id}"
+                ]);
+            }
+
+            $offer->update([
+                'compensation' => $offer->counter_compensation,
+                'reserved_fee' => $successFee,
+                'status' => 'pending_joining',
+                'student_joining_status' => 'pending',
+                'startup_joining_status' => 'pending'
+            ]);
+
+            // Sync with application status and outcomes if exists
+            if ($offer->source_task_id) {
+                $application = \App\Models\Application::where('task_id', $offer->source_task_id)
+                    ->where('student_profile_id', $offer->student_profile_id)
+                    ->first();
+                if ($application) {
+                    $application->update([
+                        'status' => $offer->offer_type === 'internship' ? 'internship_offered' : 'hired'
+                    ]);
+                }
+            }
+        });
+
+        // Notify student
+        Notification::create([
+            'user_id' => $offer->student->user_id,
+            'title' => 'Counter Offer Accepted!',
+            'message' => "{$offer->startup->company_name} has accepted your counter offer rate of ₹" . number_format($offer->compensation) . " for '{$offer->title}'. Please confirm your joining.",
+            'type' => 'success'
+        ]);
+
+        return back()->with('success', 'Counter offer accepted successfully! Pending joining verification.');
+    }
+
+    public function rejectCounter($id)
+    {
+        $offer = HiringOffer::with(['student.user', 'startup'])->findOrFail($id);
+        $startup = auth()->user()->startupProfile;
+
+        if (!$startup || $offer->startup_profile_id !== $startup->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($offer->status !== 'countered') {
+            return back()->with('error', 'This offer is not in a countered state.');
+        }
+
+        $offer->update(['status' => 'rejected']);
+
+        // Notify student
+        Notification::create([
+            'user_id' => $offer->student->user_id,
+            'title' => 'Counter Offer Declined',
+            'message' => "{$offer->startup->company_name} has declined your counter offer for '{$offer->title}'.",
+            'type' => 'warning'
+        ]);
+
+        return back()->with('success', 'Counter offer declined successfully.');
     }
 }

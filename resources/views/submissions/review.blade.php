@@ -216,7 +216,8 @@
                 </div>
             @endif
 
-            {{-- ══════════════════════════════════════════════════            @if($submission->status === 'accepted' && $taskSkills->isNotEmpty())
+            {{-- ══════════════════════════════════════════════════ --}}
+            @if($submission->status === 'accepted' && $taskSkills->isNotEmpty())
                 <div class="mt-8 bg-gradient-to-br from-[var(--ig-accent-soft)] via-[var(--ig-bg-2)] to-[var(--ig-bg)] rounded-2xl border border-[var(--ig-line-2)] p-8 shadow-lg relative overflow-hidden">
                     {{-- Decorative background glow --}}
                     <div class="absolute -top-20 -right-20 w-60 h-60 bg-[var(--ig-accent)]/10 rounded-full blur-3xl"></div>

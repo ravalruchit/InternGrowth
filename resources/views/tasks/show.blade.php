@@ -1,5 +1,16 @@
 <x-app-layout>
-    <div class="ig-container">
+    <div class="ig-container py-12">
+        <!-- Flash Messages & Validation Errors -->
+        @if($errors->any())
+            <div class="ig-banner mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl text-sm text-red-955 font-semibold shadow-sm">
+                <p class="font-black text-red-955 mb-1.5">Please fix the following issues:</p>
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         
         <!-- Header & Startup Card -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end mb-12 ig-anim-fade-up">

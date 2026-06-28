@@ -139,7 +139,7 @@
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--ig-muted)] font-semibold">₹</span>
                                 <input type="number" name="stipend" id="f-stipend" value="{{ old('stipend', $task->stipend) }}" step="1" min="0"
-                                       class="ig-input pl-8"
+                                       class="ig-input pl-8" style="padding-left: 2.25rem;"
                                        placeholder="0">
                             </div>
                             <p class="text-xs text-[var(--ig-muted)] mt-1.5">Specify stipend amount. Escrow is automatically locked upon submission posting.</p>

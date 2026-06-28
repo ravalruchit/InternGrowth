@@ -633,4 +633,99 @@ class AdminController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    public function circumventionIndex()
+    {
+        $placements = \App\Models\HiringOffer::whereIn('status', ['completed', 'joined', 'bypassed_penalized'])
+            ->with(['student.user', 'startup.user'])
+            ->latest()
+            ->get();
+        return view('admin.circumvention', compact('placements'));
+    }
+
+    public function markAudited($id)
+    {
+        $offer = \App\Models\HiringOffer::findOrFail($id);
+        $offer->update([
+            'audited_at' => now()
+        ]);
+        return back()->with('success', 'Placement audit timestamp updated successfully.');
+    }
+
+    public function chargeBypassPenalty(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'penalty_amount' => 'required|numeric|min:0',
+            'notes' => 'nullable|string|max:1000'
+        ]);
+
+        $offer = \App\Models\HiringOffer::with(['student.user', 'startup'])->findOrFail($id);
+        $startup = $offer->startup;
+        $student = $offer->student;
+
+        if ($offer->status === 'bypassed_penalized') {
+            return back()->with('error', 'This placement has already been penalized.');
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function() use ($offer, $startup, $student, $validated) {
+            $startupProfile = \App\Models\StartupProfile::lockForUpdate()->findOrFail($startup->id);
+            $penalty = floatval($validated['penalty_amount']);
+
+            // Deduct from startup wallet
+            $startupProfile->decrement('wallet_balance', $penalty);
+
+            // Record transaction for startup
+            \App\Models\Transaction::create([
+                'user_type' => 'startup',
+                'user_id' => $startupProfile->id,
+                'type' => 'debit',
+                'amount' => $penalty,
+                'description' => "Non-circumvention buyout penalty: Off-platform hiring of student {$student->user->name} for offer ID: {$offer->id}",
+                'reference_id' => "bypass_penalty_{$offer->id}"
+            ]);
+
+            // Record credit for platform
+            \App\Models\Transaction::create([
+                'user_type' => 'platform',
+                'user_id' => 0,
+                'type' => 'credit',
+                'amount' => $penalty,
+                'description' => "Non-circumvention buyout penalty from {$startupProfile->company_name} for offer ID: {$offer->id}",
+                'reference_id' => "bypass_penalty_{$offer->id}"
+            ]);
+
+            $offer->update([
+                'status' => 'bypassed_penalized',
+                'flagged_for_bypass' => true,
+                'bypass_penalty_charged' => $penalty,
+                'bypass_notes' => $validated['notes'] ?? 'Bypass detected by admin.',
+                'audited_at' => now()
+            ]);
+
+            // Boost student IPRS
+            $studentScore = \App\Models\ReputationScore::where('student_profile_id', $student->id)->first();
+            if ($studentScore) {
+                $newScore = min(100, ($studentScore->overall_score ?? 50) + 10);
+                $studentScore->update(['overall_score' => $newScore]);
+            }
+        });
+
+        // Notify startup
+        \App\Models\Notification::create([
+            'user_id' => $startup->user_id,
+            'title' => 'Circumvention Penalty Charged',
+            'message' => "Warning: An audit flagged off-platform hiring of {$student->user->name} (Offer ID: {$offer->id}). A buyout penalty of ₹" . number_format($validated['penalty_amount']) . " has been charged to your wallet.",
+            'type' => 'danger'
+        ]);
+
+        // Notify student
+        \App\Models\Notification::create([
+            'user_id' => $student->user_id,
+            'title' => 'Reputation Verified & Boosted!',
+            'message' => "Your placement verification was completed by admin. Your reputation has been boosted by +10 IPRS points.",
+            'type' => 'success'
+        ]);
+
+        return back()->with('success', 'Bypass penalty successfully charged and ledger updated.');
+    }
 }

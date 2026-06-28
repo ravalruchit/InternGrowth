@@ -28,7 +28,7 @@ class StudentController extends Controller
                             $exp->whereNull('expires_at')
                                 ->orWhere('expires_at', '>=', now());
                         });
-                })->orWhereIn('status', ['pending_joining', 'joined']);
+                })->orWhereIn('status', ['countered', 'pending_joining', 'joined']);
             })
             ->with('startup')
             ->get();
@@ -774,5 +774,97 @@ class StudentController extends Controller
 
         return redirect()->route('student.profile')->with('success', 'Portfolio project removed successfully.');
     }
-}
 
+    public function listUpdates($offerId)
+    {
+        $profile = auth()->user()->studentProfile;
+        $offer = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
+            ->with(['updates' => function($q) { $q->latest(); }, 'weeklyReports' => function($q) { $q->orderBy('week_number', 'desc'); }])
+            ->findOrFail($offerId);
+
+        // Calculate next expected week number
+        $nextWeekNumber = \App\Models\WeeklyReport::where('hiring_offer_id', $offer->id)->max('week_number') + 1;
+
+        return view('student.internship.updates', compact('offer', 'nextWeekNumber'));
+    }
+
+    public function storeUpdate(Request $request, $offerId)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string|max:2000',
+            'github_url' => 'nullable|url|max:255',
+            'demo_url' => 'nullable|url|max:255'
+        ]);
+
+        $profile = auth()->user()->studentProfile;
+        $offer = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
+            ->whereIn('status', ['joined', 'active'])
+            ->findOrFail($offerId);
+
+        \App\Models\InternshipUpdate::create([
+            'hiring_offer_id' => $offer->id,
+            'student_profile_id' => $profile->id,
+            'title' => $request->title,
+            'description' => $request->description,
+            'github_url' => $request->github_url,
+            'demo_url' => $request->demo_url
+        ]);
+
+        // Notify startup
+        \App\Models\Notification::create([
+            'user_id' => $offer->startup->user_id,
+            'title' => 'New Progress Update from Intern',
+            'message' => "{$profile->user->name} posted an update: '{$request->title}' for offer ID: {$offer->id}.",
+            'type' => 'info'
+        ]);
+
+        return back()->with('success', 'Internship progress update posted successfully.');
+    }
+
+    public function storeWeeklyReport(Request $request, $offerId)
+    {
+        $request->validate([
+            'week_number' => 'required|integer|min:1',
+            'tasks_completed' => 'required|string|max:2000',
+            'challenges' => 'required|string|max:2000',
+            'next_week_goals' => 'required|string|max:2000',
+            'github_url' => 'nullable|url|max:255',
+            'demo_url' => 'nullable|url|max:255'
+        ]);
+
+        $profile = auth()->user()->studentProfile;
+        $offer = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
+            ->whereIn('status', ['joined', 'active'])
+            ->findOrFail($offerId);
+
+        // Check if report for this week is already submitted
+        $exists = \App\Models\WeeklyReport::where('hiring_offer_id', $offer->id)
+            ->where('week_number', $request->week_number)
+            ->exists();
+        if ($exists) {
+            return back()->withInput()->with('error', "Week {$request->week_number} report has already been submitted.");
+        }
+
+        \App\Models\WeeklyReport::create([
+            'hiring_offer_id' => $offer->id,
+            'student_profile_id' => $profile->id,
+            'week_number' => $request->week_number,
+            'tasks_completed' => $request->tasks_completed,
+            'challenges' => $request->challenges,
+            'next_week_goals' => $request->next_week_goals,
+            'github_url' => $request->github_url,
+            'demo_url' => $request->demo_url
+        ]);
+
+        // Notify startup
+        \App\Models\Notification::create([
+            'user_id' => $offer->startup->user_id,
+            'title' => 'Weekly Report Submitted',
+            'message' => "{$profile->user->name} submitted Week {$request->week_number} report for review.",
+            'type' => 'success'
+        ]);
+
+        return back()->with('success', 'Weekly report submitted successfully.');
+    }
+}

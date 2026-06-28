@@ -1,6 +1,28 @@
 <x-app-layout>
     <div class="ig-container py-12 ig-anim-fade-up space-y-8">
         
+        <!-- Flash Messages & Validation Errors -->
+        @if(session('success'))
+            <div class="ig-banner ig-banner-success text-sm">
+                <p class="font-bold text-emerald-950">✓ {{ session('success') }}</p>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="ig-banner mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-950 font-bold shadow-sm">
+                <p>⚠️ {{ session('error') }}</p>
+            </div>
+        @endif
+        @if($errors->any())
+            <div class="ig-banner mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl text-sm text-red-955 font-semibold shadow-sm">
+                <p class="font-black text-red-950 mb-1.5">Please fix the following issues:</p>
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <!-- Welcome Header & Info -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
@@ -416,7 +438,12 @@
 
         <!-- Hiring Pipeline / Sent Offers -->
         <div class="ig-card p-6 overflow-hidden">
-            <h2 class="ig-display text-2xl text-[var(--ig-ink)] mb-6">Direct Acquisition Offers</h2>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="ig-display text-2xl text-[var(--ig-ink)]">Direct Acquisition Offers</h2>
+                    <p class="text-[10px] text-[var(--ig-muted)] font-semibold mt-1 uppercase tracking-wider">🔒 Non-Circumvention Policy: Direct hiring of InternGrowth candidates off-platform within 12 months is subject to a flat ₹20,000 buyout fee.</p>
+                </div>
+            </div>
             
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs">
@@ -452,17 +479,31 @@
                                     </span>
                                 </td>
                                 <td class="py-4 font-semibold text-[var(--ig-ink)]">
-                                    ₹{{ number_format($offer->compensation, 0) }}/{{ $offer->compensation_period === 'annual' ? 'yr' : 'mo' }}
-                                </td>
-                                <td class="py-4 text-[var(--ig-muted)]">
-                                    {{ $offer->start_date->format('M d, Y') }}
-                                </td>
-                                <td class="py-4">
-                                    @if($offer->status === 'pending')
-                                        <span class="ig-chip text-[10px] font-bold ig-chip-warn">
-                                            Pending
-                                        </span>
-                                    @elseif($offer->status === 'pending_joining')
+                                     @if($offer->status === 'countered')
+                                         <div class="flex flex-col">
+                                             <span class="line-through text-[11px] text-[var(--ig-muted)]">₹{{ number_format($offer->compensation, 0) }}</span>
+                                             <span class="text-xs font-bold text-amber-600">Counter: ₹{{ number_format($offer->counter_compensation, 0) }}/{{ $offer->compensation_period === 'annual' ? 'yr' : 'mo' }}</span>
+                                             @if($offer->counter_note)
+                                                 <span class="text-[9px] font-normal text-[var(--ig-muted)] italic max-w-[150px] truncate" title="{{ $offer->counter_note }}">"{{ $offer->counter_note }}"</span>
+                                             @endif
+                                         </div>
+                                     @else
+                                         ₹{{ number_format($offer->compensation, 0) }}/{{ $offer->compensation_period === 'annual' ? 'yr' : 'mo' }}
+                                     @endif
+                                 </td>
+                                 <td class="py-4 text-[var(--ig-muted)]">
+                                     {{ $offer->start_date->format('M d, Y') }}
+                                 </td>
+                                 <td class="py-4">
+                                     @if($offer->status === 'pending')
+                                         <span class="ig-chip text-[10px] font-bold ig-chip-warn">
+                                             Pending
+                                         </span>
+                                     @elseif($offer->status === 'countered')
+                                         <span class="ig-chip text-[10px] font-bold ig-chip-warn bg-yellow-50/50 border border-yellow-200 text-yellow-800">
+                                             Counter Proposed
+                                         </span>
+                                     @elseif($offer->status === 'pending_joining')
                                         <span class="ig-chip text-[10px] font-bold ig-chip-warn">
                                             Pending Joining
                                         </span>
@@ -504,6 +545,21 @@
                                                 Withdraw
                                             </button>
                                         </form>
+                                    @elseif($offer->status === 'countered')
+                                        <div class="flex gap-2">
+                                            <form method="POST" action="{{ route('startup.offers.counter.accept', $offer->id) }}" onsubmit="return confirm('Are you sure you want to accept this counter offer? This will reserve the success fee.');" class="inline">
+                                                @csrf
+                                                <button type="submit" class="text-[var(--ig-lime-deep)] font-bold hover:underline bg-emerald-50 hover:bg-emerald-100 border border-emerald-250 px-2.5 py-1.5 rounded-lg transition text-[10px]">
+                                                    Accept Counter
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ route('startup.offers.counter.reject', $offer->id) }}" onsubmit="return confirm('Are you sure you want to decline this counter offer?');" class="inline">
+                                                @csrf
+                                                <button type="submit" class="text-[var(--ig-rose)] font-bold hover:underline bg-red-50 hover:bg-red-100 border border-red-250 px-2.5 py-1.5 rounded-lg transition text-[10px]">
+                                                    Decline
+                                                </button>
+                                            </form>
+                                        </div>
                                     @elseif($offer->status === 'pending_joining')
                                         @if($offer->startup_joining_status === 'pending')
                                             <div class="flex gap-2">

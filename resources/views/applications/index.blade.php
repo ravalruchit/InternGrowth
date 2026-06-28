@@ -118,11 +118,11 @@
                             @elseif($application->status === 'rejected') 
                                 bg-red-100 text-red-800 border border-red-200
                             @elseif($application->status === 'shortlisted' || $application->status === 'interview') 
-                                bg-blue-100 text-blue-800 border border-blue-250
+                                bg-blue-100 text-blue-800 border border-blue-200
                             @elseif($application->status === 'internship_offered')
-                                bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] border border-[var(--ig-accent)]/20le-200
+                                bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] border border-[var(--ig-accent)]/20
                             @else 
-                                bg-yellow-100 text-yellow-800 border border-yellow-250
+                                bg-yellow-100 text-yellow-800 border border-yellow-200
                             @endif">
                             {{ ucfirst(str_replace('_', ' ', $application->status)) }}
                         </span>
@@ -448,13 +448,13 @@
                                 $outcome = $application->startup_hiring_outcome;
                                 
                                 $stepActive = 1;
-                                if ($currentStatus === 'applied') {
+                                if (in_array($currentStatus, ['applied', 'shortlisted'])) {
                                     $stepActive = 1;
                                 } elseif ($currentStatus === 'approved' && (!$application->submission || $application->submission->status !== 'accepted')) {
                                     $stepActive = 2;
-                                } elseif ($application->submission && $application->submission->status === 'accepted' && !$outcome) {
+                                } elseif (($application->submission && $application->submission->status === 'accepted' && (empty($outcome) || in_array($outcome, ['task_only', 'task_completed_rejected']))) || $currentStatus === 'task_completed') {
                                     $stepActive = 3;
-                                } elseif (in_array($outcome, ['interview_scheduled', 'interview_passed', 'interview_failed'])) {
+                                } elseif ($currentStatus === 'interview' || in_array($outcome, ['interview_scheduled', 'interview_passed', 'interview_failed'])) {
                                     $stepActive = 4;
                                 } elseif (in_array($outcome, ['hired_intern', 'hired_job']) || in_array($currentStatus, ['internship_offered', 'internship_accepted', 'hired'])) {
                                     $stepActive = 5;
@@ -464,7 +464,7 @@
                             <!-- Step 1: Applied -->
                             <div class="flex items-center flex-1 last:flex-none">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 1 ? 'bg-[var(--ig-accent)] text-white' : 'bg-gray-205 text-gray-500' }}">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 1 ? 'bg-[var(--ig-accent)] text-white' : 'bg-gray-200 text-gray-500' }}">
                                         @if($stepActive > 1) ✓ @else 1 @endif
                                     </div>
                                     <span class="text-[9px] font-bold mt-1 text-gray-600">Applied</span>
@@ -475,7 +475,7 @@
                             <!-- Step 2: Task Assigned -->
                             <div class="flex items-center flex-1 last:flex-none">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 2 ? 'bg-[var(--ig-accent)] text-white' : 'bg-gray-205 text-gray-500' }}">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 2 ? 'bg-[var(--ig-accent)] text-white' : 'bg-gray-200 text-gray-500' }}">
                                         @if($stepActive > 2) ✓ @else 2 @endif
                                     </div>
                                     <span class="text-[9px] font-bold mt-1 text-gray-600">Task Started</span>
@@ -486,7 +486,7 @@
                             <!-- Step 3: Task Completed -->
                             <div class="flex items-center flex-1 last:flex-none">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 3 ? 'bg-[var(--ig-accent)] text-white' : 'bg-gray-205 text-gray-500' }}">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 3 ? 'bg-[var(--ig-accent)] text-white' : 'bg-gray-200 text-gray-500' }}">
                                         @if($stepActive > 3) ✓ @else 3 @endif
                                     </div>
                                     <span class="text-[9px] font-bold mt-1 text-gray-600">Task Completed</span>
@@ -497,7 +497,7 @@
                             <!-- Step 4: Interview -->
                             <div class="flex items-center flex-1 last:flex-none">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 4 ? 'bg-[var(--ig-accent)] text-white' : 'bg-gray-205 text-gray-500' }}">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 4 ? 'bg-[var(--ig-accent)] text-white' : 'bg-gray-200 text-gray-500' }}">
                                         @if($stepActive > 4) ✓ @else 4 @endif
                                     </div>
                                     <span class="text-[9px] font-bold mt-1 text-gray-600">Interview</span>
@@ -508,7 +508,7 @@
                             <!-- Step 5: Hired -->
                             <div class="flex items-center last:flex-none">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 5 ? 'bg-emerald-600 text-white' : 'bg-gray-205 text-gray-500' }}">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold {{ $stepActive >= 5 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500' }}">
                                         🎉
                                     </div>
                                     <span class="text-[9px] font-bold mt-1 text-gray-600">Hired</span>
@@ -518,27 +518,43 @@
 
                         <!-- Action Buttons based on status -->
                         <div class="pt-2 border-t border-gray-200">
-                            @if($currentStatus === 'applied')
-                                <div class="flex gap-2">
-                                    <form method="POST" action="{{ route('startup.applications.approve', $application->id) }}" class="flex-1">
-                                        @csrf
-                                        <button type="submit" class="w-full bg-[var(--ig-accent)] hover:bg-[#E03E0B] text-white font-extrabold py-2 rounded-xl text-xs transition shadow-sm">
-                                            ✓ Approve Candidate to Start Task
-                                        </button>
-                                    </form>
-                                    <form method="POST" action="{{ route('startup.applications.reject', $application->id) }}">
-                                        @csrf
-                                        <button type="submit" class="bg-white hover:bg-gray-50 text-gray-700 font-bold py-2 px-4 rounded-xl text-xs transition border border-gray-250">
-                                            Reject Candidate
-                                        </button>
-                                    </form>
-                                </div>
+                            @if(in_array($currentStatus, ['applied', 'interview']) && (!$application->submission || $application->submission->status !== 'accepted'))
+                                @if($currentStatus === 'interview' && $application->task->approved_student_id)
+                                    @if($application->task->approved_student_id === $application->student_profile_id)
+                                        <div class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3 font-semibold flex items-center gap-2">
+                                            <span class="flex h-2 w-2 relative">
+                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-600"></span>
+                                            </span>
+                                            <span>Task Assigned. Candidate is currently working on the assignment.</span>
+                                        </div>
+                                    @else
+                                        <div class="text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3 font-semibold">
+                                            ✗ Another student has already been approved for this task.
+                                        </div>
+                                    @endif
+                                @else
+                                    <div class="flex gap-2">
+                                        <form method="POST" action="{{ route('startup.applications.approve', $application->id) }}" class="flex-1">
+                                            @csrf
+                                            <button type="submit" class="w-full bg-[var(--ig-accent)] hover:bg-[#E03E0B] text-white font-extrabold py-2 rounded-xl text-xs transition shadow-sm">
+                                                ✓ Approve Candidate to Start Task
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ route('startup.applications.reject', $application->id) }}">
+                                            @csrf
+                                            <button type="submit" class="bg-white hover:bg-gray-50 text-gray-700 font-bold py-2 px-4 rounded-xl text-xs transition border border-gray-200">
+                                                Reject Candidate
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endif
                             @elseif($currentStatus === 'rejected')
                                 <div class="text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3 font-semibold">
                                     ✗ Application Rejected.
                                 </div>
                             @elseif($currentStatus === 'approved' && (!$application->submission || $application->submission->status !== 'accepted'))
-                                <div class="text-xs text-amber-800 bg-amber-50 border border-amber-250 rounded-xl p-3 font-semibold flex items-center gap-2">
+                                <div class="text-xs text-amber-800 bg-amber-50 border border-gray-200 rounded-xl p-3 font-semibold flex items-center gap-2">
                                     <span class="flex h-2 w-2 relative">
                                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                                         <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-600"></span>

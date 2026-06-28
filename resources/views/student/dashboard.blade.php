@@ -1,5 +1,16 @@
 <x-app-layout>
     <div class="ig-container">
+        <!-- Flash Messages & Validation Errors -->
+        @if($errors->any())
+            <div class="ig-banner mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl text-sm text-red-955 font-semibold shadow-sm">
+                <p class="font-black text-red-955 mb-1.5">Please fix the following issues:</p>
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <!-- ─── Header ─── -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-end mb-12 ig-anim-fade-up">
@@ -54,6 +65,8 @@
                                 <div class="md:col-span-2">
                                     @if($offer->status === 'pending')
                                         <span class="ig-chip ig-chip-lime">{{ strtoupper($offer->offer_type) }} OFFER RECEIVED</span>
+                                    @elseif($offer->status === 'countered')
+                                        <span class="ig-chip bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">🔄 COUNTER PROPOSED (AWAITING STARTUP RESPONSE)</span>
                                     @elseif($offer->status === 'pending_joining')
                                         <span class="ig-chip ig-chip-warn">PENDING JOINING VERIFICATION</span>
                                     @elseif($offer->status === 'joined')
@@ -62,22 +75,31 @@
                                     <h3 class="ig-display text-3xl text-white mt-3">{{ $offer->title }}</h3>
                                     <p class="ig-mono text-[12px] mt-1" style="color:#9C9580">from <span class="text-white font-semibold">{{ $offer->startup->company_name }}</span></p>
                                     <p class="text-sm mt-4 leading-relaxed" style="color:#C9C1AE">{{ Str::limit($offer->description, 180) }}</p>
+                                    <button onclick="document.getElementById('offer-detail-modal-{{ $offer->id }}').showModal()" class="text-xs text-[var(--ig-lime)] hover:underline font-bold mt-4 flex items-center gap-1 bg-transparent border-none cursor-pointer">
+                                        👁️ View Full Offer Details
+                                    </button>
                                 </div>
                                 <div class="md:text-right">
                                     <p class="ig-eyebrow mb-1" style="color:#9C9580">Compensation</p>
-                                    <p class="ig-stat-num text-4xl text-[var(--ig-lime)]">₹{{ number_format($offer->compensation, 0) }}</p>
-                                    <p class="ig-mono text-[11px] mt-1" style="color:#9C9580">per {{ $offer->compensation_period === 'annual' ? 'year' : 'month' }}</p>
+                                    @if($offer->status === 'countered')
+                                        <p class="text-xs line-through text-white/40 mb-0.5">₹{{ number_format($offer->compensation, 0) }}</p>
+                                        <p class="ig-stat-num text-3xl text-[var(--ig-lime)]">₹{{ number_format($offer->counter_compensation, 0) }}</p>
+                                        <span class="text-[9px] font-bold uppercase tracking-wider text-yellow-400 block mt-1">Proposed Counter</span>
+                                    @else
+                                        <p class="ig-stat-num text-4xl text-[var(--ig-lime)]">₹{{ number_format($offer->compensation, 0) }}</p>
+                                        <p class="ig-mono text-[11px] mt-1" style="color:#9C9580">per {{ $offer->compensation_period === 'annual' ? 'year' : 'month' }}</p>
+                                    @endif
                                     
                                     <div class="flex flex-col md:items-end gap-2 mt-5">
                                         @if($offer->status === 'pending')
                                             <div class="flex gap-2 justify-end">
-                                                <form method="POST" action="{{ route('student.offers.reject', $offer->id) }}">@csrf
-                                                    <button class="ig-btn" style="background:transparent;color:#C9C1AE;border:1px solid rgba(255,255,255,.15)">Decline</button>
-                                                </form>
+                                                <button onclick="document.getElementById('offer-detail-modal-{{ $offer->id }}').showModal()" class="ig-btn" style="background:transparent;color:#C9C1AE;border:1px solid rgba(255,255,255,.15)">Decline / Counter</button>
                                                 <form method="POST" action="{{ route('student.offers.accept', $offer->id) }}">@csrf
-                                                    <button class="ig-btn ig-btn-lime"><span>Accept Offer</span><span class="arrow">→</span></button>
+                                                    <button class="ig-btn ig-btn-lime cursor-pointer"><span>Accept Offer</span><span class="arrow">→</span></button>
                                                 </form>
                                             </div>
+                                        @elseif($offer->status === 'countered')
+                                            <p class="text-xs text-[var(--ig-muted)]">Startup review in progress.</p>
                                         @elseif($offer->status === 'pending_joining')
                                             @if($offer->student_joining_status === 'pending')
                                                 <p class="text-xs text-[var(--ig-muted)] mb-1">Did you join this internship/position?</p>
@@ -97,11 +119,101 @@
                                             @endif
                                         @elseif($offer->status === 'joined')
                                             <p class="text-xs text-[var(--ig-lime)] font-semibold mt-2">Verified placement. Work is currently in progress.</p>
+                                            <a href="{{ route('student.internship.updates', $offer->id) }}" class="ig-btn ig-btn-lime text-xs mt-3 text-center inline-block cursor-pointer">
+                                                <span>📂 Internship Workspace</span>
+                                            </a>
                                         @endif
                                     </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Detailed Offer Modal -->
+                        <dialog id="offer-detail-modal-{{ $offer->id }}" class="rounded-3xl p-8 bg-[var(--ig-surface-ink)] border border-white/10 max-w-lg w-full shadow-2xl backdrop:bg-black/80 text-left text-white">
+                            <div class="relative">
+                                <button onclick="document.getElementById('offer-detail-modal-{{ $offer->id }}').close()" class="absolute top-0 right-0 text-gray-400 hover:text-white transition bg-transparent border-none cursor-pointer">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                                
+                                <span class="ig-chip ig-chip-lime text-[10px] font-bold uppercase tracking-wider mb-2">
+                                    {{ $offer->offer_type }} offer
+                                </span>
+                                
+                                <h3 class="ig-display text-2xl text-white mt-2">{{ $offer->title }}</h3>
+                                <p class="ig-mono text-xs text-[var(--ig-muted)] mt-1">from <strong class="text-white">{{ $offer->startup->company_name }}</strong></p>
+                                
+                                <div class="grid grid-cols-2 gap-4 bg-white/5 border border-white/10 rounded-2xl p-4 my-6">
+                                    <div>
+                                        <span class="block text-2xl font-black text-[var(--ig-lime)]">₹{{ number_format($offer->compensation, 0) }}</span>
+                                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Compensation (per {{ $offer->compensation_period === 'annual' ? 'yr' : 'mo' }})</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-black text-white mt-1">{{ $offer->start_date->format('M d, Y') }}</span>
+                                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Start Date</span>
+                                    </div>
+                                    @if($offer->end_date)
+                                        <div class="col-span-2 border-t border-white/10 pt-2.5">
+                                            <span class="block text-sm font-semibold text-white">{{ $offer->end_date->format('M d, Y') }}</span>
+                                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">End Date</span>
+                                        </div>
+                                    @endif
+                                </div>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <h4 class="text-[10px] font-bold text-[var(--ig-lime)] uppercase tracking-widest mb-1.5">Role Description</h4>
+                                        <p class="text-xs text-slate-300 leading-relaxed font-normal whitespace-pre-wrap">{{ $offer->description }}</p>
+                                    </div>
+                                    
+                                    @if($offer->contract_terms)
+                                        <div>
+                                            <h4 class="text-[10px] font-bold text-[var(--ig-lime)] uppercase tracking-widest mb-1.5">Perks & Contract Terms</h4>
+                                            <p class="text-xs text-slate-300 leading-relaxed font-normal whitespace-pre-wrap">{{ $offer->contract_terms }}</p>
+                                        </div>
+                                    @endif
+                                </div>
+                                
+                                @if($offer->status === 'pending')
+                                    <!-- Counter Offer Container -->
+                                    <div id="counter-offer-container-{{ $offer->id }}" class="hidden mt-6 pt-5 border-t border-white/10 space-y-4">
+                                        <h4 class="text-[10px] font-bold text-[var(--ig-lime)] uppercase tracking-widest">Submit Counter Offer</h4>
+                                        <form method="POST" action="{{ route('student.offers.counter', $offer->id) }}" class="space-y-4">
+                                            @csrf
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-white/70 uppercase tracking-wider mb-1">Counter Compensation (₹)</label>
+                                                <input type="number" name="counter_compensation" required min="0" placeholder="e.g. 18000" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-[var(--ig-lime)]">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-white/70 uppercase tracking-wider mb-1">Why should we consider this? (Note)</label>
+                                                <textarea name="counter_note" required rows="2" placeholder="Explain your experience or why you are asking for this rate..." class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-[var(--ig-lime)] resize-none"></textarea>
+                                            </div>
+                                            <div class="flex justify-end gap-2">
+                                                <button type="button" onclick="document.getElementById('counter-offer-container-{{ $offer->id }}').classList.add('hidden')" class="text-xs text-gray-400 hover:text-white px-3 py-1.5 bg-transparent border-none cursor-pointer">Cancel</button>
+                                                <button type="submit" class="bg-gradient-to-r from-yellow-500 to-amber-600 hover:shadow-lg text-white font-bold px-4 py-1.5 rounded-lg text-xs transition border-none cursor-pointer">Submit Counter</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    
+                                    <div class="mt-8 pt-5 border-t border-white/10 flex justify-between gap-3 items-center" id="main-actions-{{ $offer->id }}">
+                                        <button onclick="document.getElementById('counter-offer-container-{{ $offer->id }}').classList.remove('hidden')" class="text-xs text-yellow-400 hover:underline font-bold bg-transparent border-none cursor-pointer">
+                                            🔄 Counter Offer
+                                        </button>
+                                        <div class="flex gap-2">
+                                            <form method="POST" action="{{ route('student.offers.reject', $offer->id) }}">
+                                                @csrf
+                                                <button type="submit" class="ig-btn text-xs text-white border-white/20 hover:bg-white/10 cursor-pointer" style="padding: 10px 18px; background: transparent; border: 1px solid rgba(255,255,255,0.15);">Decline</button>
+                                            </form>
+                                            <form method="POST" action="{{ route('student.offers.accept', $offer->id) }}">
+                                                @csrf
+                                                <button type="submit" class="ig-btn ig-btn-lime text-xs cursor-pointer" style="padding: 10px 22px;">Accept Offer</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </dialog>
                     @endforeach
                 </div>
             </section>

@@ -12,6 +12,16 @@
                 <p>{{ session('error') }}</p>
             </div>
         @endif
+        @if($errors->any())
+            <div class="ig-banner mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl text-sm text-red-955 font-semibold shadow-sm">
+                <p class="font-black text-red-955 mb-1.5">Please fix the following issues:</p>
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
@@ -305,11 +315,23 @@
                                             @endforeach
                                         </div>
 
-                                        @if($item->certificate_number)
-                                            <a href="{{ route('certificates.verify', $item->certificate_number) }}" target="_blank" class="text-xs font-bold text-[var(--ig-accent)] hover:underline inline-flex items-center gap-1">
-                                                🎖️ View Credentials
-                                            </a>
-                                        @endif
+                                        <div class="flex items-center gap-4">
+                                            @if($item->github_url)
+                                                <a href="{{ $item->github_url }}" target="_blank" class="text-xs font-bold text-slate-800 hover:underline inline-flex items-center gap-1">
+                                                    🐙 Code Repo
+                                                </a>
+                                            @endif
+                                            @if($item->demo_url)
+                                                <a href="{{ $item->demo_url }}" target="_blank" class="text-xs font-bold text-[var(--ig-accent)] hover:underline inline-flex items-center gap-1">
+                                                    🔗 Live Demo
+                                                </a>
+                                            @endif
+                                            @if($item->certificate_number)
+                                                <a href="{{ route('certificates.verify', $item->certificate_number) }}" target="_blank" class="text-xs font-bold text-[var(--ig-accent)] hover:underline inline-flex items-center gap-1">
+                                                    🎖️ View Credentials
+                                                </a>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
@@ -375,6 +397,13 @@
                             <textarea name="contract_terms" rows="2" placeholder="e.g. Certificate, Flexible Hours, Work From Home" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--ig-lime)] resize-none"></textarea>
                         </div>
 
+                        <div class="flex items-start gap-2 pt-2 text-[var(--ig-lime)]/90 text-xs">
+                            <input type="checkbox" name="agreement" id="agreement-check-intern" required value="1" class="mt-0.5 rounded text-[var(--ig-lime)] focus:ring-[var(--ig-lime)] bg-black/40 border-white/10">
+                            <label for="agreement-check-intern" class="leading-tight font-semibold">
+                                I confirm that this hiring process will be completed through InternGrowth (Payment Agreement).
+                            </label>
+                        </div>
+
                         <div class="flex justify-end space-x-3 pt-4">
                             <button type="button" onclick="toggleModal('internship-modal')" class="ig-btn ig-btn-ghost text-xs text-white border-white/20 hover:bg-white/10 hover:text-white" style="padding: 10px 18px;">Cancel</button>
                             <button type="submit" class="ig-btn ig-btn-lime text-xs" style="padding: 10px 22px;">Send Offer</button>
@@ -430,6 +459,13 @@
                         <div>
                             <label class="block text-xs font-bold text-white/70 uppercase tracking-wider mb-1">Contract Terms & Benefits</label>
                             <textarea name="contract_terms" rows="2" placeholder="e.g. Health Insurance, Annual Leave, Bonus Structure" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--ig-lime)] resize-none"></textarea>
+                        </div>
+
+                        <div class="flex items-start gap-2 pt-2 text-[var(--ig-lime)]/90 text-xs">
+                            <input type="checkbox" name="agreement" id="agreement-check-job" required value="1" class="mt-0.5 rounded text-[var(--ig-lime)] focus:ring-[var(--ig-lime)] bg-black/40 border-white/10">
+                            <label for="agreement-check-job" class="leading-tight font-semibold">
+                                I confirm that this hiring process will be completed through InternGrowth (Payment Agreement).
+                            </label>
                         </div>
 
                         <div class="flex justify-end space-x-3 pt-4">
