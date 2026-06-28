@@ -28,34 +28,44 @@
             <div class="ig-banner mb-8 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-955 font-bold shadow-sm">
                 <p>⚠️ {{ session('error') }}</p>
             </div>
-        @endif
-
-        <div x-data="{ activeTab: 'overview' }" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              <div x-data="{ activeTab: 'overview' }" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            <!-- Left Navigation Sidebar -->
-            <div class="lg:col-span-3 space-y-2">
-                <button @click="activeTab = 'overview'" :class="activeTab === 'overview' ? 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] font-bold' : 'text-gray-600 hover:bg-slate-50'" class="w-full text-left px-4 py-3 rounded-xl text-sm transition font-semibold flex items-center gap-2">
+            <!-- Left Navigation Sidebar (Horizontal Scrollable Pills on Mobile) -->
+            <div class="lg:col-span-3 flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-3 lg:pb-0 scrollbar-none whitespace-nowrap lg:whitespace-normal">
+                <button @click="activeTab = 'overview'" 
+                        :class="activeTab === 'overview' ? 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] font-bold' : 'text-[var(--ig-ink-2)] hover:bg-[var(--ig-bg-2)]'" 
+                        class="px-4 py-2.5 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold flex items-center gap-2 transition flex-shrink-0 lg:w-full text-center lg:text-left justify-center lg:justify-start border border-transparent cursor-pointer">
                     📊 Overview
                 </button>
-                <button @click="activeTab = 'mission'" :class="activeTab === 'mission' ? 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] font-bold' : 'text-gray-600 hover:bg-slate-50'" class="w-full text-left px-4 py-3 rounded-xl text-sm transition font-semibold flex items-center gap-2">
+                <button @click="activeTab = 'mission'" 
+                        :class="activeTab === 'mission' ? 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] font-bold' : 'text-[var(--ig-ink-2)] hover:bg-[var(--ig-bg-2)]'" 
+                        class="px-4 py-2.5 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold flex items-center gap-2 transition flex-shrink-0 lg:w-full text-center lg:text-left justify-center lg:justify-start border border-transparent cursor-pointer">
                     🎯 Mission Board
                 </button>
-                <button @click="activeTab = 'reports'" :class="activeTab === 'reports' ? 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] font-bold' : 'text-gray-600 hover:bg-slate-50'" class="w-full text-left px-4 py-3 rounded-xl text-sm transition font-semibold flex items-center gap-2">
+                <button @click="activeTab = 'reports'" 
+                        :class="activeTab === 'reports' ? 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] font-bold' : 'text-[var(--ig-ink-2)] hover:bg-[var(--ig-bg-2)]'" 
+                        class="px-4 py-2.5 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold flex items-center gap-2 transition flex-shrink-0 lg:w-full text-center lg:text-left justify-center lg:justify-start border border-transparent cursor-pointer">
                     📝 Weekly Reports
                 </button>
-                <button @click="activeTab = 'messages'" :class="activeTab === 'messages' ? 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] font-bold' : 'text-gray-600 hover:bg-slate-50'" class="w-full text-left px-4 py-3 rounded-xl text-sm transition font-semibold flex items-center gap-2">
+                <button @click="activeTab = 'messages'" 
+                        :class="activeTab === 'messages' ? 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] font-bold' : 'text-[var(--ig-ink-2)] hover:bg-[var(--ig-bg-2)]'" 
+                        class="px-4 py-2.5 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold flex items-center gap-2 transition flex-shrink-0 lg:w-full text-center lg:text-left justify-center lg:justify-start border border-transparent cursor-pointer">
                     💬 Messages
                 </button>
-                <button @click="activeTab = 'resources'" :class="activeTab === 'resources' ? 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] font-bold' : 'text-gray-600 hover:bg-slate-50'" class="w-full text-left px-4 py-3 rounded-xl text-sm transition font-semibold flex items-center gap-2">
+                <button @click="activeTab = 'resources'" 
+                        :class="activeTab === 'resources' ? 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] font-bold' : 'text-[var(--ig-ink-2)] hover:bg-[var(--ig-bg-2)]'" 
+                        class="px-4 py-2.5 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold flex items-center gap-2 transition flex-shrink-0 lg:w-full text-center lg:text-left justify-center lg:justify-start border border-transparent cursor-pointer">
                     🗂️ Resources
                 </button>
-                <button @click="activeTab = 'certificates'" :class="activeTab === 'certificates' ? 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] font-bold' : 'text-gray-600 hover:bg-slate-50'" class="w-full text-left px-4 py-3 rounded-xl text-sm transition font-semibold flex items-center gap-2">
+                <button @click="activeTab = 'certificates'" 
+                        :class="activeTab === 'certificates' ? 'bg-[var(--ig-accent-soft)] text-[var(--ig-accent)] font-bold' : 'text-[var(--ig-ink-2)] hover:bg-[var(--ig-bg-2)]'" 
+                        class="px-4 py-2.5 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold flex items-center gap-2 transition flex-shrink-0 lg:w-full text-center lg:text-left justify-center lg:justify-start border border-transparent cursor-pointer">
                     🎖️ Certificates
                 </button>
             </div>
 
             <!-- Right Content Panels -->
-            <div class="lg:col-span-9 bg-white border border-[var(--ig-line)] rounded-3xl p-6 md:p-8 shadow-sm">
+            <div class="lg:col-span-9 ig-card p-6 md:p-8">
                 
                 <!-- Tab: Overview -->
                 <div x-show="activeTab === 'overview'" class="space-y-8">
@@ -64,19 +74,19 @@
                     <!-- Progress Bar -->
                     <div class="space-y-2 pt-2">
                         <div class="flex justify-between text-xs font-semibold">
-                            <span class="text-gray-500">Contract Progress</span>
+                            <span class="text-[var(--ig-muted)]">Contract Progress</span>
                             <span class="text-[var(--ig-accent)] font-bold">{{ $offer->progress_pct }}%</span>
                         </div>
-                        <div class="w-full bg-gray-100 rounded-full h-3">
+                        <div class="w-full bg-[var(--ig-bg-2)] rounded-full h-3">
                             <div class="bg-gradient-to-r from-[var(--ig-accent-soft)] to-[var(--ig-accent)] h-3 rounded-full transition-all duration-500" style="width: {{ $offer->progress_pct }}%"></div>
                         </div>
                     </div>
 
                     <!-- Gamified Streaks Widget -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 border border-slate-200/60 rounded-2xl p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-2xl p-6">
                         <div class="space-y-3">
                             <p class="text-xs uppercase font-extrabold text-[var(--ig-muted)] tracking-widest">— Streak Status</p>
-                            <h3 class="text-3xl font-black text-gray-900 font-poppins flex items-center gap-2">
+                            <h3 class="text-3xl font-black text-[var(--ig-ink)] font-poppins flex items-center gap-2">
                                 🔥 Current Streak: {{ $offer->current_streak }} days
                             </h3>
                             <p class="text-xs text-[var(--ig-muted)]">Check in daily to build code visibility and earn bonus platform reputation points.</p>
@@ -90,17 +100,17 @@
                                         </button>
                                     </form>
                                 @else
-                                    <button disabled class="ig-btn bg-emerald-50 text-emerald-600 font-extrabold text-xs px-6 py-2.5 rounded-xl border border-emerald-200/50 cursor-not-allowed flex items-center gap-1">
+                                    <button disabled class="ig-btn bg-emerald-50 text-emerald-600 font-extrabold text-xs px-6 py-2.5 rounded-xl border border-emerald-250/50 cursor-not-allowed flex items-center gap-1">
                                         🟢 Checked In Today! (Streak active)
                                     </button>
                                 @endif
                             </div>
                         </div>
 
-                        <div class="space-y-3 border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-6 flex flex-col justify-between">
+                        <div class="space-y-3 border-t md:border-t-0 md:border-l border-[var(--ig-line)] pt-4 md:pt-0 md:pl-6 flex flex-col justify-between">
                             <div>
-                                <p class="text-xs uppercase font-extrabold text-slate-500 tracking-widest">— Next Milestone</p>
-                                <p class="text-sm font-bold text-gray-800 mt-2">
+                                <p class="text-xs uppercase font-extrabold text-[var(--ig-muted)] tracking-widest">— Next Milestone</p>
+                                <p class="text-sm font-bold text-[var(--ig-ink)] mt-2">
                                     {{ 10 - ($offer->current_streak % 10) }} days to next milestone
                                 </p>
                                 <p class="text-xs text-[var(--ig-muted)] mt-1">10-day milestone streak adds <strong class="text-[var(--ig-accent)]">+25 IPRS Reputation Points</strong>.</p>
@@ -112,18 +122,18 @@
                     </div>
 
                     <!-- Meta Data Details -->
-                    <div class="grid grid-cols-3 gap-6 text-xs bg-slate-50 border border-slate-100 rounded-xl p-4">
+                    <div class="grid grid-cols-3 gap-6 text-xs bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-xl p-4">
                         <div>
-                            <p class="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Stipend Rate</p>
-                            <p class="text-gray-900 font-extrabold mt-0.5">₹{{ number_format($offer->compensation, 0) }} / {{ $offer->compensation_period }}</p>
+                            <p class="text-[9px] uppercase tracking-wider text-[var(--ig-muted)] font-bold">Stipend Rate</p>
+                            <p class="text-[var(--ig-ink)] font-extrabold mt-0.5">₹{{ number_format($offer->compensation, 0) }} / {{ $offer->compensation_period }}</p>
                         </div>
                         <div>
-                            <p class="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Start Date</p>
-                            <p class="text-gray-900 font-extrabold mt-0.5">{{ $offer->start_date->format('d M, Y') }}</p>
+                            <p class="text-[9px] uppercase tracking-wider text-[var(--ig-muted)] font-bold">Start Date</p>
+                            <p class="text-[var(--ig-ink)] font-extrabold mt-0.5">{{ $offer->start_date->format('d M, Y') }}</p>
                         </div>
                         <div>
-                            <p class="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Expected End</p>
-                            <p class="text-gray-900 font-extrabold mt-0.5">{{ $offer->end_date ? $offer->end_date->format('d M, Y') : 'Ongoing' }}</p>
+                            <p class="text-[9px] uppercase tracking-wider text-[var(--ig-muted)] font-bold">Expected End</p>
+                            <p class="text-[var(--ig-ink)] font-extrabold mt-0.5">{{ $offer->end_date ? $offer->end_date->format('d M, Y') : 'Ongoing' }}</p>
                         </div>
                     </div>
                 </div>
@@ -133,33 +143,33 @@
                     <h2 class="ig-display text-2xl text-[var(--ig-ink)] mb-4">Mission Board</h2>
                     
                     <!-- Progress Submit Form -->
-                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                    <div class="bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-2xl p-5">
                         <h4 class="font-bold text-base text-[var(--ig-ink)] mb-3">Post Progress Updates</h4>
                         <form method="POST" action="{{ route('student.internship.updates.store', $offer->id) }}" class="space-y-4">
                             @csrf
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Update Title</label>
+                                <label class="block text-[10px] font-bold text-[var(--ig-ink-2)] uppercase tracking-wider mb-1">Update Title</label>
                                 <input type="text" name="title" required placeholder="e.g. Connected PostgreSQL models" 
-                                       class="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl text-xs font-semibold">
+                                       class="ig-input text-xs font-semibold">
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Work Description / Blockers</label>
+                                <label class="block text-[10px] font-bold text-[var(--ig-ink-2)] uppercase tracking-wider mb-1">Work Description / Blockers</label>
                                 <textarea name="description" required placeholder="Describe what components you completed or package version details today..." rows="3"
-                                          class="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl text-xs resize-none"></textarea>
+                                          class="ig-input text-xs resize-none"></textarea>
                             </div>
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">GitHub Link (Optional)</label>
+                                    <label class="block text-[10px] font-bold text-[var(--ig-ink-2)] uppercase tracking-wider mb-1">GitHub Link (Optional)</label>
                                     <input type="url" name="github_url" placeholder="https://github.com/..." 
-                                           class="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl text-xs">
+                                           class="ig-input text-xs">
                                 </div>
                                 <div>
-                                    <label class="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Demo Link (Optional)</label>
+                                    <label class="block text-[10px] font-bold text-[var(--ig-ink-2)] uppercase tracking-wider mb-1">Demo Link (Optional)</label>
                                     <input type="url" name="demo_url" placeholder="https://..." 
-                                           class="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl text-xs">
+                                           class="ig-input text-xs">
                                 </div>
                             </div>
-                            <button type="submit" class="bg-[var(--ig-accent)] hover:bg-violet-700 text-white font-extrabold text-xs py-2 px-6 rounded-xl transition shadow-sm">
+                            <button type="submit" class="ig-btn ig-btn-primary text-xs py-2 px-6 rounded-xl transition shadow-sm border-none cursor-pointer">
                                 Submit Progress Log
                             </button>
                         </form>
@@ -168,12 +178,12 @@
                     <!-- Updates Log History -->
                     <div>
                         <h4 class="font-bold text-base text-[var(--ig-ink)] mb-4">Activity Logs Timeline</h4>
-                        <div class="divide-y divide-gray-150">
+                        <div class="divide-y divide-[var(--ig-line)]">
                             @forelse($offer->updates as $update)
                                 <div class="py-4 first:pt-0 last:pb-0">
-                                    <h5 class="font-bold text-sm text-gray-800">{{ $update->title }}</h5>
-                                    <p class="text-[9px] text-gray-400 font-medium">{{ $update->created_at->format('M d, Y @ H:i') }}</p>
-                                    <p class="text-xs text-gray-650 mt-1.5 whitespace-pre-line">{{ $update->description }}</p>
+                                    <h5 class="font-bold text-sm text-[var(--ig-ink)]">{{ $update->title }}</h5>
+                                    <p class="text-[9px] text-[var(--ig-muted)] font-medium">{{ $update->created_at->format('M d, Y @ H:i') }}</p>
+                                    <p class="text-xs text-[var(--ig-ink-2)] mt-1.5 whitespace-pre-line">{{ $update->description }}</p>
                                 </div>
                             @empty
                                 <p class="text-xs text-[var(--ig-muted)] py-4 text-center">No logs recorded yet.</p>
@@ -187,29 +197,29 @@
                     <h2 class="ig-display text-2xl text-[var(--ig-ink)] mb-4">Weekly Progress Reports</h2>
                     
                     <!-- Report Submit Form -->
-                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                    <div class="bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-2xl p-5">
                         <h4 class="font-bold text-base text-[var(--ig-ink)] mb-3">Submit Weekly Report</h4>
                         <form method="POST" action="{{ route('student.internship.reports.store', $offer->id) }}" class="space-y-4">
                             @csrf
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Week Number</label>
+                                <label class="block text-[10px] font-bold text-[var(--ig-ink-2)] uppercase tracking-wider mb-1">Week Number</label>
                                 <input type="number" name="week_number" required value="{{ $nextWeekNumber }}" min="1"
-                                       class="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl text-xs font-semibold">
+                                       class="ig-input text-xs font-semibold">
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Completed Deliverables</label>
+                                <label class="block text-[10px] font-bold text-[var(--ig-ink-2)] uppercase tracking-wider mb-1">Completed Deliverables</label>
                                 <textarea name="tasks_completed" required placeholder="Summarize your main achievements this week..." rows="3"
-                                          class="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl text-xs resize-none"></textarea>
+                                          class="ig-input text-xs resize-none"></textarea>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Blockers / Challenges</label>
+                                <label class="block text-[10px] font-bold text-[var(--ig-ink-2)] uppercase tracking-wider mb-1">Blockers / Challenges</label>
                                 <textarea name="challenges" required placeholder="What blocked you or required major research..." rows="2"
-                                          class="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl text-xs resize-none"></textarea>
+                                          class="ig-input text-xs resize-none"></textarea>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Goals for Next Week</label>
+                                <label class="block text-[10px] font-bold text-[var(--ig-ink-2)] uppercase tracking-wider mb-1">Goals for Next Week</label>
                                 <textarea name="next_week_goals" required placeholder="What are your key deliverables for the upcoming week..." rows="2"
-                                          class="w-full px-3 py-2 bg-white border border-gray-250 rounded-xl text-xs resize-none"></textarea>
+                                          class="ig-input text-xs resize-none"></textarea>
                             </div>
                             <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs py-2.5 px-6 rounded-xl transition shadow-sm border-none cursor-pointer">
                                 Submit Week Report for Review
@@ -222,19 +232,19 @@
                         <h4 class="font-bold text-base text-[var(--ig-ink)] mb-4">Evaluations History</h4>
                         <div class="space-y-4">
                             @forelse($offer->weeklyReports as $report)
-                                <div class="border border-gray-200 rounded-2xl p-4 bg-slate-50/50">
+                                <div class="border border-[var(--ig-line)] rounded-2xl p-4 bg-[var(--ig-bg-2)]/50">
                                     <div class="flex justify-between items-center mb-3">
                                         <span class="ig-chip ig-chip-accent font-extrabold text-[8px] uppercase tracking-wider">Week {{ $report->week_number }}</span>
                                         @if($report->rating)
-                                            <span class="text-xs font-bold text-emerald-700">⭐ {{ $report->rating }}/5 Rated</span>
+                                            <span class="text-xs font-bold text-emerald-750">⭐ {{ $report->rating }}/5 Rated</span>
                                         @else
-                                            <span class="text-xs text-gray-400">⏳ Pending Rating</span>
+                                            <span class="text-xs text-[var(--ig-muted)]">⏳ Pending Rating</span>
                                         @endif
                                     </div>
-                                    <p class="text-xs text-gray-800"><strong class="text-gray-500">Done:</strong> {{ $report->tasks_completed }}</p>
+                                    <p class="text-xs text-[var(--ig-ink)]"><strong class="text-[var(--ig-muted)]">Done:</strong> {{ $report->tasks_completed }}</p>
                                     
                                     @if($report->startup_feedback)
-                                        <div class="mt-3 p-3 bg-white border border-slate-100 rounded-xl text-xs text-slate-700 italic">
+                                        <div class="mt-3 p-3 bg-white border border-[var(--ig-line)] rounded-xl text-xs text-slate-700 italic">
                                             <strong class="text-slate-500 font-bold block not-italic uppercase tracking-widest text-[8px] mb-1">— Startup Review</strong>
                                             "{{ $report->startup_feedback }}"
                                         </div>
@@ -252,14 +262,14 @@
                     <h2 class="ig-display text-2xl text-[var(--ig-ink)] mb-4">Communication</h2>
                     <p class="text-xs text-[var(--ig-muted)]">Maintain active messaging channels with the founder and developers.</p>
                     
-                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center">
-                        <p class="text-sm font-semibold text-gray-850 mb-4">Start or open chat thread with {{ $offer->startup->company_name }} team</p>
+                    <div class="bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-2xl p-6 text-center">
+                        <p class="text-sm font-semibold text-[var(--ig-ink)] mb-4 font-poppins">Start or open chat thread with {{ $offer->startup->company_name }} team</p>
                         @if($conversationId)
-                            <a href="{{ route('messages.show', $conversationId) }}" class="ig-btn bg-[var(--ig-accent)] hover:bg-violet-700 text-white font-extrabold text-xs py-2.5 px-6 rounded-xl transition inline-block shadow-sm">
+                            <a href="{{ route('messages.show', $conversationId) }}" class="ig-btn ig-btn-primary text-xs py-2.5 px-6 rounded-xl transition inline-block shadow-sm">
                                 💬 Open Message Channel
                             </a>
                         @else
-                            <a href="{{ route('messages.create', ['studentId' => $offer->student_profile_id, 'startupId' => $offer->startup_profile_id, 'taskId' => $offer->source_task_id ?? '']) }}" class="ig-btn bg-[var(--ig-accent)] hover:bg-violet-700 text-white font-extrabold text-xs py-2.5 px-6 rounded-xl transition inline-block shadow-sm">
+                            <a href="{{ route('messages.create', ['studentId' => $offer->student_profile_id, 'startupId' => $offer->startup_profile_id, 'taskId' => $offer->source_task_id ?? '']) }}" class="ig-btn ig-btn-primary text-xs py-2.5 px-6 rounded-xl transition inline-block shadow-sm">
                                 💬 Start New Message Thread
                             </a>
                         @endif
@@ -269,21 +279,21 @@
                 <!-- Tab: Resources -->
                 <div x-show="activeTab === 'resources'" class="space-y-6" style="display: none;">
                     <h2 class="ig-display text-2xl text-[var(--ig-ink)] mb-4">Resources & Deliverables</h2>
-                    <div class="divide-y divide-gray-150">
+                    <div class="divide-y divide-[var(--ig-line)]">
                         @forelse($offer->weeklyReports->whereNotNull('github_url') as $report)
                             <div class="py-3 flex justify-between items-center text-xs">
                                 <div>
-                                    <p class="font-extrabold text-gray-900">Week {{ $report->week_number }} Submission Deliverables</p>
-                                    <p class="text-slate-400 mt-0.5">Submitted code repositories</p>
+                                    <p class="font-extrabold text-[var(--ig-ink)]">Week {{ $report->week_number }} Submission Deliverables</p>
+                                    <p class="text-[var(--ig-muted)] mt-0.5">Submitted code repositories</p>
                                 </div>
-                                <div class="flex gap-2">
+                                <div class="flex gap-2 font-bold">
                                     @if($report->github_url)
-                                        <a href="{{ $report->github_url }}" target="_blank" class="text-xs text-slate-800 font-extrabold hover:underline">
+                                        <a href="{{ $report->github_url }}" target="_blank" class="text-xs text-[var(--ig-ink-2)] hover:underline">
                                             🐙 GitHub
                                         </a>
                                     @endif
                                     @if($report->demo_url)
-                                        <a href="{{ $report->demo_url }}" target="_blank" class="text-xs text-[var(--ig-accent)] font-extrabold hover:underline">
+                                        <a href="{{ $report->demo_url }}" target="_blank" class="text-xs text-[var(--ig-accent)] hover:underline">
                                             🔗 Live Demo
                                         </a>
                                     @endif
@@ -317,9 +327,9 @@
                             </div>
                         </div>
                     @else
-                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center text-[var(--ig-muted)]">
-                            <p class="text-sm font-semibold text-gray-800 mb-1">No certificate issued yet.</p>
-                            <p class="text-xs text-gray-500">Your certificate will be generated automatically once the startup marks this internship as completed.</p>
+                        <div class="bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-2xl p-6 text-center text-[var(--ig-muted)]">
+                            <p class="text-sm font-semibold text-[var(--ig-ink)] mb-1">No certificate issued yet.</p>
+                            <p class="text-xs text-[var(--ig-muted)]">Your certificate will be generated automatically once the startup marks this internship as completed.</p>
                         </div>
                     @endif
                 </div>

@@ -103,14 +103,14 @@
                                     </div>
                                 </div>
 
-                                <div class="space-y-2 text-xs font-semibold text-gray-600 bg-slate-50 border border-slate-100 rounded-xl p-4 mb-4">
+                                <div class="space-y-2 text-xs font-semibold text-[var(--ig-ink-2)] bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-xl p-4 mb-4">
                                     <div class="flex justify-between">
                                         <span>Stipend:</span>
-                                        <span class="text-gray-900">₹{{ number_format($offer->compensation, 0) }} / {{ $offer->compensation_period }}</span>
+                                        <span class="text-[var(--ig-ink)]">₹{{ number_format($offer->compensation, 0) }} / {{ $offer->compensation_period }}</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span>Duration:</span>
-                                        <span class="text-gray-900">
+                                        <span class="text-[var(--ig-ink)]">
                                             @if($offer->start_date && $offer->end_date)
                                                 {{ max(1, $offer->start_date->diffInMonths($offer->end_date)) }} months
                                             @else
@@ -120,7 +120,7 @@
                                     </div>
                                     <div class="flex justify-between">
                                         <span>Offer Date:</span>
-                                        <span class="text-gray-900">{{ $offer->created_at->format('d M, Y') }}</span>
+                                        <span class="text-[var(--ig-ink)]">{{ $offer->created_at->format('d M, Y') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -128,20 +128,20 @@
                             <div class="flex gap-2">
                                 <form method="POST" action="{{ route('student.offers.accept', $offer->id) }}" class="flex-1">
                                     @csrf
-                                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2 rounded-xl text-xs shadow-sm transition">
+                                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2 rounded-xl text-xs shadow-sm transition cursor-pointer">
                                         Accept
                                     </button>
                                 </form>
                                 <form method="POST" action="{{ route('student.offers.reject', $offer->id) }}" class="flex-1">
                                     @csrf
-                                    <button type="submit" class="w-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-extrabold py-2 rounded-xl text-xs transition">
+                                    <button type="submit" class="w-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-extrabold py-2 rounded-xl text-xs transition cursor-pointer">
                                         Reject
                                     </button>
                                 </form>
                             </div>
                         </div>
                     @empty
-                        <div class="col-span-2 text-center py-16 text-[var(--ig-muted)] bg-white border border-[var(--ig-line)] rounded-3xl">
+                        <div class="col-span-2 text-center py-16 text-[var(--ig-muted)] bg-[var(--ig-surface)] border border-[var(--ig-line)] rounded-3xl">
                             <p class="font-bold text-base text-[var(--ig-ink)]">No pending offers.</p>
                             <p class="text-xs text-[var(--ig-muted)] mt-1">Hiring pitches sent by startups will render here for your review.</p>
                         </div>
@@ -171,32 +171,32 @@
                                 <!-- Progress Bar -->
                                 <div class="space-y-1.5 pt-2 mb-4">
                                     <div class="flex justify-between text-xs font-semibold">
-                                        <span class="text-gray-500">Placement Progress</span>
+                                        <span class="text-[var(--ig-muted)]">Placement Progress</span>
                                         <span class="text-[var(--ig-accent)]">{{ $offer->progress_pct }}%</span>
                                     </div>
-                                    <div class="w-full bg-gray-100 rounded-full h-2">
+                                    <div class="w-full bg-[var(--ig-bg-2)] rounded-full h-2">
                                         <div class="bg-gradient-to-r from-[var(--ig-accent-soft)] to-[var(--ig-accent)] h-2 rounded-full transition-all duration-500" style="width: {{ $offer->progress_pct }}%"></div>
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-3 text-[11px] font-semibold text-gray-600 bg-slate-50 border border-slate-100 rounded-xl p-3 mb-4">
+                                <div class="grid grid-cols-2 gap-3 text-[11px] font-semibold text-[var(--ig-ink-2)] bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-xl p-3 mb-4">
                                     <div>
-                                        <p class="text-[9px] text-gray-400 uppercase tracking-wider">Start/End Date</p>
-                                        <p class="text-gray-900 font-extrabold mt-0.5">{{ $offer->start_date->format('d M') }} — {{ $offer->end_date ? $offer->end_date->format('d M, Y') : 'Ongoing' }}</p>
+                                        <p class="text-[9px] text-[var(--ig-muted)] uppercase tracking-wider">Start/End Date</p>
+                                        <p class="text-[var(--ig-ink)] font-extrabold mt-0.5">{{ $offer->start_date->format('d M') }} — {{ $offer->end_date ? $offer->end_date->format('d M, Y') : 'Ongoing' }}</p>
                                     </div>
                                     <div>
-                                        <p class="text-[9px] text-gray-400 uppercase tracking-wider">Stipend Rate</p>
-                                        <p class="text-gray-900 font-extrabold mt-0.5">₹{{ number_format($offer->compensation, 0) }} / mo</p>
+                                        <p class="text-[9px] text-[var(--ig-muted)] uppercase tracking-wider">Stipend Rate</p>
+                                        <p class="text-[var(--ig-ink)] font-extrabold mt-0.5">₹{{ number_format($offer->compensation, 0) }} / mo</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <a href="{{ route('student.internships.workspace', $offer->id) }}" class="w-full bg-[var(--ig-accent)] hover:bg-violet-700 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-sm transition text-center">
+                            <a href="{{ route('student.internships.workspace', $offer->id) }}" class="w-full bg-[var(--ig-accent)] hover:bg-violet-750 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-sm transition text-center cursor-pointer">
                                 📂 Open Workspace
                             </a>
                         </div>
                     @empty
-                        <div class="col-span-2 text-center py-16 text-[var(--ig-muted)] bg-white border border-[var(--ig-line)] rounded-3xl">
+                        <div class="col-span-2 text-center py-16 text-[var(--ig-muted)] bg-[var(--ig-surface)] border border-[var(--ig-line)] rounded-3xl">
                             <p class="font-bold text-base text-[var(--ig-ink)]">No active placements.</p>
                             <p class="text-xs text-[var(--ig-muted)] mt-1">Confirmed internships will show here once you start working.</p>
                         </div>
@@ -211,7 +211,7 @@
                         <div class="ig-card p-6 flex flex-col justify-between hover:shadow-md transition duration-300">
                             <div>
                                 <div class="flex items-center gap-3.5 mb-4">
-                                    <div class="w-11 h-11 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 text-lg uppercase border border-slate-200">
+                                    <div class="w-11 h-11 rounded-full bg-[var(--ig-bg-2)] flex items-center justify-center font-bold text-[var(--ig-muted)] text-lg uppercase border border-[var(--ig-line)]">
                                         {{ substr($offer->startup->company_name, 0, 2) }}
                                     </div>
                                     <div>
@@ -223,18 +223,18 @@
                                     </span>
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-3 text-[11px] font-semibold text-gray-600 bg-slate-50 border border-slate-100 rounded-xl p-3 mb-4">
+                                <div class="grid grid-cols-2 gap-3 text-[11px] font-semibold text-[var(--ig-ink-2)] bg-[var(--ig-bg-2)] border border-[var(--ig-line)] rounded-xl p-3 mb-4">
                                     <div>
-                                        <p class="text-[9px] text-gray-400 uppercase tracking-wider">Performance Score</p>
-                                        <p class="text-gray-900 font-extrabold mt-0.5">{{ $offer->internship_score }}/100</p>
+                                        <p class="text-[9px] text-[var(--ig-muted)] uppercase tracking-wider">Performance Score</p>
+                                        <p class="text-[var(--ig-ink)] font-extrabold mt-0.5">{{ $offer->internship_score }}/100</p>
                                     </div>
                                     <div>
-                                        <p class="text-[9px] text-gray-400 uppercase tracking-wider">Startup Grade</p>
-                                        <p class="text-gray-900 font-extrabold mt-0.5 capitalize">{{ $offer->hiring_success_rating ?: 'N/A' }}</p>
+                                        <p class="text-[9px] text-[var(--ig-muted)] uppercase tracking-wider">Startup Grade</p>
+                                        <p class="text-[var(--ig-ink)] font-extrabold mt-0.5 capitalize">{{ $offer->hiring_success_rating ?: 'N/A' }}</p>
                                     </div>
-                                    <div class="col-span-2 border-t border-gray-200/50 pt-2 mt-1">
-                                        <p class="text-[9px] text-gray-400 uppercase tracking-wider">Conversion Outcome</p>
-                                        <p class="font-extrabold mt-0.5 {{ $offer->converted_to_full_time ? 'text-indigo-600' : 'text-gray-650' }}">
+                                    <div class="col-span-2 border-t border-[var(--ig-line)] pt-2 mt-1">
+                                        <p class="text-[9px] text-[var(--ig-muted)] uppercase tracking-wider">Conversion Outcome</p>
+                                        <p class="font-extrabold mt-0.5 {{ $offer->converted_to_full_time ? 'text-indigo-600' : 'text-[var(--ig-ink-2)]' }}">
                                             {{ $offer->converted_to_full_time ? '🎉 Converted to Full-Time' : 'Completed (Internship Only)' }}
                                         </p>
                                     </div>
