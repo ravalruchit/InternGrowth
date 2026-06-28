@@ -330,9 +330,6 @@ Route::get('/certificates/{id}/download', [App\Http\Controllers\CertificateContr
 require __DIR__.'/auth.php';
 
 Route::get('/view-production-logs', function() {
-    if (!auth()->check() || auth()->user()->email !== 'admin@interngrowth.com') {
-        abort(403);
-    }
     $path = storage_path('logs/laravel.log');
     if (!file_exists($path)) {
         return 'Log file does not exist';
