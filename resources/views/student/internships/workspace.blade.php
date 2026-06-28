@@ -28,6 +28,7 @@
             <div class="ig-banner mb-8 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-955 font-bold shadow-sm">
                 <p>⚠️ {{ session('error') }}</p>
             </div>
+        @endif
               <div x-data="{ activeTab: 'overview' }" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             <!-- Left Navigation Sidebar (Horizontal Scrollable Pills on Mobile) -->
