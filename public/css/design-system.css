@@ -347,3 +347,28 @@ body.ig-body::before {
 @media (max-width: 768px) {
     .ig-display, h1.ig-h1 { letter-spacing: -0.03em; }
 }
+
+/* -------------- Shimmer Effect -------------- */
+.ig-shimmer {
+    position: relative;
+    overflow: hidden;
+}
+.ig-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.15) 20%,
+        rgba(255, 255, 255, 0.4) 60%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    animation: shimmer-anim 2s infinite;
+}
+@keyframes shimmer-anim {
+    100% {
+        transform: translateX(100%);
+    }
+}

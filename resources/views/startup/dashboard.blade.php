@@ -41,7 +41,28 @@
             </div>
         </div>
 
-        {{-- Verification warning banner --}}
+        <!-- Simulated Skeleton Loader Wrapper -->
+        <div id="dashboard-skeleton" class="space-y-8 animate-pulse">
+            <!-- Banner Skeleton -->
+            <div class="h-24 bg-slate-100 rounded-3xl w-full"></div>
+            
+            <!-- Stats Skeleton Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+                <div class="h-36 bg-slate-100 rounded-3xl sm:col-span-2"></div>
+                <div class="h-36 bg-slate-100 rounded-3xl"></div>
+                <div class="h-36 bg-slate-100 rounded-3xl"></div>
+                <div class="h-36 bg-slate-100 rounded-3xl"></div>
+            </div>
+
+            <!-- Main grid block Skeleton -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="h-64 bg-slate-100 rounded-3xl"></div>
+                <div class="h-64 bg-slate-100 rounded-3xl lg:col-span-2"></div>
+            </div>
+        </div>
+
+        <div id="dashboard-content" class="hidden space-y-8">
+            {{-- Verification warning banner --}}
         @if(!$profile->is_verified)
             <div class="ig-banner ig-banner-warn">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4">
@@ -126,6 +147,81 @@
                 <p class="text-[10px] font-bold text-[var(--ig-muted)] uppercase tracking-wider">Credibility</p>
                 <p class="ig-display text-4xl text-[var(--ig-ink)] mt-3">{{ number_format($profile->credibility_score * 100, 0) }}%</p>
                 <p class="text-[10px] text-[var(--ig-faint)] mt-2 font-mono">reputation score</p>
+            </div>
+        </div>
+
+        <!-- Startup Subscription & Usage Limits Widget -->
+        <div class="ig-card p-6" style="border: 1px solid var(--ig-line);">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <!-- Left: Plan Info -->
+                <div class="space-y-2" style="flex: 1;">
+                    <p class="ig-eyebrow mb-1">— Plan & Subscriptions</p>
+                    <div class="flex items-center gap-3">
+                        @if(auth()->user()->isStartupGrowth())
+                            <span class="text-xs font-black uppercase bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-150">🚀 Startup Growth Active</span>
+                            <span class="text-xs text-slate-500 font-semibold">{{ auth()->user()->activeSubscription()->daysRemaining() }} Days Remaining</span>
+                        @else
+                            <span class="text-xs font-black uppercase bg-slate-100 text-slate-700 px-3 py-1 rounded-full border border-slate-200">⚡ Startup Free Plan</span>
+                            <span class="text-xs text-red-500 font-bold">Postings Limited</span>
+                        @endif
+                    </div>
+                    <p class="text-xs text-[var(--ig-muted)] mt-1.5 leading-relaxed">
+                        @if(auth()->user()->isStartupGrowth())
+                            Your Startup Growth subscription is active. You have unlimited task postings, team analytics access, and waived success fees on all internships.
+                        @else
+                            You are currently on the Startup Free tier. You can list up to 3 active tasks and your first internship placement is free. Subsequent placements carry a success fee of ₹1,999.
+                        @endif
+                    </p>
+                </div>
+
+                <!-- Center: Usage Indicators -->
+                <div class="flex-shrink-0 grid grid-cols-2 gap-6 border-l border-r border-[var(--ig-line)] px-8" style="min-width: 280px;">
+                    <div>
+                        <span class="text-[9px] uppercase font-black text-gray-400 block mb-1">Active Tasks</span>
+                        @php
+                            $activeTasksCount = \App\Models\Task::where('startup_profile_id', auth()->user()->startupProfile->id)
+                                ->whereIn('status', ['posted', 'in_progress'])
+                                ->count();
+                        @endphp
+                        <span class="text-xl font-extrabold text-slate-800">
+                            {{ $activeTasksCount }} / {{ auth()->user()->isStartupGrowth() ? 'Unlimited' : '3' }}
+                        </span>
+                        @if(!auth()->user()->isStartupGrowth())
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1.5">
+                                <div class="bg-indigo-600 h-full rounded-full" style="width: {{ ($activeTasksCount / 3) * 100 }}%"></div>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div>
+                        <span class="text-[9px] uppercase font-black text-gray-400 block mb-1">Hires Sent</span>
+                        @php
+                            $hiresCount = \App\Models\HiringOffer::where('startup_profile_id', auth()->user()->startupProfile->id)->count();
+                        @endphp
+                        <span class="text-xl font-extrabold text-slate-800">
+                            {{ $hiresCount }} / {{ auth()->user()->isStartupGrowth() ? 'Unlimited' : '1' }}
+                        </span>
+                        @if(!auth()->user()->isStartupGrowth())
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1.5">
+                                <div class="bg-indigo-600 h-full rounded-full" style="width: {{ min(100, ($hiresCount / 1) * 100) }}%"></div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Right: Upgrade / Management action buttons -->
+                <div class="flex-shrink-0 flex flex-col gap-2.5 items-stretch" style="min-width: 185px;">
+                    @if(auth()->user()->isStartupGrowth())
+                        <a href="{{ route('pricing.index') }}" class="ig-btn ig-btn-ghost text-xs text-center font-bold py-2.5">Pricing Matrix</a>
+                        <button type="button" onclick="openCancelSubscriptionModal()" class="ig-btn text-xs font-bold bg-red-50 hover:bg-red-100 text-red-650 px-5 py-2.5 rounded-xl border border-red-200/50 w-full text-center cursor-pointer">
+                            Downgrade Plan
+                        </button>
+                    @else
+                        <a href="{{ route('pricing.index') }}" class="ig-btn text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-750 px-5 py-3 rounded-2xl w-full text-center block no-underline border-none">
+                            Upgrade to Growth Plan
+                        </a>
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -719,15 +815,7 @@
                         </div>
                     </div>
                 @empty
-                    <div class="text-center py-12 text-[var(--ig-muted)]">
-                        <svg class="mx-auto h-10 w-10 text-[var(--ig-faint)] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        <p class="font-bold text-sm text-[var(--ig-ink)]">No tasks posted yet.</p>
-                        @if($profile->is_verified)
-                            <a href="{{ route('tasks.create') }}" class="text-[var(--ig-accent)] font-semibold text-xs hover:underline mt-1 inline-block">Post your first task →</a>
-                        @endif
-                    </div>
+                    <x-empty-states.no-tasks />
                 @endforelse
             </div>
         </div>
@@ -808,7 +896,86 @@
                     @endforeach
                 </div>
             </div>
-        @endif
-
     </div>
+
+    <!-- Custom Subscription Downgrade Confirmation Modal -->
+    <div id="cancelSubscriptionModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true">
+        <!-- Backdrop overlay -->
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeCancelSubscriptionModal()"></div>
+
+        <!-- Modal panel -->
+        <div class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all w-full max-w-md border border-slate-100 ig-anim-scale-in z-10">
+            <div class="p-6">
+                <!-- Icon & Title -->
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-500 text-2xl shadow-inner">
+                        ⚠️
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-slate-950 text-base" id="modal-title">Downgrade to Startup Free</h3>
+                        <p class="text-xs text-slate-550 mt-0.5">Are you sure you want to cancel your Growth plan?</p>
+                    </div>
+                </div>
+
+                <!-- Warning Content -->
+                <div class="bg-red-50/50 border border-red-100 rounded-2xl p-4 text-xs text-red-800 leading-relaxed mb-6">
+                    <p class="font-bold mb-1">Downgrading will restrict:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Unlimited task postings (maximum capped to 3 active tasks)</li>
+                        <li>Waived placements (subsequent internship hires carry ₹1,999 success fee)</li>
+                        <li>Advanced talent search ranking and matching tools</li>
+                    </ul>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="closeCancelSubscriptionModal()" class="flex-1 ig-btn ig-btn-ghost py-3 justify-center text-xs font-bold rounded-2xl cursor-pointer">
+                        Keep Growth Active
+                    </button>
+                    <form method="POST" action="{{ route('pricing.cancel') }}" class="flex-1 m-0">
+                        @csrf
+                        <button type="submit" class="w-full ig-btn justify-center text-xs font-bold bg-red-600 hover:bg-red-700 text-white border-none py-3 rounded-2xl cursor-pointer">
+                            Confirm Downgrade
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openCancelSubscriptionModal() {
+            const modal = document.getElementById('cancelSubscriptionModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCancelSubscriptionModal() {
+            const modal = document.getElementById('cancelSubscriptionModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            setTimeout(function() {
+                const skeleton = document.getElementById('dashboard-skeleton');
+                const content = document.getElementById('dashboard-content');
+                if (skeleton && content) {
+                    skeleton.classList.add('hidden');
+                    content.classList.remove('hidden');
+                    content.classList.add('ig-anim-fade-up');
+                }
+            }, 500);
+        });
+    </script>
+
+    </div><!-- Closing dashboard-content -->
+
+    <!-- Floating Action Button (FAB) -->
+    <a href="{{ route('tasks.create') }}" class="fixed bottom-6 right-6 flex items-center justify-center gap-2 px-5 py-3.5 bg-[var(--ig-accent)] hover:bg-violet-700 text-white font-extrabold rounded-full shadow-2xl hover:scale-105 transition-all z-40 group no-underline" style="color: #ffffff !important;">
+        <span class="text-lg">+</span>
+        <span class="text-xs uppercase tracking-wider">Post Task</span>
+    </a>
 </x-app-layout>

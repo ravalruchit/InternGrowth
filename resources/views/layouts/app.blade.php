@@ -23,15 +23,17 @@
 
                 <!-- Links -->
                 <div class="hidden md:flex items-center gap-7">
-                    <a href="{{ route('dashboard') }}" class="ig-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
-                    <a href="{{ route('tasks.index') }}" class="ig-nav-link {{ request()->routeIs('tasks.index') ? 'active' : '' }}">Marketplace</a>
-                    <a href="{{ route('leaderboard') }}" class="ig-nav-link {{ request()->routeIs('leaderboard') ? 'active' : '' }}">Leaderboard</a>
-                    @if(auth()->check() && auth()->user()->isStudent())
-                        <a href="{{ route('student.internships.index') }}" class="ig-nav-link {{ request()->routeIs('student.internships.*') ? 'active' : '' }}">🎯 My Internships</a>
-                        <a href="{{ route('student.analytics') }}" class="ig-nav-link {{ request()->routeIs('student.analytics') ? 'active' : '' }}">Analytics</a>
-                    @endif
-                    @if(auth()->check() && auth()->user()->isStartup())
-                        <a href="{{ route('startup.team.index') }}" class="ig-nav-link {{ request()->routeIs('startup.team.*') ? 'active' : '' }}">⭐ My Team</a>
+                    @if(auth()->check() && auth()->user()->is_onboarded)
+                        <a href="{{ route('dashboard') }}" class="ig-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
+                        <a href="{{ route('tasks.index') }}" class="ig-nav-link {{ request()->routeIs('tasks.index') ? 'active' : '' }}">Marketplace</a>
+                        <a href="{{ route('leaderboard') }}" class="ig-nav-link {{ request()->routeIs('leaderboard') ? 'active' : '' }}">Leaderboard</a>
+                        @if(auth()->user()->isStudent())
+                            <a href="{{ route('student.internships.index') }}" class="ig-nav-link {{ request()->routeIs('student.internships.*') ? 'active' : '' }}">🎯 My Internships</a>
+                            <a href="{{ route('student.analytics') }}" class="ig-nav-link {{ request()->routeIs('student.analytics') ? 'active' : '' }}">Analytics</a>
+                        @endif
+                        @if(auth()->user()->isStartup())
+                            <a href="{{ route('startup.team.index') }}" class="ig-nav-link {{ request()->routeIs('startup.team.*') ? 'active' : '' }}">⭐ My Team</a>
+                        @endif
                     @endif
                 </div>
 
@@ -84,6 +86,19 @@
                                 <a href="{{ route('startup.team.index') }}" class="flex items-center gap-3 px-4 py-3 text-sm hover:bg-[var(--ig-bg)] transition">
                                     <span class="text-[var(--ig-muted)]">⭐</span>
                                     My Team
+                                </a>
+                            @elseif(auth()->user()->role === 'admin')
+                                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-sm hover:bg-[var(--ig-bg)] transition font-semibold">
+                                    <span class="text-[var(--ig-muted)]">🛡️</span>
+                                    Admin Dashboard
+                                </a>
+                                <a href="{{ route('admin.revenue') }}" class="flex items-center gap-3 px-4 py-3 text-sm hover:bg-[var(--ig-bg)] transition font-semibold">
+                                    <span class="text-[var(--ig-muted)]">📊</span>
+                                    Revenue economics
+                                </a>
+                                <a href="{{ route('admin.subscriptions.index') }}" class="flex items-center gap-3 px-4 py-3 text-sm hover:bg-[var(--ig-bg)] transition font-semibold">
+                                    <span class="text-[var(--ig-muted)]">💳</span>
+                                    Subscriptions Ledger
                                 </a>
                             @endif
                             <div class="h-px bg-[var(--ig-line)]"></div>
@@ -167,57 +182,183 @@
                 document.getElementById('notif-dropdown').classList.add('hidden');
             }
         });
-        async function refreshBadge() {
-            try {
-                const res = await fetch(NOTIF_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-                const data = await res.json();
-                const badge = document.getElementById('notif-badge');
-                if (data.count > 0) {
-                    badge.textContent = data.count > 99 ? '99+' : data.count;
-                    badge.classList.remove('hidden'); badge.classList.add('flex');
-                } else {
-                    badge.classList.add('hidden'); badge.classList.remove('flex');
+        <!-- Toast Stack Container -->
+        <div id="toast-container" class="fixed bottom-6 left-6 flex flex-col gap-3 z-50 pointer-events-none max-w-sm w-[90vw]" style="bottom: 80px; left: 24px;"></div>
+
+        <style>
+            @keyframes bell-shake {
+                0% { transform: rotate(0); }
+                15% { transform: rotate(25deg); }
+                30% { transform: rotate(-20deg); }
+                45% { transform: rotate(15deg); }
+                60% { transform: rotate(-10deg); }
+                75% { transform: rotate(5deg); }
+                100% { transform: rotate(0); }
+            }
+            .bell-shake {
+                animation: bell-shake 0.6s ease-in-out;
+            }
+        </style>
+
+        <script>
+            const NOTIF_READ_ALL = '{{ route("notifications.read-all") }}';
+            const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+            let dropdownOpen = false;
+            let seenNotificationIds = new Set();
+            let isFirstPoll = true;
+
+            function toggleNotifDropdown() {
+                dropdownOpen = !dropdownOpen;
+                document.getElementById('notif-dropdown').classList.toggle('hidden', !dropdownOpen);
+                if (dropdownOpen) fetchDropdownNotifs();
+            }
+            document.addEventListener('click', (e) => {
+                const w = document.getElementById('notif-wrapper');
+                if (w && !w.contains(e.target) && dropdownOpen) {
+                    dropdownOpen = false;
+                    document.getElementById('notif-dropdown').classList.add('hidden');
                 }
-            } catch (e) {}
-        }
-        async function markAllRead() {
-            await fetch(NOTIF_READ_ALL, { method:'POST', headers:{'X-CSRF-TOKEN': CSRF, 'X-Requested-With':'XMLHttpRequest'} });
-            refreshBadge(); fetchDropdownNotifs();
-        }
-        async function fetchDropdownNotifs() {
-            try {
-                const res = await fetch('{{ url("/notifications/dropdown") }}', { headers: { 'X-Requested-With':'XMLHttpRequest' }});
-                if (!res.ok) return;
-                const data = await res.json(); renderDropdown(data.notifications);
-            } catch(e){}
-        }
-        function renderDropdown(items) {
-            const list = document.getElementById('notif-list');
-            if (!items || items.length === 0) {
-                list.innerHTML = '<div class="px-4 py-8 text-center text-sm" style="color:var(--ig-faint)">No notifications</div>'; return;
-            }
-            const icon = { success:'✓', warning:'!', error:'×', info:'·' };
-            list.innerHTML = items.map(n => `
-                <div class="px-4 py-3 border-b border-[var(--ig-line)] last:border-0 hover:bg-[var(--ig-bg)] cursor-pointer ${n.is_read ? 'opacity-60' : ''}" onclick="markOneRead(${n.id}, this, '${n.target_url || '#'}')">
-                    <div class="flex items-start gap-3">
-                        <span class="ig-avatar" style="width:22px;height:22px;font-size:11px;">${icon[n.type] || '·'}</span>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-[13px] font-semibold truncate">${n.title}${!n.is_read ? ' <span class="inline-block w-1.5 h-1.5 rounded-full" style="background:var(--ig-accent)"></span>' : ''}</p>
-                            <p class="text-[12px] mt-0.5 line-clamp-2" style="color:var(--ig-muted)">${n.message}</p>
-                            <p class="ig-mono text-[10px] mt-1" style="color:var(--ig-faint)">${n.time_ago}</p>
-                        </div>
+            });
+
+            function showToast(notification) {
+                const container = document.getElementById('toast-container');
+                if (!container) return;
+
+                const toast = document.createElement('div');
+                toast.className = "flex items-start gap-3 p-4 rounded-2xl bg-white border border-[var(--ig-line)] shadow-2xl transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto cursor-pointer max-w-sm w-full";
+                
+                const titleLower = notification.title.toLowerCase();
+                const isPriority = titleLower.includes('important') || titleLower.includes('offer') || titleLower.includes('scheduled') || titleLower.includes('interview');
+                if (isPriority) {
+                    toast.className += " border-red-200 bg-red-50/50";
+                }
+
+                const titleColor = isPriority ? 'text-red-955 font-black' : 'text-slate-950 font-bold';
+
+                toast.innerHTML = `
+                    <div class="w-8 h-8 rounded-full ${isPriority ? 'bg-red-100 text-red-600' : 'bg-indigo-50 text-indigo-600'} flex items-center justify-center text-sm flex-shrink-0">
+                        ${isPriority ? '🚨' : '🎉'}
                     </div>
-                </div>`).join('');
-        }
-        async function markOneRead(id, el, targetUrl) {
-            await fetch(`/notifications/${id}/read`, { method:'POST', headers:{'X-CSRF-TOKEN':CSRF,'X-Requested-With':'XMLHttpRequest'} });
-            el.classList.add('opacity-60'); refreshBadge();
-            if (targetUrl && targetUrl !== '#') {
-                window.location.href = targetUrl;
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs ${titleColor} truncate">${notification.title}</p>
+                        <p class="text-[11px] text-slate-600 mt-0.5 leading-normal">${notification.message}</p>
+                    </div>
+                    <button type="button" class="text-slate-400 hover:text-slate-600 text-xs ml-auto border-none bg-transparent cursor-pointer">×</button>
+                `;
+
+                toast.addEventListener('click', async (e) => {
+                    if (e.target.tagName.toLowerCase() === 'button') {
+                        toast.remove();
+                        return;
+                    }
+                    await markOneRead(notification.id, toast, notification.target_url || '#');
+                });
+
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.classList.remove('translate-y-2', 'opacity-0');
+                }, 50);
+
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', 'translate-y-[-10px]');
+                    setTimeout(() => toast.remove(), 300);
+                }, 6000);
             }
-        }
-        refreshBadge(); setInterval(refreshBadge, 30000);
-    </script>
+
+            async function refreshBadge() {
+                try {
+                    const res = await fetch('{{ url("/notifications/dropdown") }}', { headers: { 'X-Requested-With':'XMLHttpRequest' }});
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    const items = data.notifications || [];
+                    
+                    const unreadItems = items.filter(n => !n.is_read);
+                    const badge = document.getElementById('notif-badge');
+                    if (unreadItems.length > 0) {
+                        badge.textContent = unreadItems.length > 99 ? '99+' : unreadItems.length;
+                        badge.classList.remove('hidden'); badge.classList.add('flex');
+                    } else {
+                        badge.classList.add('hidden'); badge.classList.remove('flex');
+                    }
+
+                    let hasNew = false;
+                    unreadItems.forEach(n => {
+                        if (!seenNotificationIds.has(n.id)) {
+                            seenNotificationIds.add(n.id);
+                            if (!isFirstPoll) {
+                                showToast(n);
+                                hasNew = true;
+                            }
+                        }
+                    });
+
+                    // Add already read notifications to seen Set so we don't count them
+                    items.forEach(n => {
+                        if (n.is_read) {
+                            seenNotificationIds.add(n.id);
+                        }
+                    });
+
+                    if (hasNew && !isFirstPoll) {
+                        const bell = document.querySelector('#notif-btn svg');
+                        if (bell) {
+                            bell.classList.add('bell-shake');
+                            setTimeout(() => bell.classList.remove('bell-shake'), 600);
+                        }
+                    }
+
+                    isFirstPoll = false;
+
+                    if (dropdownOpen) {
+                        renderDropdown(items);
+                    }
+                } catch (e) {}
+            }
+
+            async function markAllRead() {
+                await fetch(NOTIF_READ_ALL, { method:'POST', headers:{'X-CSRF-TOKEN': CSRF, 'X-Requested-With':'XMLHttpRequest'} });
+                refreshBadge();
+            }
+
+            async function fetchDropdownNotifs() {
+                try {
+                    const res = await fetch('{{ url("/notifications/dropdown") }}', { headers: { 'X-Requested-With':'XMLHttpRequest' }});
+                    if (!res.ok) return;
+                    const data = await res.json(); renderDropdown(data.notifications);
+                } catch(e){}
+            }
+
+            function renderDropdown(items) {
+                const list = document.getElementById('notif-list');
+                if (!items || items.length === 0) {
+                    list.innerHTML = '<div class="px-4 py-8 text-center text-sm" style="color:var(--ig-faint)">No notifications</div>'; return;
+                }
+                const icon = { success:'✓', warning:'!', error:'×', info:'·' };
+                list.innerHTML = items.map(n => `
+                    <div class="px-4 py-3 border-b border-[var(--ig-line)] last:border-0 hover:bg-[var(--ig-bg)] cursor-pointer ${n.is_read ? 'opacity-60' : ''}" onclick="markOneRead(${n.id}, this, '${n.target_url || '#'}')">
+                        <div class="flex items-start gap-3">
+                            <span class="ig-avatar" style="width:22px;height:22px;font-size:11px;">${icon[n.type] || '·'}</span>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[13px] font-semibold truncate">${n.title}${!n.is_read ? ' <span class="inline-block w-1.5 h-1.5 rounded-full" style="background:var(--ig-accent)"></span>' : ''}</p>
+                                <p class="text-[12px] mt-0.5 line-clamp-2" style="color:var(--ig-muted)">${n.message}</p>
+                                <p class="ig-mono text-[10px] mt-1" style="color:var(--ig-faint)">${n.time_ago}</p>
+                            </div>
+                        </div>
+                    </div>`).join('');
+            }
+
+            async function markOneRead(id, el, targetUrl) {
+                await fetch(`/notifications/${id}/read`, { method:'POST', headers:{'X-CSRF-TOKEN':CSRF,'X-Requested-With':'XMLHttpRequest'} });
+                refreshBadge();
+                if (targetUrl && targetUrl !== '#') {
+                    window.location.href = targetUrl;
+                }
+            }
+
+            refreshBadge();
+            setInterval(refreshBadge, 10000);
+        </script>
     @endauth
 
     <script src="{{ asset('js/interngrowth.js') }}"></script>

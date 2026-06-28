@@ -20,6 +20,46 @@ class StudentController extends Controller
     public function dashboard()
     {
         $profile = auth()->user()->studentProfile->load(['skills', 'reputationScore', 'portfolio.items', 'startupReviews']);
+
+        // Award badge from url if present (Demo Simulation)
+        if (request()->has('badge')) {
+            $badgeSlug = request()->query('badge');
+            $badgeNames = [
+                'php_expert' => 'PHP Expert Verified',
+                'sql_architect' => 'SQL Architect Verified',
+                'laravel_master' => 'Laravel Master Verified',
+            ];
+            $badgeName = $badgeNames[$badgeSlug] ?? 'Skill Verified';
+            
+            \App\Models\StudentBadge::firstOrCreate(
+                [
+                    'student_profile_id' => $profile->id,
+                    'badge_slug' => $badgeSlug,
+                ],
+                [
+                    'badge_name' => $badgeName,
+                    'earned_at' => now(),
+                ]
+            );
+
+            // Add reputation bonus
+            $rep = $profile->reputationScore;
+            if ($rep) {
+                $rep->increment('overall_score', 15);
+                $rep->save();
+            }
+
+            // Create notification
+            \App\Models\Notification::create([
+                'user_id' => auth()->id(),
+                'title' => '🎉 Badge Unlocked!',
+                'message' => "Congratulations! You passed the assessment and unlocked the \"{$badgeName}\" badge. +15 IPRS added.",
+                'type' => 'success',
+            ]);
+
+            return redirect()->route('dashboard')->with('success', "🏆 Badge Unlocked: \"{$badgeName}\"! +15 IPRS reputation added.");
+        }
+
         $hiringOffers = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
             ->where(function($q) {
                 $q->where(function($sub) {
@@ -891,10 +931,11 @@ class StudentController extends Controller
         $offerEarnings = $allOffers->filter(fn($o) => in_array($o->status, ['joined', 'active', 'completed']))
             ->sum(function($o) {
                 if ($o->status === 'completed') {
-                    $months = max(1, $o->start_date->diffInMonths($o->completed_at ?: $o->end_date));
+                    $months = max(1, (int) $o->start_date->diffInMonths($o->completed_at ?: $o->end_date));
                     return $o->compensation * $months;
                 } else {
-                    $months = max(1, $o->start_date->diffInMonths(now()));
+                    // For active/ongoing placements, only count months that have fully passed
+                    $months = (int) $o->start_date->diffInMonths(now());
                     return $o->compensation * $months;
                 }
             });
@@ -928,13 +969,22 @@ class StudentController extends Controller
     {
         $profile = auth()->user()->studentProfile;
         $offer = \App\Models\HiringOffer::where('student_profile_id', $profile->id)
-            ->with(['updates' => function($q) { $q->latest(); }, 'weeklyReports' => function($q) { $q->orderBy('week_number', 'desc'); }, 'startup.user'])
+            ->with([
+                'internshipTasks' => function($q) { $q->with('latestSubmission')->orderByRaw("FIELD(status,'needs_changes','pending','submitted','approved')")->orderBy('due_date'); },
+                'weeklyReports' => function($q) { $q->orderBy('week_number', 'desc'); },
+                'resources',
+                'startup.user',
+            ])
             ->findOrFail($id);
 
-        $canCheckInToday = true;
-        if ($offer->last_checked_in_at && $offer->last_checked_in_at->isToday()) {
-            $canCheckInToday = false;
-        }
+        // Lazy streak-reset check (for hackathon — in production use scheduler)
+        app(\App\Services\StreakService::class)->checkStreakReset($offer);
+        $offer->refresh();
+
+        // Group tasks by milestone
+        $milestones = $offer->internshipTasks->groupBy(function ($task) {
+            return $task->milestone_name ?: 'General Tasks';
+        });
 
         $conversation = \App\Models\Conversation::where('student_profile_id', $profile->id)
             ->where('startup_profile_id', $offer->startup_profile_id)
@@ -943,77 +993,29 @@ class StudentController extends Controller
 
         $nextWeekNumber = $offer->weeklyReports->max('week_number') + 1;
 
-        return view('student.internships.workspace', compact('offer', 'canCheckInToday', 'conversationId', 'nextWeekNumber'));
+        // Student badges for this internship
+        $badges = \App\Models\StudentBadge::where('student_profile_id', $profile->id)
+            ->where('hiring_offer_id', $offer->id)
+            ->get();
+
+        return view('student.internships.workspace', compact(
+            'offer', 'milestones', 'conversationId', 'nextWeekNumber', 'badges'
+        ));
     }
 
-    public function checkIn($id)
+    public function aiCoach()
     {
-        $profile = auth()->user()->studentProfile;
-        $offer = \App\Models\HiringOffer::where('student_profile_id', $profile->id)->findOrFail($id);
+        return view('student.premium.coach');
+    }
 
-        if ($offer->last_checked_in_at && $offer->last_checked_in_at->isToday()) {
-            return back()->with('error', 'You have already checked in for today!');
-        }
+    public function mockInterviews()
+    {
+        return view('student.premium.mock');
+    }
 
-        $streak = $offer->current_streak;
-        $lastCheckin = $offer->last_checked_in_at;
-
-        if ($lastCheckin) {
-            $diff = $lastCheckin->copy()->startOfDay()->diffInDays(now()->startOfDay());
-            $isYesterday = $diff == 1; // Loose comparison
-            if ($isYesterday) {
-                $streak++;
-            } else {
-                $streak = 1; // Streak broken
-            }
-        } else {
-            $streak = 1; // First checkin
-        }
-
-        $offer->current_streak = $streak;
-        $offer->last_checked_in_at = now();
-        $offer->save();
-
-        // Increment student's IPRS Score
-        $reputation = \App\Models\ReputationScore::firstOrCreate(
-            ['student_profile_id' => $profile->id],
-            ['overall_score' => 50.00]
-        );
-
-        $iprsEarned = 5.00;
-        $milestoneAchieved = false;
-
-        if ($streak > 0 && $streak % 10 === 0) {
-            $iprsEarned += 25.00;
-            $milestoneAchieved = true;
-        }
-
-        $reputation->overall_score += $iprsEarned;
-        $reputation->save();
-
-        // Recalculate reputation rank/statistics
-        $reputationService = new \App\Services\ReputationEngineService();
-        $reputationService->updateReputation($profile->id);
-
-        // Notifications
-        \App\Models\Notification::create([
-            'user_id' => auth()->id(),
-            'title' => 'Daily Check-In Completed',
-            'message' => "🟢 Worked Today checked. Streak updated to {$streak} days. +{$iprsEarned} IPRS points added!",
-            'type' => 'success',
-            'action_url' => route('student.internships.workspace', $offer->id)
-        ]);
-
-        if ($milestoneAchieved) {
-            \App\Models\Notification::create([
-                'user_id' => auth()->id(),
-                'title' => '🏆 Streak Milestone Achieved!',
-                'message' => "Amazing persistence! Your {$streak}-day check-in streak earned you +25 bonus IPRS points.",
-                'type' => 'success',
-                'action_url' => route('student.internships.workspace', $offer->id)
-            ]);
-        }
-
-        return back()->with('success', "Check-in successful! Streak: {$streak} days (+{$iprsEarned} IPRS credited).");
+    public function skillAssessments()
+    {
+        return view('student.premium.assessments');
     }
 }
+

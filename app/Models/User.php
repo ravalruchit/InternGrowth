@@ -23,6 +23,10 @@ class User extends Authenticatable
         'password',
         'role',
         'is_verified',
+        'is_onboarded',
+        'subscription_status',
+        'subscription_plan',
+        'trial_ends_at',
     ];
 
     /**
@@ -46,6 +50,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_verified' => 'boolean',
+            'is_onboarded' => 'boolean',
+            'trial_ends_at' => 'datetime',
         ];
     }
 
@@ -64,6 +70,11 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class);
     }
 
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
     public function isStudent(): bool
     {
         return $this->role === 'student';
@@ -77,5 +88,44 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    /* ─── Subscription Helpers ─── */
+
+    public function activeSubscription()
+    {
+        return $this->subscriptions()
+            ->whereIn('status', ['active', 'trial'])
+            ->where(function($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>=', now());
+            })
+            ->latest()
+            ->first();
+    }
+
+    public function hasActiveSubscription(): bool
+    {
+        return $this->activeSubscription() !== null;
+    }
+
+    public function isStudentPro(): bool
+    {
+        if (!$this->isStudent()) {
+            return false;
+        }
+        
+        $activeSub = $this->activeSubscription();
+        return $activeSub && $activeSub->plan_type === 'student_pro';
+    }
+
+    public function isStartupGrowth(): bool
+    {
+        if (!$this->isStartup()) {
+            return false;
+        }
+
+        $activeSub = $this->activeSubscription();
+        return $activeSub && $activeSub->plan_type === 'startup_growth';
     }
 }

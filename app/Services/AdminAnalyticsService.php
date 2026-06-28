@@ -111,6 +111,7 @@ class AdminAnalyticsService
         // ── 3. REVENUE ANALYTICS & FORECASTING ──────────────────────────────
         $taskCommissionRevenue = Transaction::where('user_type', 'platform')->where('type', 'credit')->where('status', 'active')->where('reference_id', 'like', 'task_%')->sum('amount');
         $hiringSuccessRevenue = Transaction::where('user_type', 'platform')->where('type', 'credit')->where('status', 'active')->where('reference_id', 'like', 'offer_%')->sum('amount');
+        $subscriptionRevenue = Transaction::where('user_type', 'platform')->where('type', 'credit')->where('status', 'active')->where('reference_id', 'like', 'sub_%')->sum('amount');
 
         // Forecasting
         $pipelineCommissions = Task::where('status', 'posted')->sum('stipend') * 0.10;
@@ -146,11 +147,19 @@ class AdminAnalyticsService
                 ->whereBetween('created_at', [$monthStart, $monthEnd])
                 ->sum('amount');
 
+            $monthSubs = Transaction::where('user_type', 'platform')
+                ->where('type', 'credit')
+                ->where('status', 'active')
+                ->where('reference_id', 'like', 'sub_%')
+                ->whereBetween('created_at', [$monthStart, $monthEnd])
+                ->sum('amount');
+
             $revenueChartData[] = [
                 'month'  => $monthStart->format('M Y'),
                 'tasks'  => round($monthTasks, 2),
                 'hiring' => round($monthHires, 2),
-                'total'  => round($monthTasks + $monthHires, 2),
+                'subscriptions' => round($monthSubs, 2),
+                'total'  => round($monthTasks + $monthHires + $monthSubs, 2),
             ];
         }
 
@@ -674,6 +683,7 @@ class AdminAnalyticsService
             'revenue' => [
                 'task_commission'            => round($taskCommissionRevenue, 2),
                 'hiring_success'             => round($hiringSuccessRevenue, 2),
+                'subscription'               => round($subscriptionRevenue, 2),
                 'forecast_this_month'        => round($expectedRevenueThisMonth, 2),
                 'forecast_next_month'        => round($expectedRevenueNextMonth, 2),
                 'growth_rate'                => round($growthRate * 100, 1),

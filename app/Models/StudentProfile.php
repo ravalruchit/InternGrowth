@@ -224,4 +224,9 @@ class StudentProfile extends Model
     {
         return $this->hasMany(WithdrawalRequest::class, 'student_profile_id');
     }
+
+    public function badges(): HasMany
+    {
+        return $this->hasMany(StudentBadge::class, 'student_profile_id');
+    }
 }

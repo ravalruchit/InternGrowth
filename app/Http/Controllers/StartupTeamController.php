@@ -90,12 +90,22 @@ class StartupTeamController extends Controller
     {
         $startup = auth()->user()->startupProfile;
         $offer = HiringOffer::where('startup_profile_id', $startup->id)
-            ->with(['student.user', 'updates' => function($q) {
-                $q->latest();
-            }])
+            ->with([
+                'student.user',
+                'internshipTasks' => function($q) { $q->with('latestSubmission')->orderBy('created_at'); },
+                'weeklyReports' => function($q) { $q->orderBy('week_number', 'desc'); },
+                'resources',
+            ])
             ->findOrFail($offerId);
 
-        return view('startup.team.work', compact('offer'));
+        $tasks = $offer->internshipTasks;
+        $milestones = $tasks->groupBy(function ($task) {
+            return $task->milestone_name ?: 'General Tasks';
+        });
+
+        $pendingReviewCount = $tasks->where('status', 'submitted')->count();
+
+        return view('startup.team.tasks', compact('offer', 'tasks', 'milestones', 'pendingReviewCount'));
     }
 
     public function viewReports($offerId)

@@ -109,19 +109,23 @@
                                     </div>
                                 </div>
 
-                                <!-- Key placement parameters -->
-                                <div class="grid grid-cols-3 gap-4 text-xs font-medium bg-slate-50 border border-slate-100 rounded-xl p-3">
+                                <!-- Key placement parameters & Verified Task Stats -->
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-semibold bg-slate-50 border border-slate-100 rounded-xl p-4">
                                     <div>
-                                        <p class="text-[9px] uppercase text-gray-400">— Joining Date</p>
-                                        <p class="text-gray-800 font-bold mt-0.5">{{ $offer->start_date->format('d M, Y') }}</p>
+                                        <p class="text-[9px] uppercase text-gray-400">— Streak</p>
+                                        <p class="text-gray-800 font-bold mt-0.5">🔥 {{ $offer->current_streak ?? 0 }} Days</p>
                                     </div>
                                     <div>
-                                        <p class="text-[9px] uppercase text-gray-400">— Compensation</p>
-                                        <p class="text-gray-800 font-bold mt-0.5">₹{{ number_format($offer->compensation, 2) }} / {{ $offer->compensation_period }}</p>
+                                        <p class="text-[9px] uppercase text-gray-400">— Approved Tasks</p>
+                                        <p class="text-emerald-700 font-bold mt-0.5">✅ {{ $offer->approved_tasks_count }} Tasks</p>
                                     </div>
                                     <div>
-                                        <p class="text-[9px] uppercase text-gray-400">— Expected End</p>
-                                        <p class="text-gray-800 font-bold mt-0.5">{{ $offer->end_date ? $offer->end_date->format('d M, Y') : 'Ongoing' }}</p>
+                                        <p class="text-[9px] uppercase text-gray-400">— Performance</p>
+                                        <p class="text-sky-700 font-bold mt-0.5">⭐ {{ $offer->performance_score }}%</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] uppercase text-gray-400">— Stipend</p>
+                                        <p class="text-gray-800 font-bold mt-0.5">₹{{ number_format($offer->compensation, 0) }} / {{ $offer->compensation_period }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -139,12 +143,8 @@
                                     </a>
                                 </div>
 
-                                <a href="{{ route('startup.team.work', $offer->id) }}" class="ig-btn justify-center text-xs py-2.5 font-bold shadow-sm">
-                                    📂 Progress Updates Logs ({{ $offer->updates->count() }})
-                                </a>
-
-                                <a href="{{ route('startup.team.reports', $offer->id) }}" class="ig-btn ig-btn-ghost justify-center text-xs py-2.5 font-bold">
-                                    📊 Review Weekly Reports ({{ $offer->weeklyReports->count() }})
+                                <a href="{{ route('startup.team.work', $offer->id) }}" class="ig-btn justify-center text-xs py-2.5 font-bold shadow-sm text-center">
+                                    💼 Open Workspace
                                 </a>
 
                                 <!-- Trigger complete internship -->

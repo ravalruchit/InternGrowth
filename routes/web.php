@@ -5,7 +5,8 @@ use App\Http\Controllers\{
     TaskController, ApplicationController, SubmissionController,
     CertificateController, LeaderboardController, RatingController, MessageController,
     WalletController, AdminWalletController, WalletTopupController, ReportController,
-    NotificationController, StartupReviewController, TalentProfileController, WithdrawalController, StartupTeamController
+    NotificationController, StartupReviewController, TalentProfileController, WithdrawalController, StartupTeamController,
+    InternshipTaskController, PricingController, AdminSubscriptionController
 };
 use App\Http\Controllers\Auth\GoogleAuthController;
 use Illuminate\Support\Facades\Route;
@@ -93,7 +94,12 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 
     // Student Routes
-    Route::middleware('role:student')->prefix('student')->name('student.')->group(function () {
+    Route::middleware(['role:student', 'onboarded'])->prefix('student')->name('student.')->group(function () {
+        Route::get('/onboarding', [\App\Http\Controllers\StudentOnboardingController::class, 'show'])->name('onboarding');
+        Route::post('/onboarding/step1', [\App\Http\Controllers\StudentOnboardingController::class, 'step1'])->name('onboarding.step1');
+        Route::post('/onboarding/step2', [\App\Http\Controllers\StudentOnboardingController::class, 'step2'])->name('onboarding.step2');
+        Route::post('/onboarding/step3', [\App\Http\Controllers\StudentOnboardingController::class, 'step3'])->name('onboarding.step3');
+
         Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
         Route::get('/profile', [StudentController::class, 'profile'])->name('profile');
         Route::post('/profile', [StudentController::class, 'updateProfile'])->name('profile.update');
@@ -122,11 +128,23 @@ Route::middleware('auth')->group(function () {
         // New student internships center
         Route::get('/internships', [StudentController::class, 'internships'])->name('internships.index');
         Route::get('/internships/{id}/workspace', [StudentController::class, 'workspace'])->name('internships.workspace');
-        Route::post('/internships/{id}/checkin', [StudentController::class, 'checkIn'])->name('internships.checkin');
+        Route::post('/internships/{offer}/tasks/{task}/submit', [InternshipTaskController::class, 'submit'])->name('internships.tasks.submit');
+
+        // Premium locked routes
+        Route::middleware('student.pro')->group(function() {
+            Route::get('/coach', [StudentController::class, 'aiCoach'])->name('coach');
+            Route::get('/mock-interviews', [StudentController::class, 'mockInterviews'])->name('mock');
+            Route::get('/assessments', [StudentController::class, 'skillAssessments'])->name('assessments');
+        });
     });
 
     // Startup Routes
-    Route::middleware('role:startup')->prefix('startup')->name('startup.')->group(function () {
+    Route::middleware(['role:startup', 'onboarded'])->prefix('startup')->name('startup.')->group(function () {
+        Route::get('/onboarding', [\App\Http\Controllers\StartupOnboardingController::class, 'show'])->name('onboarding');
+        Route::post('/onboarding/step1', [\App\Http\Controllers\StartupOnboardingController::class, 'step1'])->name('onboarding.step1');
+        Route::post('/onboarding/step2', [\App\Http\Controllers\StartupOnboardingController::class, 'step2'])->name('onboarding.step2');
+        Route::post('/onboarding/step3', [\App\Http\Controllers\StartupOnboardingController::class, 'step3'])->name('onboarding.step3');
+
         Route::get('/dashboard', [StartupController::class, 'dashboard'])->name('dashboard');
         Route::get('/profile', [StartupController::class, 'profile'])->name('profile');
         Route::post('/profile', [StartupController::class, 'updateProfile'])->name('profile.update');
@@ -155,6 +173,15 @@ Route::middleware('auth')->group(function () {
         Route::post('/team/reports/{report}/feedback', [StartupTeamController::class, 'submitWeeklyFeedback'])->name('team.reports.feedback');
         Route::get('/team/{offer}/convert', [StartupTeamController::class, 'showConversionForm'])->name('team.convert.form');
         Route::post('/team/{offer}/convert', [StartupTeamController::class, 'processConversion'])->name('team.convert');
+
+        // Verified Task System
+        Route::post('/team/{offer}/tasks', [InternshipTaskController::class, 'store'])->name('team.tasks.store');
+        Route::put('/team/{offer}/tasks/{task}', [InternshipTaskController::class, 'update'])->name('team.tasks.update');
+        Route::delete('/team/{offer}/tasks/{task}', [InternshipTaskController::class, 'destroy'])->name('team.tasks.destroy');
+        Route::post('/team/{offer}/tasks/{task}/approve', [InternshipTaskController::class, 'approve'])->name('team.tasks.approve');
+        Route::post('/team/{offer}/tasks/{task}/request-changes', [InternshipTaskController::class, 'requestChanges'])->name('team.tasks.request-changes');
+        Route::post('/team/{offer}/resources', [InternshipTaskController::class, 'storeResource'])->name('team.resources.store');
+        Route::delete('/team/{offer}/resources/{resource}', [InternshipTaskController::class, 'destroyResource'])->name('team.resources.destroy');
     });
 
     // Admin Routes
@@ -283,6 +310,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/startup/interviews/{id}/complete', [App\Http\Controllers\InterviewController::class, 'complete'])->name('startup.interviews.complete')->middleware('role:startup');
     Route::post('/startup/interviews/{id}/noshow', [App\Http\Controllers\InterviewController::class, 'noShow'])->name('startup.interviews.noshow')->middleware('role:startup');
     Route::post('/student/interviews/{id}/noshow', [App\Http\Controllers\InterviewController::class, 'studentNoShow'])->name('student.interviews.noshow')->middleware('role:student');
+    // Pricing Page Routes
+    Route::get('/pricing', [PricingController::class, 'index'])->name('pricing.index');
+    Route::post('/pricing/upgrade', [PricingController::class, 'upgrade'])->name('pricing.upgrade')->middleware('auth');
+    Route::post('/pricing/cancel', [PricingController::class, 'cancel'])->name('pricing.cancel')->middleware('auth');
+
+    // Admin Subscription/Revenue Routes
+    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/revenue', [AdminSubscriptionController::class, 'revenue'])->name('revenue');
+        Route::get('/subscriptions', [AdminSubscriptionController::class, 'index'])->name('subscriptions.index');
+        Route::post('/subscriptions/manual-upgrade', [AdminSubscriptionController::class, 'manualUpgrade'])->name('subscriptions.manual-upgrade');
+    });
 });
 
 // Experience Certificates Public Routes

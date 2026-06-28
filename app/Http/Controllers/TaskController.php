@@ -87,6 +87,17 @@ class TaskController extends Controller
                 ->with('error', 'You cannot create tasks until your outstanding balance (negative wallet balance) is cleared.');
         }
 
+        // Enforce Free Startup Plan limits (max 3 active tasks)
+        if (!auth()->user()->isStartupGrowth()) {
+            $activeCount = \App\Models\Task::where('startup_profile_id', auth()->user()->startupProfile->id)
+                ->whereIn('status', ['posted', 'in_progress'])
+                ->count();
+            if ($activeCount >= 3) {
+                return redirect()->route('pricing.index')
+                    ->with('error', '⚠️ Limit reached! Free startups can have a maximum of 3 active tasks. Upgrade to Growth to post unlimited tasks.');
+            }
+        }
+
         $skills = Skill::all();
         return view('tasks.create', compact('skills'));
     }
@@ -103,6 +114,17 @@ class TaskController extends Controller
         if (auth()->user()->startupProfile->wallet_balance < 0) {
             return redirect()->route('startup.dashboard')
                 ->with('error', 'You cannot create tasks until your outstanding balance (negative wallet balance) is cleared.');
+        }
+
+        // Enforce Free Startup Plan limits (max 3 active tasks)
+        if (!auth()->user()->isStartupGrowth()) {
+            $activeCount = \App\Models\Task::where('startup_profile_id', auth()->user()->startupProfile->id)
+                ->whereIn('status', ['posted', 'in_progress'])
+                ->count();
+            if ($activeCount >= 3) {
+                return redirect()->route('pricing.index')
+                    ->with('error', '⚠️ Limit reached! Free startups can have a maximum of 3 active tasks. Upgrade to Growth to post unlimited tasks.');
+            }
         }
 
         $validated = $request->validate([

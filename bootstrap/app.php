@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'student.pro' => \App\Http\Middleware\EnsureStudentPro::class,
+            'startup.growth' => \App\Http\Middleware\EnsureStartupGrowth::class,
+            'onboarded' => \App\Http\Middleware\RedirectIfNotOnboarded::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

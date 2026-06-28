@@ -18,7 +18,29 @@
             </div>
         </div>
 
-        <!-- Row 1: Team Analytics Widgets -->
+        <!-- Simulated Skeleton Loader Wrapper -->
+        <div id="dashboard-skeleton" class="space-y-8 animate-pulse">
+            <!-- Analytics Widgets Skeleton -->
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
+                <div class="h-20 bg-slate-100 rounded-3xl"></div>
+                <div class="h-20 bg-slate-100 rounded-3xl"></div>
+                <div class="h-20 bg-slate-100 rounded-3xl"></div>
+                <div class="h-20 bg-slate-100 rounded-3xl"></div>
+                <div class="h-20 bg-slate-100 rounded-3xl col-span-2 lg:col-span-1"></div>
+            </div>
+            
+            <!-- Tabs Bar Skeleton -->
+            <div class="h-10 bg-slate-100 rounded-2xl w-full"></div>
+            
+            <!-- Cards Skeleton Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="h-48 bg-slate-100 rounded-3xl"></div>
+                <div class="h-48 bg-slate-100 rounded-3xl"></div>
+            </div>
+        </div>
+
+        <div id="dashboard-content" class="hidden space-y-8">
+            <!-- Row 1: Team Analytics Widgets -->
         <div class="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-12 ig-reveal is-in">
             <div class="ig-card p-6 flex flex-col justify-between hover:translate-y-[-2px] transition duration-300">
                 <div>
@@ -141,9 +163,8 @@
                             </div>
                         </div>
                     @empty
-                        <div class="col-span-2 text-center py-16 text-[var(--ig-muted)] bg-[var(--ig-surface)] border border-[var(--ig-line)] rounded-3xl">
-                            <p class="font-bold text-base text-[var(--ig-ink)]">No pending offers.</p>
-                            <p class="text-xs text-[var(--ig-muted)] mt-1">Hiring pitches sent by startups will render here for your review.</p>
+                        <div class="col-span-2">
+                            <x-empty-states.no-internships />
                         </div>
                     @endforelse
                 </div>
@@ -196,9 +217,8 @@
                             </a>
                         </div>
                     @empty
-                        <div class="col-span-2 text-center py-16 text-[var(--ig-muted)] bg-[var(--ig-surface)] border border-[var(--ig-line)] rounded-3xl">
-                            <p class="font-bold text-base text-[var(--ig-ink)]">No active placements.</p>
-                            <p class="text-xs text-[var(--ig-muted)] mt-1">Confirmed internships will show here once you start working.</p>
+                        <div class="col-span-2">
+                            <x-empty-states.no-internships />
                         </div>
                     @endforelse
                 </div>
@@ -244,7 +264,7 @@
                             <div class="flex gap-2">
                                 @php
                                     $cert = \App\Models\Certificate::where('hiring_offer_id', $offer->id)->first();
-                                @endphp
+                                 @endphp
                                 @if($cert)
                                     <a href="{{ route('certificates.verify', $cert->certificate_number) }}" target="_blank" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-2 rounded-xl text-xs shadow-sm transition text-center">
                                         🎖️ View Cert
@@ -256,9 +276,8 @@
                             </div>
                         </div>
                     @empty
-                        <div class="col-span-2 text-center py-16 text-[var(--ig-muted)] bg-white border border-[var(--ig-line)] rounded-3xl">
-                            <p class="font-bold text-base text-[var(--ig-ink)]">No completed experiences.</p>
-                            <p class="text-xs text-[var(--ig-muted)] mt-1">Certified placements will show here once finished.</p>
+                        <div class="col-span-2">
+                            <x-empty-states.no-internships />
                         </div>
                     @endforelse
                 </div>
@@ -283,12 +302,26 @@
                             </div>
                         </div>
                     @empty
-                        <div class="col-span-2 text-center py-16 text-[var(--ig-muted)] bg-white border border-[var(--ig-line)] rounded-3xl">
-                            <p class="font-bold text-base text-[var(--ig-ink)]">Archive is empty.</p>
+                        <div class="col-span-2">
+                            <x-empty-states.no-internships />
                         </div>
                     @endforelse
                 </div>
             </div>
         </div>
-    </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                setTimeout(function() {
+                    const skeleton = document.getElementById('dashboard-skeleton');
+                    const content = document.getElementById('dashboard-content');
+                    if (skeleton && content) {
+                        skeleton.classList.add('hidden');
+                        content.classList.remove('hidden');
+                        content.classList.add('ig-anim-fade-up');
+                    }
+                }, 500);
+            });
+        </script>
+    </div><!-- Closing dashboard-content -->
 </x-app-layout>

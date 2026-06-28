@@ -15,6 +15,12 @@
                 </p>
             </div>
             <div class="lg:col-span-5 flex flex-wrap gap-3 justify-start lg:justify-end">
+                <a href="{{ route('admin.revenue') }}" class="ig-btn text-xs py-2 px-3 flex items-center gap-1.5 shadow-sm bg-indigo-600 text-white font-bold hover:bg-indigo-700">
+                    📊 Revenue Economics
+                </a>
+                <a href="{{ route('admin.subscriptions.index') }}" class="ig-btn text-xs py-2 px-3 flex items-center gap-1.5 shadow-sm bg-teal-650 text-white font-bold hover:bg-teal-750">
+                    💳 Subscriptions Ledger
+                </a>
                 <a href="{{ route('admin.withdrawals.index') }}" class="ig-btn ig-btn-primary text-xs py-2 px-3 flex items-center gap-1.5 shadow-sm">
                     💸 Withdrawals Queue
                 </a>

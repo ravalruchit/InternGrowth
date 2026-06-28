@@ -140,9 +140,14 @@ class DbJsonSync extends Command
 
             $rows = $data[$table];
 
-            // Convert boolean or JSON values if necessary for Postgres driver
+            // Filter out non-existent columns and format array values
+            $columns = Schema::getColumnListing($table);
             foreach ($rows as &$row) {
                 foreach ($row as $key => $val) {
+                    if (!in_array($key, $columns)) {
+                        unset($row[$key]);
+                        continue;
+                    }
                     if (is_array($val)) {
                         $row[$key] = json_encode($val);
                     }

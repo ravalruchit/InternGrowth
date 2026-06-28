@@ -53,19 +53,24 @@ class HiringOfferController extends Controller
 
         $student = StudentProfile::with('user')->findOrFail($validated['student_profile_id']);
 
-        // Compute success fee based on user criteria
+        // Compute success fee based on user criteria & subscription plan
         $successFee = 0.00;
         if ($validated['offer_type'] === 'internship') {
-            // One promotional ₹0 internship offer per startup (lifetime)
-            $hasPromoClaimed = HiringOffer::where('startup_profile_id', $startup->id)
-                ->where('offer_type', 'internship')
-                ->where('reserved_fee', 0.00)
-                ->exists();
-            
-            // First hire is promo ₹0, subsequent is ₹1,999
-            $successFee = $hasPromoClaimed ? 1999.00 : 0.00;
+            // If on Startup Growth, success fees are waived
+            if (auth()->user()->isStartupGrowth()) {
+                $successFee = 0.00;
+            } else {
+                // One promotional ₹0 internship offer per startup (lifetime)
+                $hasPromoClaimed = HiringOffer::where('startup_profile_id', $startup->id)
+                    ->where('offer_type', 'internship')
+                    ->where('reserved_fee', 0.00)
+                    ->exists();
+                
+                // First hire is promo ₹0, subsequent is ₹1,999
+                $successFee = $hasPromoClaimed ? 1999.00 : 0.00;
+            }
         } else {
-            // Job: 5% of CTC
+            // Job: 5% of CTC (remains active for all plans)
             $annualCTC = $validated['compensation_period'] === 'annual' 
                 ? $validated['compensation'] 
                 : $validated['compensation'] * 12;

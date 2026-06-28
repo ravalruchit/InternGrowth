@@ -28,7 +28,26 @@
             </div>
         </div>
 
-        <!-- ─── Verification banner ─── -->
+        <!-- Simulated Skeleton Loader Wrapper -->
+        <div id="dashboard-skeleton" class="space-y-8 animate-pulse">
+            <!-- Banner Skeleton -->
+            <div class="h-24 bg-slate-100 rounded-3xl w-full"></div>
+            
+            <!-- Main Grid Skeleton -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-8 h-80 bg-slate-100 rounded-3xl"></div>
+                <div class="lg:col-span-4 grid grid-cols-2 gap-4">
+                    <div class="h-32 bg-slate-100 rounded-3xl"></div>
+                    <div class="h-32 bg-slate-100 rounded-3xl"></div>
+                    <div class="h-32 bg-slate-100 rounded-3xl"></div>
+                    <div class="h-32 bg-slate-100 rounded-3xl"></div>
+                    <div class="col-span-2 h-20 bg-slate-100 rounded-3xl"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="dashboard-content" class="hidden space-y-8">
+            <!-- ─── Verification banner ─── -->
         @if(!$profile->is_verified)
             <div class="ig-banner ig-banner-warn mb-8 ig-anim-fade-up ig-delay-1">
                 <svg class="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -44,6 +63,63 @@
                 <div class="flex-1">
                     <p class="text-sm font-semibold">Verified student · {{ $profile->college_name }}</p>
                     <p class="text-[12px] text-[var(--ig-muted)] mt-0.5">Full access · all tasks unlocked</p>
+                </div>
+            </div>
+        @endif
+
+        <!-- ─── Premium/Upgrade Pro Banner ─── -->
+        @if(auth()->user()->isStudentPro())
+            <div class="ig-card-dark p-6 mb-8 ig-reveal relative overflow-hidden ig-shimmer">
+                <!-- Glowing purple backdrop orb -->
+                <div class="absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl opacity-20" style="background:var(--ig-accent)"></div>
+                
+                <div class="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl shadow-inner">
+                            🚀
+                        </div>
+                        <div>
+                            <h3 class="ig-display text-lg text-white flex items-center gap-2">
+                                Your Premium Pro Toolkit
+                                <span class="text-[9px] uppercase tracking-wider bg-[var(--ig-lime)] text-[#2A4E00] font-black px-2 py-0.5 rounded">Active</span>
+                            </h3>
+                            <p class="text-xs mt-1" style="color:#C9C1AE">Accelerate your career with AI-powered coaching, mock interviews, and verified badge credentials.</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2.5 items-center">
+                        <a href="{{ route('student.coach') }}" class="ig-btn ig-btn-lime text-xs font-bold px-5 py-2.5">
+                            🤖 AI Coach
+                        </a>
+                        <a href="{{ route('student.mock') }}" class="ig-btn text-xs font-bold px-5 py-2.5 bg-white/5 hover:bg-white/15 border border-white/20 hover:border-white/30 rounded-xl transition no-underline" style="color: #ffffff !important;">
+                            🎭 Mock Interview
+                        </a>
+                        <a href="{{ route('student.assessments') }}" class="ig-btn text-xs font-bold px-5 py-2.5 bg-white/5 hover:bg-white/15 border border-white/20 hover:border-white/30 rounded-xl transition no-underline" style="color: #ffffff !important;">
+                            📝 Assessments
+                        </a>
+                        <button type="button" onclick="openCancelSubscriptionModal()" class="text-xs font-bold text-red-400 hover:text-red-300 bg-transparent border-none cursor-pointer pl-3 hover:underline transition">
+                            Cancel Pro
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="ig-card p-6 mb-8 ig-reveal bg-gradient-to-r from-[var(--ig-bg-2)] to-white border border-[var(--ig-line)] flex flex-col lg:flex-row lg:items-center justify-between gap-6 ig-shimmer">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-2xl shadow-sm">
+                        ⭐
+                    </div>
+                    <div>
+                        <h3 class="ig-display text-lg text-[var(--ig-ink)] flex items-center gap-2">
+                            Upgrade to InternGrowth Pro
+                            <span class="text-[9px] uppercase tracking-wider bg-[var(--ig-bg-2)] text-[var(--ig-ink-2)] font-extrabold px-2 py-0.5 rounded border border-[var(--ig-line)]">Standard Free</span>
+                        </h3>
+                        <p class="text-xs text-[var(--ig-muted)] mt-1">Unlock AI career coach recommendations, verified skill badges, and mock technical interview simulations.</p>
+                    </div>
+                </div>
+                <div>
+                    <a href="{{ route('pricing.index') }}" class="ig-btn ig-btn-primary text-xs font-bold py-3 px-6 whitespace-nowrap">
+                        Upgrade to Pro
+                    </a>
                 </div>
             </div>
         @endif
@@ -169,7 +245,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12">
 
             <!-- IPRS Scorecard -->
-            <div class="lg:col-span-8 ig-card-dark p-8 relative overflow-hidden ig-reveal">
+            <div class="lg:col-span-8 ig-card-dark p-8 relative overflow-hidden ig-reveal self-start">
                 <div class="absolute -top-32 -right-32 w-[400px] h-[400px] rounded-full blur-3xl opacity-20" style="background:var(--ig-accent)"></div>
 
                 <div class="relative">
@@ -223,50 +299,31 @@
                 </div>
             </div>
 
-            <!-- Notifications Center Widget -->
-            <div class="lg:col-span-4 ig-card p-6 flex flex-col justify-between ig-reveal">
-                <div>
-                    <div class="flex items-center justify-between mb-6 pb-2 border-b border-[var(--ig-line)]">
-                        <h3 class="text-xs uppercase font-extrabold tracking-widest text-[var(--ig-muted)]">🔔 Recent Updates</h3>
-                        <span class="text-[10px] font-black text-[var(--ig-accent)] bg-[var(--ig-accent-soft)] px-2 py-0.5 rounded-full">Inbox</span>
+            <!-- Stats column -->
+            <div class="lg:col-span-4 grid grid-cols-2 gap-4">
+                @php
+                    $stats = [
+                        ['Projects Completed', $projectsCompleted, 'ig-card', ''],
+                        ['Intern offers', $internshipOffersCount, 'ig-card', ''],
+                        ['Job offers', $jobOffersCount, 'ig-card', ''],
+                        ['Earnings', '₹'.number_format($totalEarnings, 0), 'ig-card', 'lime-accent'],
+                    ];
+                @endphp
+                @foreach($stats as $s)
+                    <div class="{{ $s[2] }} p-5 ig-reveal">
+                        <p class="ig-eyebrow text-[10px]">{{ $s[0] }}</p>
+                        <p class="ig-stat-num text-3xl mt-3 {{ $s[3] === 'lime-accent' ? 'text-[var(--ig-lime)]' : '' }}">{{ $s[1] }}</p>
                     </div>
-
-                    @php
-                        $recentNotifications = \App\Models\Notification::where('user_id', auth()->id())
-                            ->latest()
-                            ->take(4)
-                            ->get();
-                        $iconMap = [
-                            'success' => '🟢',
-                            'warning' => '🚨',
-                            'error' => '❌',
-                            'info' => '⭐'
-                        ];
-                    @endphp
-
-                    <div class="space-y-4">
-                        @forelse($recentNotifications as $notif)
-                            <a href="{{ $notif->target_url ?: '#' }}" class="block p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition group">
-                                <div class="flex items-start gap-2.5">
-                                    <span class="text-sm flex-shrink-0 mt-0.5">{{ $iconMap[$notif->type] ?? '✓' }}</span>
-                                    <div class="min-w-0">
-                                        <h4 class="font-bold text-xs text-gray-800 group-hover:text-[var(--ig-accent)] transition truncate">{{ $notif->title }}</h4>
-                                        <p class="text-[10px] text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">{{ $notif->message }}</p>
-                                        <span class="text-[9px] text-gray-400 mt-1 block font-medium">{{ $notif->created_at->diffForHumans() }}</span>
-                                    </div>
-                                </div>
-                            </a>
-                        @empty
-                            <p class="text-xs text-[var(--ig-muted)] py-8 text-center italic">No recent notifications</p>
-                        @endforelse
+                @endforeach
+                <a href="{{ route('wallet.index') }}" class="col-span-2 ig-card-dark p-5 flex items-center justify-between ig-reveal">
+                    <div>
+                        <p class="ig-eyebrow text-[10px]" style="color:#9C9580">Wallet balance</p>
+                        <p class="ig-stat-num text-3xl text-white mt-2">₹{{ number_format($profile->wallet_balance, 0) }}</p>
                     </div>
-                </div>
+                    <span class="text-[var(--ig-lime)]">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </a>
 
-                <div class="mt-6 pt-4 border-t border-[var(--ig-line)] text-center">
-                    <a href="{{ route('notifications.index') }}" class="text-[11px] font-black text-gray-600 hover:text-gray-900 transition flex items-center justify-center gap-1">
-                        View All Notifications <span class="arrow">→</span>
-                    </a>
-                </div>
             </div>
         </div>
 
@@ -732,5 +789,86 @@
             document.getElementById('review-rating-val').value = r;
             for (let i=1;i<=5;i++){const b=document.getElementById(`star-btn-${i}`);if(i<=r){b.classList.add('text-[var(--ig-accent)]');b.classList.remove('text-[var(--ig-line-2)]');}else{b.classList.remove('text-[var(--ig-accent)]');b.classList.add('text-[var(--ig-line-2)]');}}
         }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            setTimeout(function() {
+                const skeleton = document.getElementById('dashboard-skeleton');
+                const content = document.getElementById('dashboard-content');
+                if (skeleton && content) {
+                    skeleton.classList.add('hidden');
+                    content.classList.remove('hidden');
+                    content.classList.add('ig-anim-fade-up');
+                }
+            }, 500);
+        });
     </script>
+
+    </div><!-- Closing dashboard-content -->
+
+    <!-- Custom Subscription Cancellation Confirmation Modal -->
+    <div id="cancelSubscriptionModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true">
+        <!-- Backdrop overlay -->
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeCancelSubscriptionModal()"></div>
+
+        <!-- Modal panel -->
+        <div class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all w-full max-w-md border border-slate-100 ig-anim-scale-in z-10">
+            <div class="p-6">
+                <!-- Icon & Title -->
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-500 text-2xl shadow-inner">
+                        ⚠️
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-slate-950 text-base" id="modal-title">Downgrade to Standard Free</h3>
+                        <p class="text-xs text-slate-550 mt-0.5">Are you sure you want to cancel your Pro plan?</p>
+                    </div>
+                </div>
+
+                <!-- Warning Content -->
+                <div class="bg-red-50/50 border border-red-100 rounded-2xl p-4 text-xs text-red-800 leading-relaxed mb-6">
+                    <p class="font-bold mb-1">Downgrading will deactivate:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>AI Career Coach custom feedback recommendations</li>
+                        <li>Verified assessment skill badges & IPRS points bonus</li>
+                        <li>Mock technical interview practice simulations</li>
+                    </ul>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="closeCancelSubscriptionModal()" class="flex-1 ig-btn ig-btn-ghost py-3 justify-center text-xs font-bold rounded-2xl cursor-pointer">
+                        Keep Pro Active
+                    </button>
+                    <form method="POST" action="{{ route('pricing.cancel') }}" class="flex-1 m-0">
+                        @csrf
+                        <button type="submit" class="w-full ig-btn justify-center text-xs font-bold bg-red-600 hover:bg-red-700 text-white border-none py-3 rounded-2xl cursor-pointer">
+                            Confirm Downgrade
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openCancelSubscriptionModal() {
+            const modal = document.getElementById('cancelSubscriptionModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCancelSubscriptionModal() {
+            const modal = document.getElementById('cancelSubscriptionModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    </script>
+
+    <!-- Floating Action Button (FAB) -->
+    <a href="{{ route('tasks.index') }}" class="fixed bottom-6 right-6 flex items-center justify-center gap-2 px-5 py-3.5 bg-[var(--ig-accent)] hover:bg-violet-700 text-white font-extrabold rounded-full shadow-2xl hover:scale-105 transition-all z-40 group no-underline" style="color: #ffffff !important;">
+        <span class="text-lg">+</span>
+        <span class="text-xs uppercase tracking-wider">Apply to Task</span>
+    </a>
 </x-app-layout>
