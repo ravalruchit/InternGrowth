@@ -65,7 +65,7 @@ class AIVerificationService
             $modelName = ltrim($this->model, 'models/');
             $url = self::GEMINI_API_BASE . "/{$modelName}:generateContent?key={$this->apiKey}";
 
-            $response = Http::timeout(60)
+            $response = Http::timeout(15)
                 ->post($url, [
                     'contents' => [
                         [
@@ -323,8 +323,8 @@ PROMPT;
             $width  = imagesx($src);
             $height = imagesy($src);
 
-            // Calculate new dimensions (max 1000px on either side)
-            $maxDimension = 1000;
+            // Calculate new dimensions (max 500px on either side)
+            $maxDimension = 500;
             if ($width > $maxDimension || $height > $maxDimension) {
                 if ($width > $height) {
                     $newWidth  = $maxDimension;
@@ -352,11 +352,11 @@ PROMPT;
             if ($mime === 'image/png') {
                 imagepng($src, null, 7);
             } elseif ($mime === 'image/webp') {
-                imagewebp($src, null, 75);
+                imagewebp($src, null, 60);
             } elseif ($mime === 'image/gif') {
                 imagegif($src, null);
             } else {
-                imagejpeg($src, null, 75);
+                imagejpeg($src, null, 60);
             }
             $compressedBytes = ob_get_clean();
             imagedestroy($src);
