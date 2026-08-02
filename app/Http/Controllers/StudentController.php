@@ -43,11 +43,12 @@ class StudentController extends Controller
             );
 
             // Add reputation bonus
-            $rep = $profile->reputationScore;
-            if ($rep) {
-                $rep->increment('overall_score', 15);
-                $rep->save();
-            }
+            $rep = \App\Models\ReputationScore::firstOrCreate(
+                ['student_profile_id' => $profile->id],
+                ['overall_score' => 50, 'bonus_points' => 0, 'trust_score' => 50, 'completion_rate' => 100, 'on_time_rate' => 100]
+            );
+            $rep->increment('bonus_points', 15);
+            resolve(\App\Services\ReputationEngineService::class)->updateReputation($profile->id);
 
             // Create notification
             \App\Models\Notification::create([

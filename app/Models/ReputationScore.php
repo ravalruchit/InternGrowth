@@ -10,6 +10,7 @@ class ReputationScore extends Model
     protected $fillable = [
         'student_profile_id',
         'overall_score',
+        'bonus_points',
         'trust_score',
         'completion_rate',
         'on_time_rate',
@@ -27,6 +28,7 @@ class ReputationScore extends Model
 
     protected $casts = [
         'overall_score' => 'decimal:2',
+        'bonus_points' => 'decimal:2',
         'trust_score' => 'decimal:2',
         'completion_rate' => 'decimal:2',
         'on_time_rate' => 'decimal:2',

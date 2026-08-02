@@ -113,8 +113,8 @@
                         $tsRole  = $topStudent->preferred_role ?? $topStudent->primary_domain ?? 'Student';
                         $tsTrust = $tsRep ? round($tsRep->trust_score) : 50;
                         $tsOnTime = $tsRep ? round($tsRep->on_time_rate) : 50;
-                        $tsComm  = $tsRep ? round($tsRep->communication_rating) : 50;
-                        $tsSat   = $tsRep ? round($tsRep->satisfaction_rating) : 50;
+                        $tsComm  = $tsRep ? round($tsRep->communication_rating * 20) : 50;
+                        $tsSat   = $tsRep ? round($tsRep->satisfaction_rating * 20) : 50;
                         $tsProjects = $tsRep ? $tsRep->total_verified_projects : 0;
                         $tsSkills = $topStudent->skills ? $topStudent->skills->take(2) : collect();
                         $tsExtraSkills = $topStudent->skills ? max(0, $topStudent->skills->count() - 2) : 0;
@@ -290,8 +290,8 @@
                                         ['Trust', $rep ? round($rep->trust_score) : 50],
                                         ['Completion', $rep ? round($rep->completion_rate) : 50],
                                         ['On-time', $rep ? round($rep->on_time_rate) : 50],
-                                        ['Communication', $rep ? round($rep->communication_rating) : 50],
-                                        ['Satisfaction', $rep ? round($rep->satisfaction_rating) : 50],
+                                        ['Communication', $rep ? round($rep->communication_rating * 20) : 50],
+                                        ['Satisfaction', $rep ? round($rep->satisfaction_rating * 20) : 50],
                                     ];
                                 @endphp
                                 @foreach($bars as $b)

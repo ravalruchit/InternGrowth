@@ -705,8 +705,8 @@ class AdminController extends Controller
             // Boost student IPRS
             $studentScore = \App\Models\ReputationScore::where('student_profile_id', $student->id)->first();
             if ($studentScore) {
-                $newScore = min(100, ($studentScore->overall_score ?? 50) + 10);
-                $studentScore->update(['overall_score' => $newScore]);
+                $studentScore->increment('bonus_points', 10.00);
+                resolve(\App\Services\ReputationEngineService::class)->updateReputation($student->id);
             }
         });
 

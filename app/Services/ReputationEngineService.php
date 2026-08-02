@@ -84,7 +84,14 @@ class ReputationEngineService
                 $overallScore -= 30.00;
             }
         }
-        $overallScore = max(0.00, min(100.00, $overallScore));
+        $overallScore = max(0.00, $overallScore);
+
+        $bonusPoints = 0.00;
+        $rep = ReputationScore::where('student_profile_id', $student->id)->first();
+        if ($rep && isset($rep->bonus_points)) {
+            $bonusPoints = (float) $rep->bonus_points;
+        }
+        $overallScore = min(100.00, $overallScore + $bonusPoints);
 
         $totalProjects = $student->applications()
             ->whereHas('submission', function($query) {
@@ -105,6 +112,7 @@ class ReputationEngineService
             ['student_profile_id' => $student->id],
             [
                 'overall_score' => round($overallScore, 2),
+                'bonus_points' => round($bonusPoints, 2),
                 'trust_score' => round($trustScore, 2),
                 'completion_rate' => round($completionRate, 2),
                 'on_time_rate' => round($onTimeRate, 2),

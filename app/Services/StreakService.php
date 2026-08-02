@@ -273,17 +273,17 @@ class StreakService
         }
     }
 
-    /**
-     * Add IPRS points to student's reputation score.
-     */
     private function awardIPRS(int $studentProfileId, int $points): void
     {
         $rep = ReputationScore::firstOrCreate(
             ['student_profile_id' => $studentProfileId],
-            ['overall_score' => 0, 'trust_score' => 0, 'completion_rate' => 0, 'on_time_rate' => 0]
+            ['overall_score' => 50, 'bonus_points' => 0, 'trust_score' => 50, 'completion_rate' => 100, 'on_time_rate' => 100]
         );
 
-        $rep->increment('overall_score', $points);
+        $rep->increment('bonus_points', $points);
+
+        // Recalculate reputation score
+        resolve(\App\Services\ReputationEngineService::class)->updateReputation($studentProfileId);
     }
 
     /**
