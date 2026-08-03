@@ -83,7 +83,7 @@
                     <div class="flex flex-wrap items-center gap-x-8 gap-y-3 mt-12 ig-anim-fade-up ig-delay-4">
                         <div class="flex -space-x-2.5">
                             @php $avatarColors = ['#FF4F19','#16322F','#1F3FB5','#C84B3B']; @endphp
-                            @foreach(\App\Models\StudentProfile::with('user')->limit(4)->get() as $i => $sp)
+                            @foreach($avatarStudents as $i => $sp)
                                 <span class="ig-avatar" style="background:{{ $avatarColors[$i % 4] }}">{{ strtoupper(substr($sp->user->name ?? 'S', 0, 1)) }}</span>
                             @endforeach
                             <span class="ig-avatar" style="background:#0B0F14;color:var(--ig-lime)">+</span>

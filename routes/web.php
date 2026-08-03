@@ -19,6 +19,9 @@ Route::get('/', function () {
         $verifiedTasks  = \App\Models\Submission::where('status', 'accepted')->count();
         $totalTasks     = \App\Models\Task::count();
 
+        // ── Avatar students ──
+        $avatarStudents = \App\Models\StudentProfile::with('user')->limit(4)->get();
+
         // ── Top student (leaderboard #1) ──
         $topStudent = \App\Models\StudentProfile::with(['user', 'reputationScore', 'skills'])
             ->leftJoin('reputation_scores', 'student_profiles.id', '=', 'reputation_scores.student_profile_id')
@@ -47,6 +50,7 @@ Route::get('/', function () {
         $startupsCount = 19;
         $verifiedTasks = 12;
         $totalTasks = 45;
+        $avatarStudents = collect();
         $topStudent = null;
         $startupNames = ['Zyberzing', 'Vortex', 'Apex', 'InternGrowth'];
         $latestTasks = collect();
@@ -56,7 +60,7 @@ Route::get('/', function () {
 
     return view('welcome', compact(
         'studentsCount', 'startupsCount', 'verifiedTasks', 'totalTasks',
-        'topStudent', 'startupNames', 'latestTasks'
+        'avatarStudents', 'topStudent', 'startupNames', 'latestTasks'
     ));
 });
 
