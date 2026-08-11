@@ -357,4 +357,14 @@ Route::get('/view-production-logs', function() {
     return '<pre>' . implode("\n", $lastLines) . '</pre>';
 });
 
+Route::get('/run-import-sync', function() {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('db:sync-json', ['action' => 'import']);
+        $output = \Illuminate\Support\Facades\Artisan::output();
+        return 'Success: <pre>' . $output . '</pre>';
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
+});
+
 
